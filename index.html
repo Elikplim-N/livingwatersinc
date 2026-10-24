@@ -236,7 +236,10 @@
   <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 
   <script>
-    const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : 'http://10.179.199.140:3000/api';
+    // Same-origin serverless API on Vercel; local Express server during development
+    const API_URL = ['localhost', '127.0.0.1'].includes(window.location.hostname) && window.location.port !== '3000'
+      ? 'http://localhost:3000/api'
+      : '/api';
     let TOKEN = localStorage.getItem('auth_token');
     let allStreets = [];
     let currentStreetId = null;
@@ -269,23 +272,56 @@
       }
     }
 
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      })[c]);
+    }
+
     // Login
-    if (!TOKEN) {
+    async function login() {
       const email = prompt('Email:', 'admin@kaneshie.com');
-      const password = prompt('Password:', 'admin123');
-      fetch(`${API_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      })
-      .then(r => r.json())
-      .then(data => {
-        if (data.token) {
+      if (email === null) {
+        document.getElementById('statsCount').textContent = 'Not signed in — reload to log in';
+        return;
+      }
+      const password = prompt('Password:') ?? '';
+
+      try {
+        const response = await fetch(`${API_URL}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await response.json().catch(() => ({}));
+
+        if (response.ok && data.token) {
           localStorage.setItem('auth_token', data.token);
           TOKEN = data.token;
           loadStreets();
+        } else {
+          alert(data.error || data.message || 'Login failed');
+          login();
         }
-      });
+      } catch (error) {
+        console.error('Login error:', error);
+        document.getElementById('statsCount').textContent = 'Cannot reach server';
+        alert('Cannot reach the server. Check your connection and reload.');
+      }
+    }
+
+    function handleAuthError(response) {
+      if (response.status === 401 || response.status === 403) {
+        localStorage.removeItem('auth_token');
+        TOKEN = null;
+        login();
+        return true;
+      }
+      return false;
+    }
+
+    if (!TOKEN) {
+      login();
     } else {
       loadStreets();
     }
@@ -295,8 +331,9 @@
         const response = await fetch(`${API_URL}/streets`, {
           headers: { 'Authorization': `Bearer ${TOKEN}` }
         });
-        
-        if (!response.ok) throw new Error('Auth failed');
+
+        if (handleAuthError(response)) return;
+        if (!response.ok) throw new Error(`Failed to load streets (${response.status})`);
 
         allStreets = await response.json();
         const visited = allStreets.filter(s => s.visits && s.visits.length > 0).length;
@@ -307,12 +344,17 @@
         renderMap();
       } catch (error) {
         console.error('Error:', error);
+        document.getElementById('statsCount').textContent = 'Failed to load streets';
       }
     }
 
     function renderStreetsList() {
       const list = document.getElementById('streetsList');
-      list.innerHTML = allStreets.map(street => {
+      const term = document.getElementById('searchInput').value.trim().toLowerCase();
+      const streets = term
+        ? allStreets.filter(s => `${s.name} ${s.district}`.toLowerCase().includes(term))
+        : allStreets;
+      list.innerHTML = streets.map(street => {
         const hasVisits = street.visits && street.visits.length > 0;
         const borderColor = hasVisits ? 'border-blue-600' : 'border-white';
         const totalConverts = hasVisits ? street.visits.reduce((sum, v) => sum + (v.decisions || 0), 0) : 0;
@@ -321,8 +363,8 @@
             <div class="flex items-start gap-2">
               <div class="w-6 h-6 rounded-full bg-zinc-900 border-2 ${borderColor} flex-shrink-0 mt-0.5"></div>
               <div class="flex-1 min-w-0">
-                <h3 class="font-medium text-sm truncate">${street.name}</h3>
-                <p class="text-xs text-zinc-400">${street.district}</p>
+                <h3 class="font-medium text-sm truncate">${escapeHtml(street.name)}</h3>
+                <p class="text-xs text-zinc-400">${escapeHtml(street.district)}</p>
                 ${hasVisits ? `<p class="text-xs text-green-400 mt-1">🙏 ${totalConverts} converts</p>` : ''}
               </div>
               <button onclick="event.stopPropagation(); openVisitModal('${street.id}')" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded">
@@ -355,13 +397,13 @@
 
           const marker = L.marker([lat, lng], { icon });
           
-          const totalAttendance = hasVisits ? street.visits.reduce((sum, v) => sum + v.attendance, 0) : 0;
+          const totalAttendance = hasVisits ? street.visits.reduce((sum, v) => sum + (v.attendance || 0), 0) : 0;
           const totalConverts = hasVisits ? street.visits.reduce((sum, v) => sum + (v.decisions || 0), 0) : 0;
 
           marker.bindPopup(`
             <div style="min-width: 200px;">
-              <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 4px;">${street.name}</h3>
-              <p style="color: #a1a1aa; font-size: 13px; margin-bottom: 8px;">${street.district}</p>
+              <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 4px;">${escapeHtml(street.name)}</h3>
+              <p style="color: #a1a1aa; font-size: 13px; margin-bottom: 8px;">${escapeHtml(street.district)}</p>
               ${hasVisits ? `
                 <div style="font-size: 13px; line-height: 1.6; margin-bottom: 12px;">
                   <p>✅ ${street.visits.length} visit${street.visits.length > 1 ? 's' : ''}</p>
@@ -477,8 +519,15 @@
       currentStreetId = null;
     }
 
+    document.getElementById('searchInput').addEventListener('input', renderStreetsList);
+
     document.getElementById('addStreetForm').addEventListener('submit', async (e) => {
       e.preventDefault();
+
+      if (!addMarker) {
+        alert('Click on the map to set the street location first.');
+        return;
+      }
 
       try {
         const response = await fetch(`${API_URL}/streets`, {
@@ -495,13 +544,14 @@
           })
         });
 
+        if (handleAuthError(response)) return;
         if (response.ok) {
           alert('✅ Street added successfully!');
           closeAddModal();
           loadStreets();
         } else {
-          const data = await response.json();
-          alert(data.error || 'Failed to add street');
+          const data = await response.json().catch(() => ({}));
+          alert(data.error || data.message || 'Failed to add street');
         }
       } catch (error) {
         alert('Error adding street');
@@ -515,8 +565,8 @@
         street_id: currentStreetId,
         visit_date: document.getElementById('visitDate').value,
         team_members: [],
-        attendance: parseInt(document.getElementById('visitAttendance').value),
-        decisions: parseInt(document.getElementById('visitConverts').value),
+        attendance: parseInt(document.getElementById('visitAttendance').value, 10) || 0,
+        decisions: parseInt(document.getElementById('visitConverts').value, 10) || 0,
         follow_ups: 0,
         notes: ''
       };
@@ -531,6 +581,7 @@
           body: JSON.stringify(visitData)
         });
 
+        if (handleAuthError(response)) return;
         if (response.ok) {
           alert('✅ Visit logged!');
           closeVisitModal();

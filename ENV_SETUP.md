@@ -4,10 +4,10 @@
 
 ```env
 # PostgreSQL Database
-DATABASE_URL=postgresql://postgres:dgas0atnw2pd05y0@178.105.184.157:63400/postgres?sslmode=disable
+DATABASE_URL=postgresql://USER:PASSWORD@HOST:PORT/postgres?sslmode=disable
 
 # JWT Secret (change in production!)
-JWT_SECRET=kaneshie-outreach-super-secret-jwt-key-2026
+JWT_SECRET=replace-with-a-long-random-secret
 
 # Server Port
 PORT=3000
@@ -19,7 +19,7 @@ NODE_ENV=development
 ## Frontend (no .env needed for HTML version)
 
 The HTML version reads these from the code:
-- **API URL**: Set in `index.html` line ~180
+- **API URL**: `/api` in production, `http://localhost:3000/api` locally (see `API_URL` in `index.html`)
 - **MapTiler Key**: Currently using free OpenStreetMap (no key needed)
 
 If you want to use MapTiler tiles:
@@ -30,14 +30,13 @@ If you want to use MapTiler tiles:
 
 ### Backend Environment Variables (set in Vercel dashboard):
 ```
-DATABASE_URL=postgresql://postgres:dgas0atnw2pd05y0@178.105.184.157:63400/postgres?sslmode=disable
-JWT_SECRET=kaneshie-outreach-super-secret-jwt-key-2026
+DATABASE_URL=postgresql://USER:PASSWORD@HOST:PORT/postgres?sslmode=disable
+JWT_SECRET=replace-with-a-long-random-secret
 ```
 
-### Frontend (update in code):
-```javascript
-const API_URL = 'https://your-backend-url.vercel.app/api';
-```
+### Frontend:
+The API is deployed alongside the frontend as a Vercel serverless function
+(`api/index.ts`), so `index.html` calls `/api` on the same domain — no URL to update.
 
 ## Quick Setup
 
@@ -72,7 +71,7 @@ python3 -m http.server 8888
 ## Current Values
 
 Your current setup uses:
-- **Database**: `178.105.184.157:63400`
+- **Database**: set via `DATABASE_URL`
 - **Backend**: Port 3000
 - **Frontend**: Port 8888
 - **Maps**: OpenStreetMap (free, no key needed)
