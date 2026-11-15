@@ -139,6 +139,7 @@
             <div class="bg-zinc-800/60 rounded-xl p-2.5"><p class="text-[10px] uppercase tracking-wider text-zinc-400">Converts</p><p id="statConverts" class="text-lg font-bold mt-0.5 text-emerald-400">–</p></div>
           </div>
           <div class="mt-3 h-1.5 bg-zinc-800 rounded-full overflow-hidden"><div id="coverageBar" class="h-full bg-gradient-to-r from-blue-600 to-emerald-500 rounded-full transition-all duration-500" style="width:0%"></div></div>
+          <p id="coverageText" class="text-[11px] text-zinc-500 mt-1.5">&nbsp;</p>
         </div>
 
         <!-- Search & filters -->
@@ -163,7 +164,11 @@
         <!-- List -->
         <div id="streetsList" class="flex-1 overflow-y-auto scroll-thin"></div>
 
-        <div class="p-3 border-t border-zinc-800">
+        <div class="p-3 border-t border-zinc-800 space-y-2">
+          <button id="importBtn" class="hidden btn btn-ghost w-full text-xs">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
+            Load all streets in Kaneshie Division
+          </button>
           <button data-action="add-street" class="btn btn-primary w-full">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
             Add street
@@ -236,6 +241,7 @@
         <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full bg-emerald-600"></i>Last 30 days</span>
         <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full bg-blue-600"></i>Visited</span>
         <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full bg-zinc-500"></i>Not yet</span>
+        <span class="hidden sm:flex items-center gap-1.5"><i class="w-4 h-0.5 bg-amber-400"></i>Division</span>
       </div>
 
       <!-- Loading overlay -->
@@ -337,7 +343,7 @@
       <p id="confirmText" class="text-sm text-zinc-400 mt-1"></p>
       <div class="flex gap-2 mt-5">
         <button data-close class="btn btn-ghost flex-1">Cancel</button>
-        <button id="confirmOk" class="btn flex-1 bg-red-600 hover:bg-red-700 text-white">Delete</button>
+        <button id="confirmOk" class="btn flex-1 text-white">Delete</button>
       </div>
     </div>
   </div>
@@ -475,6 +481,7 @@
 
     function onSignedIn() {
       const u = state.user;
+      $('importBtn').classList.toggle('hidden', u?.role !== 'admin');
       $('userName').textContent = u ? `${u.full_name || u.email}${u.role === 'admin' ? ' · Admin' : ''}` : '';
       loadStreets();
     }
@@ -485,6 +492,59 @@
     L.tileLayer(TILE_URL, { attribution: TILE_ATTR, maxZoom: 20, subdomains: 'abcd' }).addTo(map);
     const cluster = L.markerClusterGroup({ showCoverageOnHover: false, maxClusterRadius: 45, spiderfyOnMaxZoom: true });
     map.addLayer(cluster);
+    const linesLayer = L.layerGroup().addTo(map);
+
+    // ---------- Division boundary ----------
+    // Traced from the Ghana Police Service "Jurisdictional Map of Kaneshie Division" (division.geojson).
+    const division = { outer: null, districts: [], bounds: null };
+    function pointInRing([lat, lng], ring) {
+      let inside = false;
+      for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+        const [xi, yi] = ring[i], [xj, yj] = ring[j];
+        if ((yi > lat) !== (yj > lat) && lng < ((xj - xi) * (lat - yi)) / (yj - yi) + xi) inside = !inside;
+      }
+      return inside;
+    }
+    const inDivision = (pt) => !division.outer || (!!pt && pointInRing(pt, division.outer));
+    const districtAt = (pt) => division.districts.find(d => pointInRing(pt, d.ring))?.name || null;
+    const toLatLngs = (ring) => ring.map(([lng, lat]) => [lat, lng]);
+
+    function drawDivision(target, { mask = true } = {}) {
+      if (!division.outer) return;
+      const outer = toLatLngs(division.outer);
+      if (mask) {
+        const world = [[-90, -360], [-90, 360], [90, 360], [90, -360]];
+        L.polygon([world, outer], { stroke: false, fillColor: '#000', fillOpacity: 0.55, interactive: false }).addTo(target);
+      }
+      for (const d of division.districts) {
+        L.polygon(toLatLngs(d.ring), { color: d.color, weight: 1.5, opacity: 0.7, dashArray: '6 6', fillColor: d.color, fillOpacity: 0.07, interactive: false }).addTo(target);
+        if (mask) {
+          const c = L.polygon(toLatLngs(d.ring)).getBounds().getCenter();
+          L.marker(c, { interactive: false, icon: L.divIcon({ className: '', html: `<div style="transform:translate(-50%,-50%);font:700 11px Inter,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:${d.color};opacity:.85;white-space:nowrap;text-shadow:0 1px 3px #000">${esc(d.name)}</div>` }) }).addTo(target);
+        }
+      }
+      L.polygon(outer, { color: '#fbbf24', weight: 3, opacity: 0.95, fill: false, interactive: false }).addTo(target);
+    }
+
+    async function loadDivision() {
+      try {
+        const gj = await (await fetch('/division.geojson')).json();
+        for (const f of gj.features) {
+          const ring = f.geometry.coordinates[0];
+          if (f.properties.kind === 'division') division.outer = ring;
+          else division.districts.push({ name: f.properties.name, color: f.properties.color, ring });
+        }
+        division.bounds = L.latLngBounds(toLatLngs(division.outer));
+        drawDivision(map);
+        map.fitBounds(division.bounds, { padding: [20, 20] });
+        map.setMaxBounds(division.bounds.pad(1.5));
+        state.fitted = true;
+        if (state.streets.length) renderAll();
+      } catch (err) {
+        console.warn('Division boundary not loaded', err);
+      }
+    }
+    loadDivision();
     let youMarker = null;
 
     const pinIcon = (status) => L.divIcon({ html: `<div class="pin ${status}"></div>`, className: '', iconSize: [28, 28], iconAnchor: [14, 28], popupAnchor: [0, -26] });
@@ -510,13 +570,22 @@
         </div>`;
     }
 
+    const lineColor = { recent: '#22c55e', visited: '#3b82f6', unvisited: '#a1a1aa' };
     function renderMap() {
       cluster.clearLayers();
+      linesLayer.clearLayers();
       state.markersById.clear();
       const layers = [];
       for (const street of state.streets) {
         const pt = streetPoint(street);
         if (!pt) continue;
+        const lines = (street.geometry?.coordinates || []).filter(l => l.length > 1).map(toLatLngs);
+        if (lines.length && street.length_m > 20) {
+          const st = streetStatus(street);
+          L.polyline(lines, { color: lineColor[st], weight: st === 'unvisited' ? 3 : 5, opacity: st === 'unvisited' ? 0.45 : 0.9 })
+            .bindPopup(() => popupHtml(street), { className: 'lwi-popup' })
+            .addTo(linesLayer);
+        }
         const marker = L.marker(pt, { icon: pinIcon(streetStatus(street)), title: street.name });
         marker.bindPopup(() => popupHtml(street), { className: 'lwi-popup', closeButton: true });
         state.markersById.set(String(street.id), marker);
@@ -564,7 +633,7 @@
       try {
         state.streets = await api('/streets');
         renderAll();
-        if (!quiet && !state.fitted) {
+        if (!quiet && !state.fitted && !division.outer) {
           const pts = state.streets.map(streetPoint).filter(Boolean);
           if (pts.length) map.fitBounds(pts, { padding: [40, 40], maxZoom: 16 });
           state.fitted = true;
@@ -588,19 +657,24 @@
     }
 
     function renderStats() {
-      const s = state.streets;
+      const all = state.streets;
+      const s = all.filter(x => inDivision(streetPoint(x)));
       const visited = s.filter(x => x.visits?.length).length;
       const allVisits = s.flatMap(x => x.visits || []);
       const pct = s.length ? Math.round((visited / s.length) * 100) : 0;
+      $('coverageText').textContent = division.outer
+        ? `${fmt(visited)} of ${fmt(s.length)} streets in Kaneshie Division visited${all.length > s.length ? ` · ${all.length - s.length} outside` : ''}`
+        : `${fmt(visited)} of ${fmt(s.length)} streets visited`;
       $('statStreets').textContent = fmt(s.length);
       $('statCoverage').textContent = `${pct}%`;
       $('statPeople').textContent = fmt(sum(allVisits, 'attendance'));
       $('statConverts').textContent = fmt(sum(allVisits, 'decisions'));
       $('coverageBar').style.width = `${pct}%`;
-      $('badgeCount').textContent = s.length;
-      document.querySelector('[data-count="all"]').textContent = s.length;
-      document.querySelector('[data-count="visited"]').textContent = visited;
-      document.querySelector('[data-count="unvisited"]').textContent = s.length - visited;
+      const allVisited = all.filter(x => x.visits?.length).length;
+      $('badgeCount').textContent = all.length;
+      document.querySelector('[data-count="all"]').textContent = all.length;
+      document.querySelector('[data-count="visited"]').textContent = allVisited;
+      document.querySelector('[data-count="unvisited"]').textContent = all.length - allVisited;
     }
 
     function filteredStreets() {
@@ -641,7 +715,7 @@
             <span class="w-2.5 h-2.5 rounded-full shrink-0 ${dot[st]}"></span>
             <div class="flex-1 min-w-0">
               <p class="text-sm font-medium truncate">${esc(s.name)}</p>
-              <p class="text-xs text-zinc-400 truncate">${esc(s.district)}${v.length ? ` · ${relDate(v[0].visit_date)}` : ' · Not visited'}${converts ? ` · <span class="text-emerald-400">${converts} convert${converts === 1 ? '' : 's'}</span>` : ''}</p>
+              <p class="text-xs text-zinc-400 truncate">${division.outer && !inDivision(streetPoint(s)) ? '<span class="text-amber-400">Outside division</span> · ' : ''}${esc(s.district)}${v.length ? ` · ${relDate(v[0].visit_date)}` : ' · Not visited'}${converts ? ` · <span class="text-emerald-400">${converts} convert${converts === 1 ? '' : 's'}</span>` : ''}</p>
             </div>
             <button data-log="${esc(s.id)}" class="shrink-0 text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-zinc-800 group-hover:bg-blue-600 hover:!bg-blue-700 transition">Log</button>
           </div>`;
@@ -757,7 +831,9 @@
     });
 
     let confirmHandler = null;
-    function confirmAction(title, text, handler) {
+    function confirmAction(title, text, handler, { okLabel = 'Delete', danger = true } = {}) {
+      $('confirmOk').textContent = okLabel;
+      $('confirmOk').className = `btn flex-1 text-white ${danger ? 'bg-red-600 hover:bg-red-700' : 'btn-primary'}`;
       $('confirmTitle').textContent = title;
       $('confirmText').textContent = text;
       confirmHandler = handler;
@@ -798,6 +874,7 @@
           addMap = L.map('addMap', { zoomControl: true });
           L.tileLayer(TILE_URL, { attribution: TILE_ATTR, maxZoom: 20, subdomains: 'abcd' }).addTo(addMap);
           addMap.on('click', (e) => setAddPoint(e.latlng.lat, e.latlng.lng));
+          drawDivision(addMap, { mask: false });
         }
         if (addMarker) { addMarker.remove(); addMarker = null; }
         addMap.setView(map.getCenter(), Math.max(map.getZoom(), 15));
@@ -811,7 +888,10 @@
         addMarker = L.marker([lat, lng], { draggable: true, icon: pinIcon('new') }).addTo(addMap);
         addMarker.on('dragend', () => { const p = addMarker.getLatLng(); setAddPoint(p.lat, p.lng); });
       } else addMarker.setLatLng([lat, lng]);
-      $('coordsText').textContent = `📍 ${lat.toFixed(5)}, ${lng.toFixed(5)} · drag the pin to adjust`;
+      const inside = inDivision([lat, lng]);
+      $('coordsText').innerHTML = `📍 ${lat.toFixed(5)}, ${lng.toFixed(5)} · drag the pin to adjust${inside ? '' : ' · <span class="text-amber-400 font-medium">Outside Kaneshie Division</span>'}`;
+      const d = districtAt([lat, lng]);
+      if (d) $('newStreetDistrict').value = d;
       if (geocode) reverseGeocode(lat, lng);
     }
 
@@ -828,7 +908,7 @@
         const street = a.road || a.pedestrian || a.footway || a.residential || a.neighbourhood;
         const district = a.suburb || a.neighbourhood || a.city_district || a.quarter || a.town || a.city;
         if (street) nameEl.value = street;
-        if (district) distEl.value = district;
+        if (district && !districtAt([lat, lng])) distEl.value = district;
         if (!street) nameEl.focus();
       } catch {
         /* user can type it in */
@@ -912,6 +992,53 @@
         setBusy(btn, false);
       }
     });
+
+    // ---------- Import all streets in the division (admin) ----------
+    const OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
+    const metres = (line) => line.reduce((t, p, i) => i ? t + map.distance([line[i - 1][1], line[i - 1][0]], [p[1], p[0]]) : 0, 0);
+
+    async function fetchDivisionStreets() {
+      const poly = division.outer.map(([lng, lat]) => `${lat} ${lng}`).join(' ');
+      const query = `[out:json][timeout:90];way["highway"~"^(trunk|primary|secondary|tertiary|unclassified|residential|living_street|pedestrian|service)$"]["name"](poly:"${poly}");out tags geom;`;
+      let lastErr;
+      for (const url of OVERPASS) {
+        try {
+          const r = await fetch(url, { method: 'POST', body: new URLSearchParams({ data: query }) });
+          if (r.ok) return (await r.json()).elements || [];
+          lastErr = new Error(`Map server busy (${r.status})`);
+        } catch (e) { lastErr = e; }
+      }
+      throw new Error(lastErr?.message?.includes('busy') ? lastErr.message + '. Try again in a minute.' : 'Could not reach the OpenStreetMap server.');
+    }
+
+    $('importBtn').onclick = () => {
+      if (!division.outer) { toast('Division boundary not loaded yet', 'error'); return; }
+      confirmAction('Load all streets in Kaneshie Division?',
+        'Every named street inside the division boundary will be added from OpenStreetMap. Streets you already have are skipped. This can take up to a minute.',
+        async () => {
+          const ways = await fetchDivisionStreets();
+          const groups = new Map();
+          for (const w of ways) {
+            if (!w.geometry?.length) continue;
+            const line = w.geometry.map(g => [g.lon, g.lat]);
+            const mid = line[Math.floor(line.length / 2)];
+            const district = districtAt([mid[1], mid[0]]) || 'Kaneshie';
+            const key = `${w.tags.name.trim().toLowerCase()}|${district}`;
+            const g = groups.get(key) || { name: w.tags.name.trim(), district, osm_ids: [], coordinates: [], length_m: 0 };
+            g.osm_ids.push(w.id); g.coordinates.push(line); g.length_m += metres(line);
+            groups.set(key, g);
+          }
+          const streets = [...groups.values()].map(g => ({ name: g.name, district: g.district, osm_ids: g.osm_ids, length_m: Math.round(g.length_m), geometry: { type: 'MultiLineString', coordinates: g.coordinates } }));
+          if (!streets.length) throw new Error('No named streets found inside the boundary.');
+          let added = 0, skipped = 0;
+          for (let i = 0; i < streets.length; i += 150) {
+            const res = await api('/streets/import', { method: 'POST', body: JSON.stringify({ streets: streets.slice(i, i + 150) }) });
+            added += res.added; skipped += res.skipped;
+          }
+          toast(`Added ${added} streets${skipped ? ` · ${skipped} already existed` : ''}`);
+          await loadStreets({ quiet: true });
+        }, { okLabel: 'Load streets', danger: false });
+    };
 
     // ---------- Boot ----------
     $('loginEmail').value = store.get('lwi_last_email') || '';

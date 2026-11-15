@@ -153,6 +153,42 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(201).json(result.rows[0]);
       }
 
+      if (method === 'POST' && id === 'import') {
+        if (auth.role !== 'admin') throw new HttpError(403, 'Only admins can import streets');
+        const input = Array.isArray(req.body?.streets) ? req.body.streets.slice(0, 500) : [];
+        const isLine = (l: unknown) => Array.isArray(l) && l.length > 1 && l.every(p => Array.isArray(p) && p.length === 2 && p.every(Number.isFinite));
+        const rows = input.filter((s: any) =>
+          typeof s?.name === 'string' && s.name.trim() && typeof s?.district === 'string' && s.district.trim() &&
+          s.geometry?.type === 'MultiLineString' && Array.isArray(s.geometry.coordinates) && s.geometry.coordinates.length && s.geometry.coordinates.every(isLine)
+        );
+
+        const existing = await pool.query('SELECT lower(name) AS name, lower(district) AS district FROM streets');
+        const seen = new Set(existing.rows.map(r => `${r.name}|${r.district}`));
+        const client = await pool.connect();
+        let added = 0;
+        try {
+          await client.query('BEGIN');
+          for (const s of rows) {
+            const key = `${s.name.trim().toLowerCase()}|${s.district.trim().toLowerCase()}`;
+            if (seen.has(key)) continue;
+            seen.add(key);
+            const osmIds = (Array.isArray(s.osm_ids) ? s.osm_ids : []).map(Number).filter(Number.isSafeInteger);
+            await client.query(
+              'INSERT INTO streets (osm_ids, name, district, geometry, length_m) VALUES ($1, $2, $3, $4, $5)',
+              [osmIds, s.name.trim().slice(0, 200), s.district.trim().slice(0, 200), JSON.stringify(s.geometry), Math.max(0, Number(s.length_m) || 0)]
+            );
+            added++;
+          }
+          await client.query('COMMIT');
+        } catch (err) {
+          await client.query('ROLLBACK');
+          throw err;
+        } finally {
+          client.release();
+        }
+        return res.status(201).json({ added, skipped: input.length - added });
+      }
+
       if (method === 'DELETE' && id) {
         if (auth.role !== 'admin') throw new HttpError(403, 'Only admins can delete streets');
         await pool.query('DELETE FROM visits WHERE street_id = $1', [id]);

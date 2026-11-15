@@ -6,7 +6,9 @@ A map-based outreach tracker for Living Waters Incorporated. Teams pin the stree
 
 - **Sign-in screen** with saved sessions (30 days)
 - **Live map** (dark theme) with clustered pins: green = visited in the last 30 days, blue = visited earlier, grey = not visited yet
-- **Dashboard stats**: streets, % reached, people reached, converts, with a coverage bar
+- **Kaneshie Division boundary** (Darkuman + Kaneshie districts) drawn on the map; everything outside is dimmed
+- **Dashboard stats** for the division: streets, % reached, people reached, converts, with a coverage bar. *Reached* = streets inside the division with at least one visit ÷ all streets inside the division
+- **Load all streets in the division** (admin): one click pulls every named street inside the boundary from OpenStreetMap, so the % is out of the real total
 - **Search, filter** (all / visited / not visited) and **sort** (A–Z, recent, needs visit, most converts)
 - **Street detail** with full visit history, totals, "show on map" and Google Maps directions
 - **Add streets** by tapping the map or using GPS; street name and district are filled in automatically
@@ -20,6 +22,7 @@ A map-based outreach tracker for Living Waters Incorporated. Teams pin the stree
 index.html          The whole frontend (vanilla JS + Leaflet)
 app.css             Prebuilt Tailwind CSS (regenerate with `npm run build:css`)
 api/index.ts        Vercel serverless API (/api/*)
+division.geojson    Kaneshie Division + Darkuman/Kaneshie district boundaries
 db/schema.sql       Database tables
 scripts/db-setup.mjs  Creates tables and user accounts
 ```
@@ -35,6 +38,11 @@ scripts/db-setup.mjs  Creates tables and user accounts
    Run the same command with `member` instead of `admin` to add team members (re-running it for an existing email resets that password).
 3. In Vercel, import this repo and set the environment variables `DATABASE_URL` and `JWT_SECRET` (see `.env.example`).
 4. Deploy. The frontend and API are served from the same domain — no URLs to configure.
+5. Sign in as admin and tap **Load all streets in Kaneshie Division** once.
+
+## Division boundary
+
+`division.geojson` was traced from the Ghana Police Service *Jurisdictional Map of Kaneshie Division* (2021) using the map's coordinate grid, so edges are accurate to roughly 50–100 m. To adjust it, edit the coordinates (`[longitude, latitude]`) in that file, e.g. at https://geojson.io.
 
 ## Local development
 
@@ -61,6 +69,7 @@ All endpoints except login need `Authorization: Bearer <token>`.
 | GET | `/api/auth/me` | Current user |
 | GET | `/api/streets` | All streets with their visits |
 | POST | `/api/streets` | `{ name, district, latitude, longitude }` |
+| POST | `/api/streets/import` | Admin only. `{ streets: [{ name, district, osm_ids, geometry, length_m }] }`, skips existing name+district |
 | DELETE | `/api/streets/:id` | Admin only |
 | POST | `/api/visits` | `{ street_id, visit_date, attendance, decisions, follow_ups, team_members[], notes }` |
 | DELETE | `/api/visits/:id` | Your own visits, or any as admin |
