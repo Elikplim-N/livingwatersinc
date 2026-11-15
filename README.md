@@ -40,6 +40,15 @@ scripts/db-setup.mjs  Creates tables and user accounts
 4. Deploy. The frontend and API are served from the same domain — no URLs to configure.
 5. Sign in as admin and tap **Load all streets in Kaneshie Division** once.
 
+## Start fresh (one admin, no data)
+
+Deletes every street, visit and account, creates any missing tables, and leaves a single admin login:
+
+```bash
+DATABASE_URL="postgresql://..." npm run db:reset -- admin@example.com "Admin Name" "a-strong-password"          # preview
+DATABASE_URL="postgresql://..." npm run db:reset -- admin@example.com "Admin Name" "a-strong-password" --yes    # do it
+```
+
 ## Division boundary
 
 `division.geojson` was traced from the Ghana Police Service *Jurisdictional Map of Kaneshie Division* (2021) using the map's coordinate grid, so edges are accurate to roughly 50–100 m. To adjust it, edit the coordinates (`[longitude, latitude]`) in that file, e.g. at https://geojson.io.
