@@ -82,7 +82,7 @@
           <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21s-7-7.5-7-12a7 7 0 1114 0c0 4.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>
         </div>
         <h1 class="text-2xl font-bold tracking-tight">LWI Street Tracker</h1>
-        <p class="text-sm text-zinc-400 mt-1">Living Waters Incorporated · Outreach</p>
+        <p class="text-sm text-zinc-400 mt-1">Living Waters Incorporated · Admin sign in</p>
       </div>
       <div class="bg-zinc-900/80 backdrop-blur border border-zinc-800 rounded-2xl p-6 space-y-4 shadow-2xl">
         <div>
@@ -538,7 +538,6 @@
         L.polygon([world, outer], { stroke: false, fillColor: '#000', fillOpacity: 0.18, interactive: false }).addTo(target);
       }
       for (const d of division.districts) {
-        L.polygon(toLatLngs(d.ring), { color: d.color, weight: 1.5, opacity: 0.7, dashArray: '6 6', fillColor: d.color, fillOpacity: 0.1, interactive: false }).addTo(target);
         if (mask) {
           const c = L.polygon(toLatLngs(d.ring)).getBounds().getCenter();
           L.marker(c, { interactive: false, icon: L.divIcon({ className: '', html: `<div style="transform:translate(-50%,-50%);font:700 11px Inter,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:${d.color};white-space:nowrap;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 6px #fff">${esc(d.name)}</div>` }) }).addTo(target);

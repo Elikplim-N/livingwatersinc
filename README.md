@@ -4,7 +4,7 @@ A map-based outreach tracker for Living Waters Incorporated. Teams pin the stree
 
 ## Features
 
-- **Sign-in screen** with saved sessions (30 days)
+- **Admin-only sign in** (email + password), stays signed in for 30 days
 - **Live map** (dark theme) with clustered pins: green = visited in the last 30 days, blue = visited earlier, grey = not visited yet
 - **Kaneshie Division boundary** (Darkuman + Kaneshie districts) drawn on the map; everything outside is dimmed
 - **Dashboard stats** for the division: streets, % reached, people reached, converts, with a coverage bar. *Reached* = streets inside the division with at least one visit ÷ all streets inside the division
@@ -35,10 +35,19 @@ scripts/db-setup.mjs  Creates tables and user accounts
    npm install
    DATABASE_URL="postgresql://..." npm run db:setup -- admin@example.com "Admin Name" "a-strong-password" admin
    ```
-   Run the same command with `member` instead of `admin` to add team members (re-running it for an existing email resets that password).
+   Only **admin** accounts can sign in. Run the command again to add another admin, or with an existing email to reset that password.
 3. In Vercel, import this repo and set the environment variables `DATABASE_URL` and `JWT_SECRET` (see `.env.example`).
 4. Deploy. The frontend and API are served from the same domain — no URLs to configure.
 5. Sign in as admin and tap **Load all streets in Kaneshie Division** once.
+
+## Start fresh (one admin, no data)
+
+Deletes every street, visit and account, creates any missing tables, and leaves a single admin login:
+
+```bash
+DATABASE_URL="postgresql://..." npm run db:reset -- admin@example.com "Admin Name" "a-strong-password"          # preview
+DATABASE_URL="postgresql://..." npm run db:reset -- admin@example.com "Admin Name" "a-strong-password" --yes    # do it
+```
 
 ## Division boundary
 
@@ -72,4 +81,4 @@ All endpoints except login need `Authorization: Bearer <token>`.
 | POST | `/api/streets/import` | Admin only. `{ streets: [{ name, district, osm_ids, geometry, length_m }] }`, skips existing name+district |
 | DELETE | `/api/streets/:id` | Admin only |
 | POST | `/api/visits` | `{ street_id, visit_date, attendance, decisions, follow_ups, team_members[], notes }` |
-| DELETE | `/api/visits/:id` | Your own visits, or any as admin |
+| DELETE | `/api/visits/:id` | |

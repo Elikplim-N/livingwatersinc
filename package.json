@@ -21,6 +21,7 @@
     "dev": "vercel dev",
     "db:setup": "node scripts/db-setup.mjs",
     "typecheck": "tsc --noEmit --skipLibCheck --module nodenext --moduleResolution nodenext --target es2022 --strict api/index.ts",
-    "build:css": "tailwindcss -c tailwind.config.cjs -i styles/tailwind.css -o app.css --minify"
+    "build:css": "tailwindcss -c tailwind.config.cjs -i styles/tailwind.css -o app.css --minify",
+    "db:reset": "node scripts/reset-db.mjs"
   }
 }

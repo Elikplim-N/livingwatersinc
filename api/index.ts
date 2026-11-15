@@ -35,10 +35,12 @@ function requireAuth(req: VercelRequest): AuthUser {
   const token = req.headers.authorization?.replace(/^Bearer\s+/i, '');
   if (!token) throw new HttpError(401, 'Please sign in');
   try {
-    return jwt.verify(token, JWT_SECRET) as AuthUser;
+    const auth = jwt.verify(token, JWT_SECRET) as AuthUser;
+    if (auth.role === 'admin') return auth;
   } catch {
     throw new HttpError(401, 'Your session has expired. Please sign in again.');
   }
+  throw new HttpError(401, 'Only admins can use this app.');
 }
 
 function toCount(value: unknown): number {
@@ -100,6 +102,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!user || !(await bcrypt.compare(String(password), user.password_hash))) {
         throw new HttpError(401, 'Incorrect email or password');
       }
+      if (user.role !== 'admin') throw new HttpError(403, 'Only admins can use this app.');
 
       const token = jwt.sign({ userId: user.id, email: user.email, role: user.role }, JWT_SECRET, {
         expiresIn: '30d'
