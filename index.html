@@ -2,598 +2,1072 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LWI — Street Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#09090b" />
+  <title>LWI Street Tracker</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%232563eb'/><path d='M16 6c-4 0-7 3-7 7 0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7z' fill='white'/><circle cx='16' cy='13' r='3' fill='%232563eb'/></svg>" />
 
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/app.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
 
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
-    #map { height: 100vh; width: 100%; z-index: 10; }
-    
-    .custom-popup .leaflet-popup-content-wrapper {
-      background: #09090b;
-      color: #ffffff;
-      border: 1px solid #27272a;
-      border-radius: 14px;
-      padding: 0;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-    }
-    .custom-popup .leaflet-popup-tip { background: #09090b; }
-    .custom-popup .leaflet-popup-content { margin: 14px 16px; line-height: 1.4; }
+    html, body { height: 100%; }
+    body { overscroll-behavior: none; }
+    #map { position: absolute; inset: 0; z-index: 0; background: #18181b; }
+    .leaflet-container { font-family: inherit; background: #18181b; }
+    .leaflet-control-zoom { border: none !important; box-shadow: 0 8px 24px rgba(0,0,0,.35) !important; }
+    .leaflet-control-zoom a { background: #18181b !important; color: #fff !important; border-color: #27272a !important; }
+    .leaflet-control-zoom a:hover { background: #27272a !important; }
+    .leaflet-control-attribution { background: rgba(9,9,11,.7) !important; color: #71717a !important; }
+    .leaflet-control-attribution a { color: #a1a1aa !important; }
 
-    .marker-cluster-small, .marker-cluster-medium, .marker-cluster-large {
-      background-color: rgba(9, 9, 11, 0.35);
-      border-radius: 50%;
-    }
-    .marker-cluster-small div, .marker-cluster-medium div, .marker-cluster-large div {
-      background-color: #09090b;
-      color: #ffffff;
-      font-weight: 700;
-      font-size: 11px;
-      border: 2px solid #3b82f6;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-      border-radius: 50%;
-    }
+    .lwi-popup .leaflet-popup-content-wrapper { background: #09090b; color: #fff; border: 1px solid #27272a; border-radius: 14px; box-shadow: 0 20px 40px rgba(0,0,0,.5); }
+    .lwi-popup .leaflet-popup-tip { background: #09090b; border: 1px solid #27272a; }
+    .lwi-popup .leaflet-popup-content { margin: 14px 16px; }
+    .lwi-popup a.leaflet-popup-close-button { color: #71717a; }
 
-    .street-marker {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 50%;
-      background-color: #09090b;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.45);
-      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-      cursor: pointer;
-      width: 40px;
-      height: 40px;
-      font-size: 20px;
-    }
-    .street-marker:hover {
-      transform: scale(1.25);
-      z-index: 1000 !important;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.6);
-    }
-    .street-marker.visited {
-      border: 2.5px solid #2563eb;
-      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.35), 0 3px 12px rgba(0,0,0,0.5);
-    }
-    .street-marker.unvisited {
-      border: 2px solid #ffffff;
-    }
+    .pin { width: 28px; height: 28px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); display: grid; place-items: center; box-shadow: 0 4px 12px rgba(0,0,0,.45); border: 2px solid #fff; transition: transform .15s; }
+    .pin::after { content: ''; width: 9px; height: 9px; border-radius: 50%; background: #fff; }
+    .pin.visited { background: #2563eb; }
+    .pin.recent { background: #16a34a; }
+    .pin.unvisited { background: #52525b; }
+    .pin.new { background: #f59e0b; }
+    .leaflet-marker-icon:hover .pin { transform: rotate(-45deg) scale(1.15); }
 
-    .modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.7);
-      z-index: 10000;
-      align-items: center;
-      justify-content: center;
-    }
-    .modal.active { display: flex; }
+    .marker-cluster { background: rgba(37,99,235,.25); border-radius: 50%; }
+    .marker-cluster div { width: 32px; height: 32px; margin: 4px; border-radius: 50%; background: #1d4ed8; color: #fff; font: 700 12px/32px Inter, sans-serif; text-align: center; border: 2px solid #fff; }
 
-    .add-marker {
-      background: #22c55e !important;
-      border: 3px solid white !important;
-    }
+    .you-dot { width: 16px; height: 16px; border-radius: 50%; background: #3b82f6; border: 3px solid #fff; box-shadow: 0 0 0 6px rgba(59,130,246,.3); }
 
-    .pulse {
-      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
+    .modal { display: none; }
+    .modal.active { display: flex; animation: fade .15s ease-out; }
+    .modal.active > .panel { animation: rise .2s ease-out; }
+    @keyframes fade { from { opacity: 0 } }
+    @keyframes rise { from { transform: translateY(16px); opacity: 0 } }
+
+    .toast { animation: rise .2s ease-out; }
+    .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg) } }
+
+    input[type=number]::-webkit-inner-spin-button { opacity: .4; }
+    input[type=date]::-webkit-calendar-picker-indicator { filter: invert(1); opacity: .6; }
+    .scroll-thin::-webkit-scrollbar { width: 6px; }
+    .scroll-thin::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
+
+    .field { width: 100%; padding: .625rem .75rem; background: #18181b; border: 1px solid #3f3f46; border-radius: .5rem; font-size: .875rem; color: #fff; outline: none; transition: border-color .15s, box-shadow .15s; }
+    .field:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.25); }
+    .field::placeholder { color: #71717a; }
+    .label { display: block; font-size: .75rem; font-weight: 500; color: #a1a1aa; margin-bottom: .375rem; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; font-weight: 600; font-size: .875rem; border-radius: .5rem; padding: .625rem 1rem; transition: background .15s, opacity .15s; }
+    .btn:disabled { opacity: .6; cursor: not-allowed; }
+    .btn-primary { background: #2563eb; color: #fff; } .btn-primary:hover:not(:disabled) { background: #1d4ed8; }
+    .btn-ghost { background: #27272a; color: #fff; } .btn-ghost:hover:not(:disabled) { background: #3f3f46; }
+    .btn-danger { background: transparent; color: #f87171; } .btn-danger:hover { background: rgba(248,113,113,.1); }
+    .chip { padding: .375rem .75rem; font-size: .75rem; font-weight: 500; border-radius: 9999px; color: #a1a1aa; transition: all .15s; white-space: nowrap; }
+    .chip.active { background: #fff; color: #09090b; }
+    .chip:not(.active):hover { color: #fff; background: #27272a; }
   </style>
 </head>
-<body class="bg-zinc-900 text-white antialiased">
+<body class="bg-zinc-950 text-white antialiased font-sans overflow-hidden">
 
-  <!-- Mobile Backdrop -->
-  <div 
-    id="mobileBackdrop" 
-    onclick="toggleSidebar(false)" 
-    class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-30 transition-opacity md:hidden"
-  ></div>
-
-  <!-- Sidebar (Collapsible) -->
-  <aside 
-    id="sidebar" 
-    class="fixed inset-y-0 left-0 z-40 w-[85vw] sm:w-80 md:w-96 bg-zinc-900 border-r border-zinc-800 flex flex-col shadow-xl md:shadow-sm transition-transform duration-300 ease-in-out -translate-x-full md:translate-x-0"
-  >
-    <div class="px-4 py-3 border-b border-zinc-800 bg-zinc-950/50 flex items-center justify-between">
-      <div>
-        <h1 class="text-sm font-bold uppercase tracking-wide">LWI</h1>
-        <p class="text-xs text-zinc-400 mt-1" id="statsCount">Loading...</p>
-      </div>
-      <!-- Close button (mobile) -->
-      <button 
-        onclick="toggleSidebar(false)" 
-        class="p-1.5 text-zinc-400 hover:text-white rounded-md hover:bg-zinc-800 md:hidden"
-      >
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-        </svg>
-      </button>
-    </div>
-
-    <div class="p-3 border-b border-zinc-800 bg-zinc-950/30 space-y-2">
-      <input 
-        type="text" 
-        id="searchInput" 
-        placeholder="Search streets..."
-        class="w-full px-3 py-1.5 text-xs bg-zinc-900 border border-zinc-700 rounded-md text-white placeholder-zinc-500 focus:outline-none focus:border-blue-600"
-      />
-      <button 
-        onclick="openAddModal()" 
-        class="w-full px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-md transition flex items-center justify-center gap-1.5"
-      >
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.5v15m7.5-7.5h-15"></path>
-        </svg>
-        Add Street
-      </button>
-    </div>
-
-    <div id="streetsList" class="flex-1 overflow-y-auto divide-y divide-zinc-800"></div>
-  </aside>
-
-  <!-- Map -->
-  <main class="flex-1 relative h-screen md:ml-96">
-    <div id="map"></div>
-    
-    <!-- Toggle Button (Floating) -->
-    <div class="absolute top-4 left-4 z-[1000] flex items-center gap-2">
-      <button 
-        id="sidebarToggle"
-        onclick="toggleSidebar()" 
-        class="bg-zinc-900/90 hover:bg-black text-white text-xs font-semibold px-3 py-2 rounded-lg backdrop-blur-md border border-zinc-700/60 shadow-lg flex items-center gap-2 transition"
-      >
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-        </svg>
-        <span class="hidden sm:inline">Streets</span>
-        <span id="badgeCount" class="bg-blue-600 text-white text-[10px] px-1.5 py-0.5 rounded-full font-mono">0</span>
-      </button>
-    </div>
-    
-    <!-- Legend -->
-    <div class="absolute bottom-4 left-4 z-[1000] bg-zinc-900/95 backdrop-blur border border-zinc-800 rounded-lg shadow-lg p-3">
-      <div class="flex items-center gap-3 text-xs">
-        <div class="flex items-center gap-1.5">
-          <div class="w-5 h-5 rounded-full bg-zinc-900 border-2 border-blue-600"></div>
-          <span>Visited</span>
+  <!-- ============ LOGIN ============ -->
+  <div id="loginScreen" class="hidden fixed inset-0 z-[3000] bg-zinc-950 flex items-center justify-center p-4">
+    <div class="absolute inset-0 opacity-40 pointer-events-none" style="background: radial-gradient(600px circle at 50% 0%, rgba(37,99,235,.35), transparent 70%);"></div>
+    <form id="loginForm" class="relative w-full max-w-sm">
+      <div class="flex flex-col items-center text-center mb-8">
+        <div class="w-14 h-14 rounded-2xl bg-blue-600 grid place-items-center shadow-lg shadow-blue-600/30 mb-4">
+          <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21s-7-7.5-7-12a7 7 0 1114 0c0 4.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>
         </div>
-        <div class="flex items-center gap-1.5">
-          <div class="w-5 h-5 rounded-full bg-zinc-900 border-2 border-white"></div>
-          <span>Unvisited</span>
-        </div>
+        <h1 class="text-2xl font-bold tracking-tight">LWI Street Tracker</h1>
+        <p class="text-sm text-zinc-400 mt-1">Living Waters Incorporated · Outreach</p>
       </div>
-    </div>
-  </main>
-
-  <!-- Add Street Modal -->
-  <div id="addModal" class="modal">
-    <div class="bg-zinc-900 rounded-lg border border-zinc-800 p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-      <h2 class="text-lg font-bold mb-2">Add Street</h2>
-      <p class="text-sm text-zinc-400 mb-4">
-        <span class="pulse">👆</span> <strong>Click on the map below</strong> where the street is, or drag the green marker.
-      </p>
-      
-      <div id="addMap" style="height: 350px; margin-bottom: 16px; border-radius: 8px; overflow: hidden; border: 2px solid #3b82f6;"></div>
-      
-      <form id="addStreetForm" class="space-y-3">
+      <div class="bg-zinc-900/80 backdrop-blur border border-zinc-800 rounded-2xl p-6 space-y-4 shadow-2xl">
         <div>
-          <label class="block text-xs font-medium mb-1">Street Name</label>
-          <input type="text" id="newStreetName" required class="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded text-sm" placeholder="Will be detected..." />
+          <label class="label" for="loginEmail">Email</label>
+          <input id="loginEmail" type="email" autocomplete="username" required class="field" placeholder="you@example.com" />
         </div>
         <div>
-          <label class="block text-xs font-medium mb-1">District</label>
-          <input type="text" id="newStreetDistrict" required class="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded text-sm" />
+          <label class="label" for="loginPassword">Password</label>
+          <div class="relative">
+            <input id="loginPassword" type="password" autocomplete="current-password" required class="field" style="padding-right:4rem" placeholder="••••••••" />
+            <button type="button" id="togglePw" class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-zinc-400 hover:text-white px-2 py-1">Show</button>
+          </div>
         </div>
-        <div class="grid grid-cols-2 gap-2 text-xs text-zinc-400">
-          <div>Lat: <span id="newLat">Click map</span></div>
-          <div>Lng: <span id="newLng">Click map</span></div>
+        <p id="loginError" class="hidden text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"></p>
+        <button id="loginBtn" type="submit" class="btn btn-primary w-full">Sign in</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ============ APP ============ -->
+  <div id="app" class="h-full flex">
+
+    <!-- Mobile backdrop -->
+    <div id="backdrop" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[1500] md:hidden"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed md:relative inset-y-0 left-0 z-[1600] w-[88vw] max-w-sm md:w-96 bg-zinc-900 border-r border-zinc-800 flex flex-col -translate-x-full md:translate-x-0 transition-transform duration-300">
+
+      <!-- Header -->
+      <header class="px-4 pt-4 pb-3 flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-blue-600 grid place-items-center shrink-0">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21s-7-7.5-7-12a7 7 0 1114 0c0 4.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>
         </div>
-        <div class="flex gap-2 mt-4">
-          <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm">Add Street</button>
-          <button type="button" onclick="closeAddModal()" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded text-sm">Cancel</button>
+        <div class="flex-1 min-w-0">
+          <h1 class="text-sm font-bold leading-tight">LWI Street Tracker</h1>
+          <p id="userName" class="text-xs text-zinc-400 truncate">&nbsp;</p>
+        </div>
+        <button id="logoutBtn" title="Sign out" class="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"/></svg>
+        </button>
+        <button data-close-sidebar class="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 md:hidden" title="Close">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </header>
+
+      <!-- LIST VIEW -->
+      <section id="listView" class="flex-1 flex flex-col min-h-0">
+        <!-- Stats -->
+        <div class="px-4 pb-3">
+          <div class="grid grid-cols-4 gap-2">
+            <div class="bg-zinc-800/60 rounded-xl p-2.5"><p class="text-[10px] uppercase tracking-wider text-zinc-400">Streets</p><p id="statStreets" class="text-lg font-bold mt-0.5">–</p></div>
+            <div class="bg-zinc-800/60 rounded-xl p-2.5"><p class="text-[10px] uppercase tracking-wider text-zinc-400">Reached</p><p id="statCoverage" class="text-lg font-bold mt-0.5">–</p></div>
+            <div class="bg-zinc-800/60 rounded-xl p-2.5"><p class="text-[10px] uppercase tracking-wider text-zinc-400">People</p><p id="statPeople" class="text-lg font-bold mt-0.5">–</p></div>
+            <div class="bg-zinc-800/60 rounded-xl p-2.5"><p class="text-[10px] uppercase tracking-wider text-zinc-400">Converts</p><p id="statConverts" class="text-lg font-bold mt-0.5 text-emerald-400">–</p></div>
+          </div>
+          <div class="mt-3 h-1.5 bg-zinc-800 rounded-full overflow-hidden"><div id="coverageBar" class="h-full bg-gradient-to-r from-blue-600 to-emerald-500 rounded-full transition-all duration-500" style="width:0%"></div></div>
+          <p id="coverageText" class="text-[11px] text-zinc-500 mt-1.5">&nbsp;</p>
+        </div>
+
+        <!-- Search & filters -->
+        <div class="px-4 pb-3 space-y-2.5 border-b border-zinc-800">
+          <div class="relative">
+            <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path stroke-linecap="round" d="M20 20l-3.5-3.5"/></svg>
+            <input id="searchInput" type="search" placeholder="Search streets or districts…" class="field py-2" style="padding-left:2.25rem" />
+          </div>
+          <div class="flex items-center gap-1 overflow-x-auto" id="filterChips">
+            <button class="chip active" data-filter="all">All <span data-count="all" class="opacity-60"></span></button>
+            <button class="chip" data-filter="unvisited">Not visited <span data-count="unvisited" class="opacity-60"></span></button>
+            <button class="chip" data-filter="visited">Visited <span data-count="visited" class="opacity-60"></span></button>
+            <select id="sortSelect" class="ml-auto bg-transparent text-xs text-zinc-400 hover:text-white focus:outline-none cursor-pointer">
+              <option value="name">A–Z</option>
+              <option value="recent">Recent</option>
+              <option value="oldest">Needs visit</option>
+              <option value="converts">Most converts</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- List -->
+        <div id="streetsList" class="flex-1 overflow-y-auto scroll-thin"></div>
+
+        <div class="p-3 border-t border-zinc-800 space-y-2">
+          <button id="importBtn" class="hidden btn btn-ghost w-full text-xs">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
+            Load all streets in Kaneshie Division
+          </button>
+          <button data-action="add-street" class="btn btn-primary w-full">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
+            Add street
+          </button>
+        </div>
+      </section>
+
+      <!-- DETAIL VIEW -->
+      <section id="detailView" class="hidden flex-1 flex flex-col min-h-0">
+        <div class="px-4 pb-3 border-b border-zinc-800">
+          <button id="backBtn" class="flex items-center gap-1 text-xs text-zinc-400 hover:text-white mb-3">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            All streets
+          </button>
+          <div class="flex items-start gap-3">
+            <div class="flex-1 min-w-0">
+              <h2 id="detailName" class="text-lg font-bold leading-tight"></h2>
+              <p id="detailDistrict" class="text-sm text-zinc-400"></p>
+            </div>
+            <span id="detailBadge" class="text-[11px] font-semibold px-2 py-1 rounded-full"></span>
+          </div>
+          <div class="grid grid-cols-3 gap-2 mt-4">
+            <div class="bg-zinc-800/60 rounded-xl p-2.5 text-center"><p id="detailVisits" class="text-lg font-bold">0</p><p class="text-[10px] uppercase tracking-wider text-zinc-400">Visits</p></div>
+            <div class="bg-zinc-800/60 rounded-xl p-2.5 text-center"><p id="detailPeople" class="text-lg font-bold">0</p><p class="text-[10px] uppercase tracking-wider text-zinc-400">People</p></div>
+            <div class="bg-zinc-800/60 rounded-xl p-2.5 text-center"><p id="detailConverts" class="text-lg font-bold text-emerald-400">0</p><p class="text-[10px] uppercase tracking-wider text-zinc-400">Converts</p></div>
+          </div>
+          <div class="flex gap-2 mt-3">
+            <button id="detailLogBtn" class="btn btn-primary flex-1">Log visit</button>
+            <button id="detailZoomBtn" class="btn btn-ghost" title="Show on map">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21s-7-7.5-7-12a7 7 0 1114 0c0 4.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>
+            </button>
+            <a id="detailDirections" target="_blank" rel="noopener" class="btn btn-ghost" title="Directions">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.27 3.13a59.77 59.77 0 0118.22 8.87A59.77 59.77 0 013.27 20.88L6 12zm0 0h7.5"/></svg>
+            </a>
+          </div>
+        </div>
+        <div class="flex-1 overflow-y-auto scroll-thin p-4">
+          <h3 class="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-3">Visit history</h3>
+          <div id="visitHistory" class="space-y-2"></div>
+          <button id="deleteStreetBtn" class="hidden btn btn-danger w-full mt-6 text-xs">Delete this street</button>
+        </div>
+      </section>
+    </aside>
+
+    <!-- Map area -->
+    <main class="relative flex-1 h-full">
+      <div id="map"></div>
+
+      <!-- Top bar (mobile) -->
+      <div class="absolute top-3 left-3 right-3 z-[1000] flex items-center gap-2 pointer-events-none" style="top: max(.75rem, env(safe-area-inset-top));">
+        <button id="sidebarToggle" class="pointer-events-auto md:hidden bg-zinc-900/95 backdrop-blur border border-zinc-700/60 shadow-lg rounded-xl px-3 py-2.5 flex items-center gap-2 text-sm font-semibold">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+          Streets
+          <span id="badgeCount" class="bg-blue-600 text-[11px] px-1.5 py-0.5 rounded-full">0</span>
+        </button>
+      </div>
+
+      <!-- Map style -->
+      <div class="absolute right-3 z-[1000] flex bg-zinc-900/95 backdrop-blur border border-zinc-700/60 rounded-xl shadow-lg p-1 gap-0.5" style="top: max(5.5rem, calc(env(safe-area-inset-top) + 5rem));" id="basemapSwitch">
+        <button class="chip" data-basemap="street">Street</button>
+        <button class="chip" data-basemap="satellite">Satellite</button>
+        <button class="chip" data-basemap="dark">Dark</button>
+      </div>
+
+      <!-- Floating actions -->
+      <div class="absolute right-3 z-[1000] flex flex-col gap-2" style="bottom: max(1.5rem, calc(env(safe-area-inset-bottom) + 1rem));">
+        <button id="fitDivisionBtn" title="Show whole division" class="w-12 h-12 rounded-full bg-zinc-900/95 border border-zinc-700/60 shadow-lg grid place-items-center hover:bg-zinc-800">
+          <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4h4M20 8V4h-4M4 16v4h4M20 16v4h-4"/><path stroke-linejoin="round" d="M8 9l4-2 4 3-1 6-5 1-3-4z"/></svg>
+        </button>
+        <button id="locateBtn" title="My location" class="w-12 h-12 rounded-full bg-zinc-900/95 border border-zinc-700/60 shadow-lg grid place-items-center hover:bg-zinc-800">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path stroke-linecap="round" d="M12 2v3m0 14v3M2 12h3m14 0h3"/><circle cx="12" cy="12" r="7"/></svg>
+        </button>
+        <button data-action="add-street" title="Add street" class="w-14 h-14 rounded-full bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/40 grid place-items-center">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
+        </button>
+      </div>
+
+      <!-- Legend -->
+      <div class="absolute left-3 z-[1000] bg-zinc-900/95 backdrop-blur border border-zinc-800 rounded-xl shadow-lg px-3 py-2 flex items-center gap-3 text-[11px] text-zinc-300" style="bottom: max(1.5rem, calc(env(safe-area-inset-bottom) + 1rem));">
+        <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full bg-emerald-600"></i>Last 30 days</span>
+        <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full bg-blue-600"></i>Visited</span>
+        <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full bg-zinc-500"></i>Not yet</span>
+        <span class="hidden sm:flex items-center gap-1.5"><i class="w-4 h-0.5 bg-amber-400"></i>Division</span>
+      </div>
+
+      <!-- Loading overlay -->
+      <div id="mapLoading" class="absolute inset-0 z-[1100] grid place-items-center bg-zinc-950/60 pointer-events-none">
+        <div class="flex items-center gap-3 bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-sm"><div class="spinner"></div>Loading streets…</div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ============ ADD STREET MODAL ============ -->
+  <div id="addModal" class="modal fixed inset-0 z-[2000] bg-black/70 backdrop-blur-sm items-end sm:items-center justify-center sm:p-4">
+    <div class="panel bg-zinc-900 border border-zinc-800 w-full sm:max-w-xl rounded-t-2xl sm:rounded-2xl max-h-[95vh] flex flex-col shadow-2xl">
+      <div class="px-5 pt-5 pb-3 flex items-start justify-between">
+        <div>
+          <h2 class="text-lg font-bold">Add a street</h2>
+          <p class="text-sm text-zinc-400 mt-0.5">Tap the map where the street is, or use your location.</p>
+        </div>
+        <button data-close class="p-2 -m-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M6 18L18 6M6 6l12 12"/></svg></button>
+      </div>
+      <div class="overflow-y-auto px-5 pb-5">
+        <div class="relative rounded-xl overflow-hidden border border-zinc-700">
+          <div id="addMap" class="h-64 sm:h-72"></div>
+          <button type="button" id="useLocationBtn" class="absolute top-2 right-2 z-[500] btn btn-ghost py-1.5 px-3 text-xs bg-zinc-900/95 border border-zinc-700 shadow">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="7"/></svg>
+            Use my location
+          </button>
+        </div>
+        <p id="coordsText" class="text-xs text-zinc-500 mt-2">No location selected yet</p>
+        <form id="addStreetForm" class="space-y-3 mt-3">
+          <div class="grid sm:grid-cols-2 gap-3">
+            <div>
+              <label class="label" for="newStreetName">Street name</label>
+              <input id="newStreetName" required maxlength="200" class="field" placeholder="e.g. Kaneshie Road" />
+            </div>
+            <div>
+              <label class="label" for="newStreetDistrict">District / area</label>
+              <input id="newStreetDistrict" required maxlength="200" class="field" placeholder="e.g. Kaneshie" />
+            </div>
+          </div>
+          <div class="flex gap-2 pt-2">
+            <button type="button" data-close class="btn btn-ghost">Cancel</button>
+            <button type="submit" id="addStreetSubmit" class="btn btn-primary flex-1">Add street</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ LOG VISIT MODAL ============ -->
+  <div id="visitModal" class="modal fixed inset-0 z-[2000] bg-black/70 backdrop-blur-sm items-end sm:items-center justify-center sm:p-4">
+    <div class="panel bg-zinc-900 border border-zinc-800 w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl max-h-[95vh] flex flex-col shadow-2xl">
+      <div class="px-5 pt-5 pb-3 flex items-start justify-between">
+        <div class="min-w-0">
+          <h2 class="text-lg font-bold">Log a visit</h2>
+          <p id="visitModalStreet" class="text-sm text-zinc-400 mt-0.5 truncate"></p>
+        </div>
+        <button data-close class="p-2 -m-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M6 18L18 6M6 6l12 12"/></svg></button>
+      </div>
+      <form id="visitForm" class="overflow-y-auto px-5 pb-5 space-y-3">
+        <div>
+          <label class="label" for="visitDate">Date</label>
+          <input type="date" id="visitDate" required class="field" />
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="label" for="visitAttendance">Reached</label>
+            <input type="number" inputmode="numeric" id="visitAttendance" min="0" placeholder="0" class="field text-center text-base font-semibold" />
+          </div>
+          <div>
+            <label class="label" for="visitConverts">Converts</label>
+            <input type="number" inputmode="numeric" id="visitConverts" min="0" placeholder="0" class="field text-center text-base font-semibold" />
+          </div>
+          <div>
+            <label class="label" for="visitFollowUps">Follow-ups</label>
+            <input type="number" inputmode="numeric" id="visitFollowUps" min="0" placeholder="0" class="field text-center text-base font-semibold" />
+          </div>
+        </div>
+        <div>
+          <label class="label" for="visitTeam">Team members <span class="text-zinc-500 font-normal">(comma separated)</span></label>
+          <input id="visitTeam" class="field" placeholder="e.g. Kofi, Ama, Yaw" />
+        </div>
+        <div>
+          <label class="label" for="visitNotes">Notes</label>
+          <textarea id="visitNotes" rows="3" maxlength="2000" class="field resize-none" placeholder="Prayer requests, contacts, anything to remember…"></textarea>
+        </div>
+        <p id="visitWarning" class="hidden text-xs text-amber-400"></p>
+        <div class="flex gap-2 pt-2">
+          <button type="button" data-close class="btn btn-ghost">Cancel</button>
+          <button type="submit" id="visitSubmit" class="btn btn-primary flex-1">Save visit</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- Log Visit Modal -->
-  <div id="visitModal" class="modal">
-    <div class="bg-zinc-900 rounded-lg border border-zinc-800 p-6 w-full max-w-md mx-4">
-      <h2 class="text-lg font-bold mb-4" id="visitModalTitle">Log Visit</h2>
-      <form id="visitForm" class="space-y-3">
-        <div>
-          <label class="block text-xs font-medium mb-1">Date Visited</label>
-          <input type="date" id="visitDate" required class="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded text-sm" />
-        </div>
-        <div>
-          <label class="block text-xs font-medium mb-1">Total Attendance</label>
-          <input type="number" id="visitAttendance" required min="0" class="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded text-sm" />
-        </div>
-        <div>
-          <label class="block text-xs font-medium mb-1">New Converts</label>
-          <input type="number" id="visitConverts" required min="0" class="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded text-sm" />
-        </div>
-        <div class="flex gap-2 mt-4">
-          <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm">Save Visit</button>
-          <button type="button" onclick="closeVisitModal()" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded text-sm">Cancel</button>
-        </div>
-      </form>
+  <!-- ============ CONFIRM ============ -->
+  <div id="confirmModal" class="modal fixed inset-0 z-[2500] bg-black/70 backdrop-blur-sm items-center justify-center p-4">
+    <div class="panel bg-zinc-900 border border-zinc-800 w-full max-w-sm rounded-2xl p-5 shadow-2xl">
+      <h2 id="confirmTitle" class="text-base font-bold"></h2>
+      <p id="confirmText" class="text-sm text-zinc-400 mt-1"></p>
+      <div class="flex gap-2 mt-5">
+        <button data-close class="btn btn-ghost flex-1">Cancel</button>
+        <button id="confirmOk" class="btn flex-1 text-white">Delete</button>
+      </div>
     </div>
   </div>
+
+  <!-- Toasts -->
+  <div id="toasts" class="fixed z-[4000] left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-none w-[calc(100%-2rem)] max-w-sm" style="top: max(1rem, env(safe-area-inset-top));"></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 
   <script>
-    // Same-origin serverless API on Vercel; local Express server during development
-    const API_URL = ['localhost', '127.0.0.1'].includes(window.location.hostname) && window.location.port !== '3000'
-      ? 'http://localhost:3000/api'
-      : '/api';
-    let TOKEN = localStorage.getItem('auth_token');
-    let allStreets = [];
-    let currentStreetId = null;
-    let addMapInstance = null;
-    let addMarker = null;
-    let newStreetCoords = { lat: 5.574, lng: -0.239 };
+  (() => {
+    const API_URL = '/api';
+    const DEFAULT_CENTER = [5.574, -0.239]; // Kaneshie, Accra
+    const RECENT_DAYS = 30;
+    const OSM_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
+    const BASEMAPS = {
+      street: { label: 'Street', url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', opts: { attribution: OSM_ATTR, maxZoom: 19, subdomains: 'abc' } },
+      dark: { label: 'Dark', url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', opts: { attribution: OSM_ATTR + ' &copy; <a href="https://carto.com/">CARTO</a>', maxZoom: 20, subdomains: 'abcd' } },
+      satellite: { label: 'Satellite', url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', opts: { attribution: 'Imagery &copy; Esri', maxZoom: 19 } }
+    };
+    const makeBase = (key) => L.tileLayer(BASEMAPS[key].url, BASEMAPS[key].opts);
 
-    const map = L.map('map').setView([5.574, -0.239], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap'
-    }).addTo(map);
+    const $ = (id) => document.getElementById(id);
+    const store = {
+      get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+      set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+      del(k) { try { localStorage.removeItem(k); } catch {} }
+    };
 
-    const markers = L.markerClusterGroup();
+    const state = {
+      token: store.get('auth_token'),
+      user: JSON.parse(store.get('auth_user') || 'null'),
+      streets: [],
+      filter: 'all',
+      sort: store.get('lwi_sort') || 'name',
+      selectedId: null,
+      visitStreetId: null,
+      markersById: new Map(),
+      lastLocation: null
+    };
 
-    // Sidebar toggle
-    function toggleSidebar(show) {
-      const sidebar = document.getElementById('sidebar');
-      const backdrop = document.getElementById('mobileBackdrop');
-      
-      if (show === undefined) {
-        show = sidebar.classList.contains('-translate-x-full');
-      }
-      
-      if (show) {
-        sidebar.classList.remove('-translate-x-full');
-        backdrop.classList.remove('hidden');
-      } else {
-        sidebar.classList.add('-translate-x-full');
-        backdrop.classList.add('hidden');
-      }
+    // ---------- Helpers ----------
+    const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+    const sum = (arr, key) => arr.reduce((t, v) => t + (Number(v[key]) || 0), 0);
+    const fmt = (n) => Number(n).toLocaleString();
+    const todayISO = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
+    const parseDate = (s) => { const [y, m, d] = String(s).slice(0, 10).split('-').map(Number); return new Date(y, m - 1, d); };
+    const daysAgo = (s) => Math.floor((new Date().setHours(0,0,0,0) - parseDate(s)) / 864e5);
+    const relDate = (s) => { const d = daysAgo(s); if (d <= 0) return 'Today'; if (d === 1) return 'Yesterday'; if (d < 7) return `${d} days ago`; if (d < 30) return `${Math.floor(d / 7)} wk ago`; if (d < 365) return `${Math.floor(d / 30)} mo ago`; return `${Math.floor(d / 365)} yr ago`; };
+    const longDate = (s) => parseDate(s).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+
+    function streetPoint(street) {
+      const line = street.geometry?.coordinates?.[0];
+      if (!line?.length) return null;
+      const [lng, lat] = line[Math.floor(line.length / 2)];
+      return Number.isFinite(lat) && Number.isFinite(lng) ? [lat, lng] : null;
+    }
+    function streetStatus(street) {
+      if (!street.visits?.length) return 'unvisited';
+      return daysAgo(street.visits[0].visit_date) <= RECENT_DAYS ? 'recent' : 'visited';
     }
 
-    function escapeHtml(value) {
-      return String(value ?? '').replace(/[&<>"']/g, c => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-      })[c]);
+    function toast(message, type = 'success') {
+      const colors = { success: 'border-emerald-500/40', error: 'border-red-500/40', info: 'border-zinc-700' };
+      const icons = { success: '<svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>', error: '<svg class="w-4 h-4 text-red-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 8v5m0 3h.01"/><circle cx="12" cy="12" r="9"/></svg>', info: '' };
+      const el = document.createElement('div');
+      el.className = `toast pointer-events-auto flex items-center gap-2.5 bg-zinc-900 border ${colors[type]} shadow-2xl rounded-xl px-4 py-3 text-sm w-full`;
+      el.innerHTML = `${icons[type]}<span class="flex-1">${esc(message)}</span>`;
+      $('toasts').appendChild(el);
+      setTimeout(() => { el.style.transition = 'opacity .3s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, type === 'error' ? 5000 : 2800);
     }
 
-    // Login
-    async function login() {
-      const email = prompt('Email:', 'admin@kaneshie.com');
-      if (email === null) {
-        document.getElementById('statsCount').textContent = 'Not signed in — reload to log in';
-        return;
-      }
-      const password = prompt('Password:') ?? '';
+    function setBusy(btn, busy, label) {
+      if (busy) { btn.dataset.label = btn.innerHTML; btn.innerHTML = `<div class="spinner"></div>${label || ''}`; btn.disabled = true; }
+      else { btn.innerHTML = btn.dataset.label || btn.innerHTML; btn.disabled = false; }
+    }
 
+    async function api(path, options = {}) {
+      let response;
       try {
-        const response = await fetch(`${API_URL}/auth/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password })
+        response = await fetch(API_URL + path, {
+          ...options,
+          headers: { 'Content-Type': 'application/json', ...(state.token ? { Authorization: `Bearer ${state.token}` } : {}), ...options.headers }
         });
-        const data = await response.json().catch(() => ({}));
-
-        if (response.ok && data.token) {
-          localStorage.setItem('auth_token', data.token);
-          TOKEN = data.token;
-          loadStreets();
-        } else {
-          alert(data.error || data.message || 'Login failed');
-          login();
-        }
-      } catch (error) {
-        console.error('Login error:', error);
-        document.getElementById('statsCount').textContent = 'Cannot reach server';
-        alert('Cannot reach the server. Check your connection and reload.');
+      } catch {
+        throw new Error('Cannot reach the server. Check your internet connection.');
       }
+      const data = await response.json().catch(() => ({}));
+      if (response.status === 401 && path !== '/auth/login') {
+        logout(data.error || 'Please sign in again.');
+        throw Object.assign(new Error(data.error || 'Session expired'), { handled: true });
+      }
+      if (!response.ok) throw new Error(data.error || `Request failed (${response.status})`);
+      return data;
     }
 
-    function handleAuthError(response) {
-      if (response.status === 401 || response.status === 403) {
-        localStorage.removeItem('auth_token');
-        TOKEN = null;
-        login();
-        return true;
-      }
-      return false;
+    // ---------- Auth ----------
+    function showLogin(message) {
+      $('loginScreen').classList.remove('hidden');
+      $('loginError').classList.toggle('hidden', !message);
+      $('loginError').textContent = message || '';
+      setTimeout(() => ($('loginEmail').value ? $('loginPassword') : $('loginEmail')).focus(), 50);
     }
 
-    if (!TOKEN) {
-      login();
-    } else {
+    function logout(message) {
+      state.token = null; state.user = null;
+      store.del('auth_token'); store.del('auth_user');
+      showLogin(message);
+    }
+
+    $('togglePw').onclick = () => {
+      const pw = $('loginPassword');
+      pw.type = pw.type === 'password' ? 'text' : 'password';
+      $('togglePw').textContent = pw.type === 'password' ? 'Show' : 'Hide';
+    };
+
+    $('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = $('loginBtn');
+      setBusy(btn, true, 'Signing in…');
+      $('loginError').classList.add('hidden');
+      try {
+        const data = await api('/auth/login', { method: 'POST', body: JSON.stringify({ email: $('loginEmail').value.trim(), password: $('loginPassword').value }) });
+        state.token = data.token; state.user = data.user;
+        store.set('auth_token', data.token); store.set('auth_user', JSON.stringify(data.user));
+        store.set('lwi_last_email', data.user.email);
+        $('loginPassword').value = '';
+        $('loginScreen').classList.add('hidden');
+        onSignedIn();
+      } catch (err) {
+        $('loginError').textContent = err.message;
+        $('loginError').classList.remove('hidden');
+      } finally {
+        setBusy(btn, false);
+      }
+    });
+
+    $('logoutBtn').onclick = () => logout();
+
+    function onSignedIn() {
+      const u = state.user;
+      $('importBtn').classList.toggle('hidden', u?.role !== 'admin');
+      $('userName').textContent = u ? `${u.full_name || u.email}${u.role === 'admin' ? ' · Admin' : ''}` : '';
       loadStreets();
     }
 
-    async function loadStreets() {
+    // ---------- Map ----------
+    const map = L.map('map', { zoomControl: false }).setView(DEFAULT_CENTER, 14);
+    L.control.zoom({ position: 'topright' }).addTo(map);
+    let baseKey = BASEMAPS[store.get('lwi_basemap')] ? store.get('lwi_basemap') : 'street';
+    let baseLayer = makeBase(baseKey).addTo(map);
+    function setBasemap(key) {
+      baseKey = key; store.set('lwi_basemap', key);
+      map.removeLayer(baseLayer); baseLayer = makeBase(key).addTo(map); baseLayer.bringToBack();
+      document.querySelectorAll('[data-basemap]').forEach(b => b.classList.toggle('active', b.dataset.basemap === key));
+    }
+    const cluster = L.markerClusterGroup({ showCoverageOnHover: false, maxClusterRadius: 45, spiderfyOnMaxZoom: true });
+    map.addLayer(cluster);
+    const linesLayer = L.layerGroup().addTo(map);
+
+    // ---------- Division boundary ----------
+    // Traced from the Ghana Police Service "Jurisdictional Map of Kaneshie Division" (division.geojson).
+    const division = { outer: null, districts: [], bounds: null };
+    function pointInRing([lat, lng], ring) {
+      let inside = false;
+      for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+        const [xi, yi] = ring[i], [xj, yj] = ring[j];
+        if ((yi > lat) !== (yj > lat) && lng < ((xj - xi) * (lat - yi)) / (yj - yi) + xi) inside = !inside;
+      }
+      return inside;
+    }
+    const inDivision = (pt) => !division.outer || (!!pt && pointInRing(pt, division.outer));
+    const districtAt = (pt) => division.districts.find(d => pointInRing(pt, d.ring))?.name || null;
+    const toLatLngs = (ring) => ring.map(([lng, lat]) => [lat, lng]);
+
+    function drawDivision(target, { mask = true } = {}) {
+      if (!division.outer) return;
+      const outer = toLatLngs(division.outer);
+      if (mask) {
+        const world = [[-90, -360], [-90, 360], [90, 360], [90, -360]];
+        L.polygon([world, outer], { stroke: false, fillColor: '#000', fillOpacity: 0.18, interactive: false }).addTo(target);
+      }
+      for (const d of division.districts) {
+        L.polygon(toLatLngs(d.ring), { color: d.color, weight: 1.5, opacity: 0.7, dashArray: '6 6', fillColor: d.color, fillOpacity: 0.1, interactive: false }).addTo(target);
+        if (mask) {
+          const c = L.polygon(toLatLngs(d.ring)).getBounds().getCenter();
+          L.marker(c, { interactive: false, icon: L.divIcon({ className: '', html: `<div style="transform:translate(-50%,-50%);font:700 11px Inter,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:${d.color};white-space:nowrap;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 6px #fff">${esc(d.name)}</div>` }) }).addTo(target);
+        }
+      }
+      L.polygon(outer, { color: '#000', weight: 7, opacity: 0.35, fill: false, interactive: false }).addTo(target);
+      L.polygon(outer, { color: '#f59e0b', weight: 4, opacity: 1, fill: false, interactive: false }).addTo(target);
+    }
+
+    async function loadDivision() {
       try {
-        const response = await fetch(`${API_URL}/streets`, {
-          headers: { 'Authorization': `Bearer ${TOKEN}` }
-        });
+        const gj = await (await fetch('/division.geojson')).json();
+        for (const f of gj.features) {
+          const ring = f.geometry.coordinates[0];
+          if (f.properties.kind === 'division') division.outer = ring;
+          else division.districts.push({ name: f.properties.name, color: f.properties.color, ring });
+        }
+        division.bounds = L.latLngBounds(toLatLngs(division.outer));
+        drawDivision(map);
+        map.fitBounds(division.bounds, { padding: [20, 20] });
+        state.fitted = true;
+        if (state.streets.length) renderAll();
+      } catch (err) {
+        console.warn('Division boundary not loaded', err);
+      }
+    }
+    loadDivision();
+    document.querySelectorAll('[data-basemap]').forEach(b => { b.classList.toggle('active', b.dataset.basemap === baseKey); b.onclick = () => setBasemap(b.dataset.basemap); });
+    $('fitDivisionBtn').onclick = () => division.bounds && map.flyToBounds(division.bounds, { padding: [20, 20], duration: 0.6 });
+    let youMarker = null;
 
-        if (handleAuthError(response)) return;
-        if (!response.ok) throw new Error(`Failed to load streets (${response.status})`);
+    const pinIcon = (status) => L.divIcon({ html: `<div class="pin ${status}"></div>`, className: '', iconSize: [28, 28], iconAnchor: [14, 28], popupAnchor: [0, -26] });
 
-        allStreets = await response.json();
-        const visited = allStreets.filter(s => s.visits && s.visits.length > 0).length;
-        document.getElementById('statsCount').textContent = `${allStreets.length} streets • ${visited} visited`;
-        document.getElementById('badgeCount').textContent = allStreets.length;
+    function popupHtml(street) {
+      const v = street.visits || [];
+      return `
+        <div style="min-width:200px">
+          <div style="font-weight:700;font-size:15px">${esc(street.name)}</div>
+          <div style="color:#a1a1aa;font-size:12px;margin-bottom:10px">${esc(street.district)}</div>
+          ${v.length ? `
+            <div style="display:flex;gap:12px;font-size:12px;margin-bottom:6px">
+              <span><b>${v.length}</b> <span style="color:#a1a1aa">visits</span></span>
+              <span><b>${fmt(sum(v, 'attendance'))}</b> <span style="color:#a1a1aa">people</span></span>
+              <span style="color:#34d399"><b>${fmt(sum(v, 'decisions'))}</b> converts</span>
+            </div>
+            <div style="color:#a1a1aa;font-size:12px;margin-bottom:12px">Last visit: ${relDate(v[0].visit_date)}</div>
+          ` : `<div style="color:#a1a1aa;font-size:12px;margin-bottom:12px">Not visited yet</div>`}
+          <div style="display:flex;gap:6px">
+            <button data-popup-log="${esc(street.id)}" style="flex:1;padding:8px;background:#2563eb;color:#fff;border:0;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">Log visit</button>
+            <button data-popup-open="${esc(street.id)}" style="padding:8px 12px;background:#27272a;color:#fff;border:0;border-radius:8px;font-size:13px;cursor:pointer">Details</button>
+          </div>
+        </div>`;
+    }
 
-        renderStreetsList();
-        renderMap();
-      } catch (error) {
-        console.error('Error:', error);
-        document.getElementById('statsCount').textContent = 'Failed to load streets';
+    const lineColor = { recent: '#22c55e', visited: '#3b82f6', unvisited: '#a1a1aa' };
+    function renderMap() {
+      cluster.clearLayers();
+      linesLayer.clearLayers();
+      state.markersById.clear();
+      const layers = [];
+      for (const street of state.streets) {
+        const pt = streetPoint(street);
+        if (!pt) continue;
+        const lines = (street.geometry?.coordinates || []).filter(l => l.length > 1).map(toLatLngs);
+        if (lines.length && street.length_m > 20) {
+          const st = streetStatus(street);
+          L.polyline(lines, { color: lineColor[st], weight: st === 'unvisited' ? 3 : 5, opacity: st === 'unvisited' ? 0.45 : 0.9 })
+            .bindPopup(() => popupHtml(street), { className: 'lwi-popup' })
+            .addTo(linesLayer);
+        }
+        const marker = L.marker(pt, { icon: pinIcon(streetStatus(street)), title: street.name });
+        marker.bindPopup(() => popupHtml(street), { className: 'lwi-popup', closeButton: true });
+        state.markersById.set(String(street.id), marker);
+        layers.push(marker);
+      }
+      cluster.addLayers(layers);
+    }
+
+    map.on('popupopen', (e) => {
+      const el = e.popup.getElement();
+      el.querySelector('[data-popup-log]')?.addEventListener('click', (ev) => { map.closePopup(); openVisitModal(ev.currentTarget.dataset.popupLog); });
+      el.querySelector('[data-popup-open]')?.addEventListener('click', (ev) => { map.closePopup(); showDetail(ev.currentTarget.dataset.popupOpen); toggleSidebar(true); });
+    });
+
+    function focusStreet(id, openPopup = true) {
+      const marker = state.markersById.get(String(id));
+      if (!marker) return;
+      cluster.zoomToShowLayer(marker, () => {
+        map.setView(marker.getLatLng(), Math.max(map.getZoom(), 17), { animate: true });
+        if (openPopup) marker.openPopup();
+      });
+    }
+
+    function locate(onFound) {
+      if (!navigator.geolocation) { toast('Location is not supported on this device', 'error'); return; }
+      const btn = $('locateBtn');
+      btn.classList.add('animate-pulse');
+      navigator.geolocation.getCurrentPosition((pos) => {
+        btn.classList.remove('animate-pulse');
+        const ll = [pos.coords.latitude, pos.coords.longitude];
+        state.lastLocation = ll;
+        if (youMarker) youMarker.setLatLng(ll);
+        else youMarker = L.marker(ll, { icon: L.divIcon({ html: '<div class="you-dot"></div>', className: '', iconSize: [16, 16] }), zIndexOffset: 1000, interactive: false }).addTo(map);
+        onFound(ll);
+      }, (err) => {
+        btn.classList.remove('animate-pulse');
+        toast(err.code === 1 ? 'Location permission denied. Enable it in your browser settings.' : 'Could not get your location. Try again.', 'error');
+      }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 });
+    }
+    $('locateBtn').onclick = () => locate((ll) => map.setView(ll, 17));
+
+    // ---------- Data ----------
+    async function loadStreets({ quiet = false } = {}) {
+      if (!quiet) $('mapLoading').classList.remove('hidden');
+      try {
+        state.streets = await api('/streets');
+        renderAll();
+        if (!quiet && !state.fitted && !division.outer) {
+          const pts = state.streets.map(streetPoint).filter(Boolean);
+          if (pts.length) map.fitBounds(pts, { padding: [40, 40], maxZoom: 16 });
+          state.fitted = true;
+        }
+      } catch (err) {
+        if (!err.handled) {
+          toast(err.message, 'error');
+          $('streetsList').innerHTML = `<div class="p-6 text-center text-sm text-zinc-400"><p>Couldn't load streets.</p><button id="retryBtn" class="btn btn-ghost mt-3 text-xs">Try again</button></div>`;
+          $('retryBtn').onclick = () => loadStreets();
+        }
+      } finally {
+        $('mapLoading').classList.add('hidden');
       }
     }
 
-    function renderStreetsList() {
-      const list = document.getElementById('streetsList');
-      const term = document.getElementById('searchInput').value.trim().toLowerCase();
-      const streets = term
-        ? allStreets.filter(s => `${s.name} ${s.district}`.toLowerCase().includes(term))
-        : allStreets;
-      list.innerHTML = streets.map(street => {
-        const hasVisits = street.visits && street.visits.length > 0;
-        const borderColor = hasVisits ? 'border-blue-600' : 'border-white';
-        const totalConverts = hasVisits ? street.visits.reduce((sum, v) => sum + (v.decisions || 0), 0) : 0;
+    function renderAll() {
+      renderStats();
+      renderList();
+      renderMap();
+      if (state.selectedId) showDetail(state.selectedId);
+    }
+
+    function renderStats() {
+      const all = state.streets;
+      const s = all.filter(x => inDivision(streetPoint(x)));
+      const visited = s.filter(x => x.visits?.length).length;
+      const allVisits = s.flatMap(x => x.visits || []);
+      const pct = s.length ? Math.round((visited / s.length) * 100) : 0;
+      $('coverageText').textContent = division.outer
+        ? `${fmt(visited)} of ${fmt(s.length)} streets in Kaneshie Division visited${all.length > s.length ? ` · ${all.length - s.length} outside` : ''}`
+        : `${fmt(visited)} of ${fmt(s.length)} streets visited`;
+      $('statStreets').textContent = fmt(s.length);
+      $('statCoverage').textContent = `${pct}%`;
+      $('statPeople').textContent = fmt(sum(allVisits, 'attendance'));
+      $('statConverts').textContent = fmt(sum(allVisits, 'decisions'));
+      $('coverageBar').style.width = `${pct}%`;
+      const allVisited = all.filter(x => x.visits?.length).length;
+      $('badgeCount').textContent = all.length;
+      document.querySelector('[data-count="all"]').textContent = all.length;
+      document.querySelector('[data-count="visited"]').textContent = allVisited;
+      document.querySelector('[data-count="unvisited"]').textContent = all.length - allVisited;
+    }
+
+    function filteredStreets() {
+      const term = $('searchInput').value.trim().toLowerCase();
+      let list = state.streets.filter(s => {
+        if (state.filter === 'visited' && !s.visits?.length) return false;
+        if (state.filter === 'unvisited' && s.visits?.length) return false;
+        return !term || `${s.name} ${s.district}`.toLowerCase().includes(term);
+      });
+      const last = (s) => s.visits?.[0]?.visit_date || '';
+      const sorters = {
+        name: (a, b) => a.name.localeCompare(b.name),
+        recent: (a, b) => last(b).localeCompare(last(a)) || a.name.localeCompare(b.name),
+        oldest: (a, b) => last(a).localeCompare(last(b)) || a.name.localeCompare(b.name),
+        converts: (a, b) => sum(b.visits || [], 'decisions') - sum(a.visits || [], 'decisions') || a.name.localeCompare(b.name)
+      };
+      return list.sort(sorters[state.sort] || sorters.name);
+    }
+
+    function renderList() {
+      const list = filteredStreets();
+      const el = $('streetsList');
+      if (!state.streets.length) {
+        el.innerHTML = `<div class="p-8 text-center"><div class="w-12 h-12 mx-auto rounded-full bg-zinc-800 grid place-items-center mb-3"><svg class="w-6 h-6 text-zinc-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21s-7-7.5-7-12a7 7 0 1114 0c0 4.5-7 12-7 12z"/></svg></div><p class="text-sm font-semibold">No streets yet</p><p class="text-xs text-zinc-400 mt-1">Add the first street your team will reach.</p></div>`;
+        return;
+      }
+      if (!list.length) {
+        el.innerHTML = `<div class="p-8 text-center text-sm text-zinc-400">No streets match your search.</div>`;
+        return;
+      }
+      const dot = { recent: 'bg-emerald-500', visited: 'bg-blue-500', unvisited: 'bg-zinc-600' };
+      el.innerHTML = list.map(s => {
+        const v = s.visits || [];
+        const st = streetStatus(s);
+        const converts = sum(v, 'decisions');
         return `
-          <div class="px-4 py-3 hover:bg-zinc-800/50 cursor-pointer transition" onclick="focusStreet('${street.id}')">
-            <div class="flex items-start gap-2">
-              <div class="w-6 h-6 rounded-full bg-zinc-900 border-2 ${borderColor} flex-shrink-0 mt-0.5"></div>
-              <div class="flex-1 min-w-0">
-                <h3 class="font-medium text-sm truncate">${escapeHtml(street.name)}</h3>
-                <p class="text-xs text-zinc-400">${escapeHtml(street.district)}</p>
-                ${hasVisits ? `<p class="text-xs text-green-400 mt-1">🙏 ${totalConverts} converts</p>` : ''}
-              </div>
-              <button onclick="event.stopPropagation(); openVisitModal('${street.id}')" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded">
-                Log
-              </button>
+          <div class="group flex items-center gap-3 px-4 py-3 hover:bg-zinc-800/50 cursor-pointer border-b border-zinc-800/60 ${String(state.selectedId) === String(s.id) ? 'bg-zinc-800/60' : ''}" data-street="${esc(s.id)}">
+            <span class="w-2.5 h-2.5 rounded-full shrink-0 ${dot[st]}"></span>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium truncate">${esc(s.name)}</p>
+              <p class="text-xs text-zinc-400 truncate">${division.outer && !inDivision(streetPoint(s)) ? '<span class="text-amber-400">Outside division</span> · ' : ''}${esc(s.district)}${v.length ? ` · ${relDate(v[0].visit_date)}` : ' · Not visited'}${converts ? ` · <span class="text-emerald-400">${converts} convert${converts === 1 ? '' : 's'}</span>` : ''}</p>
             </div>
-          </div>
-        `;
+            <button data-log="${esc(s.id)}" class="shrink-0 text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-zinc-800 group-hover:bg-blue-600 hover:!bg-blue-700 transition">Log</button>
+          </div>`;
       }).join('');
     }
 
-    function renderMap() {
-      markers.clearLayers();
-      
-      allStreets.forEach(street => {
-        const hasVisits = street.visits && street.visits.length > 0;
-        
-        if (street.geometry && street.geometry.coordinates && street.geometry.coordinates[0]) {
-          const coords = street.geometry.coordinates[0];
-          const midPoint = coords[Math.floor(coords.length / 2)];
-          const lat = midPoint[1];
-          const lng = midPoint[0];
+    $('streetsList').addEventListener('click', (e) => {
+      const log = e.target.closest('[data-log]');
+      if (log) { e.stopPropagation(); openVisitModal(log.dataset.log); return; }
+      const row = e.target.closest('[data-street]');
+      if (row) { showDetail(row.dataset.street); focusStreet(row.dataset.street, false); }
+    });
 
-          const markerClass = hasVisits ? 'visited' : 'unvisited';
-          const icon = L.divIcon({
-            html: `<div class="street-marker ${markerClass}">📍</div>`,
-            className: '',
-            iconSize: [40, 40]
-          });
+    let searchTimer;
+    $('searchInput').addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(renderList, 120); });
+    $('filterChips').addEventListener('click', (e) => {
+      const chip = e.target.closest('[data-filter]');
+      if (!chip) return;
+      state.filter = chip.dataset.filter;
+      document.querySelectorAll('[data-filter]').forEach(c => c.classList.toggle('active', c === chip));
+      renderList();
+    });
+    $('sortSelect').value = state.sort;
+    $('sortSelect').onchange = (e) => { state.sort = e.target.value; store.set('lwi_sort', state.sort); renderList(); };
 
-          const marker = L.marker([lat, lng], { icon });
-          
-          const totalAttendance = hasVisits ? street.visits.reduce((sum, v) => sum + (v.attendance || 0), 0) : 0;
-          const totalConverts = hasVisits ? street.visits.reduce((sum, v) => sum + (v.decisions || 0), 0) : 0;
+    // ---------- Detail ----------
+    function showDetail(id) {
+      const s = state.streets.find(x => String(x.id) === String(id));
+      if (!s) { hideDetail(); return; }
+      state.selectedId = s.id;
+      const v = s.visits || [];
+      const st = streetStatus(s);
+      $('listView').classList.add('hidden');
+      $('detailView').classList.remove('hidden');
+      $('detailName').textContent = s.name;
+      $('detailDistrict').textContent = s.district;
+      const badge = { recent: ['Recently visited', 'bg-emerald-500/15 text-emerald-400'], visited: ['Visited', 'bg-blue-500/15 text-blue-400'], unvisited: ['Not visited', 'bg-zinc-700 text-zinc-300'] }[st];
+      $('detailBadge').textContent = badge[0];
+      $('detailBadge').className = `text-[11px] font-semibold px-2 py-1 rounded-full shrink-0 ${badge[1]}`;
+      $('detailVisits').textContent = v.length;
+      $('detailPeople').textContent = fmt(sum(v, 'attendance'));
+      $('detailConverts').textContent = fmt(sum(v, 'decisions'));
+      const pt = streetPoint(s);
+      $('detailDirections').href = pt ? `https://www.google.com/maps/dir/?api=1&destination=${pt[0]},${pt[1]}` : '#';
+      $('deleteStreetBtn').classList.toggle('hidden', state.user?.role !== 'admin');
 
-          marker.bindPopup(`
-            <div style="min-width: 200px;">
-              <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 4px;">${escapeHtml(street.name)}</h3>
-              <p style="color: #a1a1aa; font-size: 13px; margin-bottom: 8px;">${escapeHtml(street.district)}</p>
-              ${hasVisits ? `
-                <div style="font-size: 13px; line-height: 1.6; margin-bottom: 12px;">
-                  <p>✅ ${street.visits.length} visit${street.visits.length > 1 ? 's' : ''}</p>
-                  <p>👥 ${totalAttendance} attendance</p>
-                  <p>🙏 ${totalConverts} converts</p>
-                </div>
-              ` : `
-                <p style="color: #a1a1aa; font-size: 13px; margin-bottom: 12px;">Not visited yet</p>
-              `}
-              <button onclick="openVisitModal('${street.id}')" style="width: 100%; padding: 8px; background: #2563eb; color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer;">
-                Log Visit
+      $('visitHistory').innerHTML = v.length ? v.map(visit => `
+        <div class="bg-zinc-800/40 border border-zinc-800 rounded-xl p-3">
+          <div class="flex items-center justify-between gap-2">
+            <p class="text-sm font-semibold">${esc(longDate(visit.visit_date))}</p>
+            <div class="flex items-center gap-1">
+              <span class="text-[11px] text-zinc-500">${relDate(visit.visit_date)}</span>
+              <button data-delete-visit="${esc(visit.id)}" title="Delete visit" class="p-1 rounded text-zinc-500 hover:text-red-400 hover:bg-red-500/10">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 7h12M9 7V4h6v3m-7 0l1 13h6l1-13"/></svg>
               </button>
             </div>
-          `, { className: 'custom-popup' });
+          </div>
+          <div class="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs">
+            <span><b>${fmt(visit.attendance || 0)}</b> <span class="text-zinc-400">reached</span></span>
+            <span class="text-emerald-400"><b>${fmt(visit.decisions || 0)}</b> converts</span>
+            ${visit.follow_ups ? `<span><b>${fmt(visit.follow_ups)}</b> <span class="text-zinc-400">follow-ups</span></span>` : ''}
+          </div>
+          ${visit.team_members?.length ? `<p class="text-xs text-zinc-400 mt-2">👥 ${esc(visit.team_members.join(', '))}</p>` : ''}
+          ${visit.notes ? `<p class="text-xs text-zinc-300 mt-2 whitespace-pre-wrap">${esc(visit.notes)}</p>` : ''}
+        </div>`).join('')
+        : `<div class="text-center py-8 text-sm text-zinc-400 border border-dashed border-zinc-800 rounded-xl">No visits logged yet.<br><span class="text-xs">Tap <b>Log visit</b> after your outreach.</span></div>`;
+      renderList();
+    }
 
-          markers.addLayer(marker);
-        }
+    function hideDetail() {
+      state.selectedId = null;
+      $('detailView').classList.add('hidden');
+      $('listView').classList.remove('hidden');
+      renderList();
+    }
+
+    $('backBtn').onclick = hideDetail;
+    $('detailLogBtn').onclick = () => openVisitModal(state.selectedId);
+    $('detailZoomBtn').onclick = () => { focusStreet(state.selectedId); toggleSidebar(false); };
+
+    $('visitHistory').addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-delete-visit]');
+      if (!btn) return;
+      confirmAction('Delete this visit?', 'This removes the visit and its numbers. This cannot be undone.', async () => {
+        await api(`/visits/${encodeURIComponent(btn.dataset.deleteVisit)}`, { method: 'DELETE' });
+        toast('Visit deleted');
+        await loadStreets({ quiet: true });
       });
+    });
 
-      map.addLayer(markers);
-    }
+    $('deleteStreetBtn').onclick = () => {
+      const s = state.streets.find(x => String(x.id) === String(state.selectedId));
+      if (!s) return;
+      confirmAction(`Delete "${s.name}"?`, 'The street and all of its visits will be permanently removed.', async () => {
+        await api(`/streets/${encodeURIComponent(s.id)}`, { method: 'DELETE' });
+        toast('Street deleted');
+        hideDetail();
+        await loadStreets({ quiet: true });
+      });
+    };
 
-    function focusStreet(streetId) {
-      const street = allStreets.find(s => s.id === streetId);
-      if (street && street.geometry && street.geometry.coordinates[0]) {
-        const coords = street.geometry.coordinates[0];
-        const midPoint = coords[Math.floor(coords.length / 2)];
-        map.setView([midPoint[1], midPoint[0]], 16);
-        toggleSidebar(false); // Close sidebar on mobile
-      }
+    // ---------- Modals ----------
+    function openModal(id) { $(id).classList.add('active'); }
+    function closeModal(id) { $(id).classList.remove('active'); }
+    document.querySelectorAll('.modal').forEach(m => {
+      m.addEventListener('click', (e) => { if (e.target === m || e.target.closest('[data-close]')) closeModal(m.id); });
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      const open = [...document.querySelectorAll('.modal.active')].pop();
+      if (open) closeModal(open.id);
+      else if (state.selectedId) hideDetail();
+    });
+
+    let confirmHandler = null;
+    function confirmAction(title, text, handler, { okLabel = 'Delete', danger = true } = {}) {
+      $('confirmOk').textContent = okLabel;
+      $('confirmOk').className = `btn flex-1 text-white ${danger ? 'bg-red-600 hover:bg-red-700' : 'btn-primary'}`;
+      $('confirmTitle').textContent = title;
+      $('confirmText').textContent = text;
+      confirmHandler = handler;
+      openModal('confirmModal');
     }
+    $('confirmOk').onclick = async () => {
+      const btn = $('confirmOk');
+      setBusy(btn, true);
+      try { await confirmHandler?.(); closeModal('confirmModal'); }
+      catch (err) { if (!err.handled) toast(err.message, 'error'); }
+      finally { setBusy(btn, false); }
+    };
+
+    // ---------- Sidebar ----------
+    function toggleSidebar(show) {
+      const sb = $('sidebar');
+      if (show === undefined) show = sb.classList.contains('-translate-x-full');
+      sb.classList.toggle('-translate-x-full', !show);
+      $('backdrop').classList.toggle('hidden', !show);
+    }
+    $('sidebarToggle').onclick = () => toggleSidebar(true);
+    $('backdrop').onclick = () => toggleSidebar(false);
+    document.querySelector('[data-close-sidebar]').onclick = () => toggleSidebar(false);
+
+    // ---------- Add street ----------
+    let addMap = null, addMarker = null, addCoords = null, geocodeSeq = 0;
+
+    document.querySelectorAll('[data-action="add-street"]').forEach(b => b.onclick = openAddModal);
 
     function openAddModal() {
-      document.getElementById('addModal').classList.add('active');
-      
-      setTimeout(() => {
-        if (!addMapInstance) {
-          addMapInstance = L.map('addMap').setView([5.574, -0.239], 14);
-          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(addMapInstance);
-          
-          addMapInstance.on('click', function(e) {
-            const lat = e.latlng.lat;
-            const lng = e.latlng.lng;
-            newStreetCoords = { lat, lng };
-            
-            if (addMarker) {
-              addMarker.setLatLng([lat, lng]);
-            } else {
-              addMarker = L.marker([lat, lng], { 
-                draggable: true,
-                icon: L.divIcon({
-                  html: '<div class="street-marker add-marker">📍</div>',
-                  className: '',
-                  iconSize: [40, 40]
-                })
-              }).addTo(addMapInstance);
-              
-              addMarker.on('dragend', function(e) {
-                const pos = e.target.getLatLng();
-                newStreetCoords = { lat: pos.lat, lng: pos.lng };
-                updateAddressFromCoords(pos.lat, pos.lng);
-              });
-            }
-            
-            updateAddressFromCoords(lat, lng);
-          });
-          
-          if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition((position) => {
-              const lat = position.coords.latitude;
-              const lng = position.coords.longitude;
-              addMapInstance.setView([lat, lng], 16);
-            });
-          }
-        } else {
-          addMapInstance.invalidateSize();
+      toggleSidebar(false);
+      addCoords = null;
+      $('addStreetForm').reset();
+      $('coordsText').textContent = 'No location selected yet';
+      openModal('addModal');
+      requestAnimationFrame(() => {
+        if (!addMap) {
+          addMap = L.map('addMap', { zoomControl: true });
+          makeBase(baseKey).addTo(addMap);
+          addMap.on('click', (e) => setAddPoint(e.latlng.lat, e.latlng.lng));
+          drawDivision(addMap, { mask: false });
         }
-      }, 100);
+        if (addMarker) { addMarker.remove(); addMarker = null; }
+        addMap.setView(map.getCenter(), Math.max(map.getZoom(), 15));
+        addMap.invalidateSize();
+      });
     }
 
-    async function updateAddressFromCoords(lat, lng) {
-      document.getElementById('newLat').textContent = lat.toFixed(6);
-      document.getElementById('newLng').textContent = lng.toFixed(6);
-      
-      try {
-        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
-        const data = await response.json();
-        
-        const street = data.address?.road || data.address?.suburb || 'Unknown Street';
-        const district = data.address?.suburb || data.address?.city_district || 'Kaneshie';
-        
-        document.getElementById('newStreetName').value = street;
-        document.getElementById('newStreetDistrict').value = district;
-      } catch (error) {
-        console.error('Geocoding error:', error);
-      }
-    }
-
-    function closeAddModal() {
-      document.getElementById('addModal').classList.remove('active');
-    }
-
-    function openVisitModal(streetId) {
-      currentStreetId = streetId;
-      const street = allStreets.find(s => s.id === streetId);
-      document.getElementById('visitModalTitle').textContent = `Log Visit - ${street?.name || ''}`;
-      document.getElementById('visitModal').classList.add('active');
-      document.getElementById('visitDate').value = new Date().toISOString().split('T')[0];
-    }
-
-    function closeVisitModal() {
-      document.getElementById('visitModal').classList.remove('active');
-      currentStreetId = null;
-    }
-
-    document.getElementById('searchInput').addEventListener('input', renderStreetsList);
-
-    document.getElementById('addStreetForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-
+    function setAddPoint(lat, lng, { geocode = true } = {}) {
+      addCoords = { lat, lng };
       if (!addMarker) {
-        alert('Click on the map to set the street location first.');
-        return;
-      }
+        addMarker = L.marker([lat, lng], { draggable: true, icon: pinIcon('new') }).addTo(addMap);
+        addMarker.on('dragend', () => { const p = addMarker.getLatLng(); setAddPoint(p.lat, p.lng); });
+      } else addMarker.setLatLng([lat, lng]);
+      const inside = inDivision([lat, lng]);
+      $('coordsText').innerHTML = `📍 ${lat.toFixed(5)}, ${lng.toFixed(5)} · drag the pin to adjust${inside ? '' : ' · <span class="text-amber-400 font-medium">Outside Kaneshie Division</span>'}`;
+      const d = districtAt([lat, lng]);
+      if (d) $('newStreetDistrict').value = d;
+      if (geocode) reverseGeocode(lat, lng);
+    }
 
+    async function reverseGeocode(lat, lng) {
+      const seq = ++geocodeSeq;
+      const nameEl = $('newStreetName'), distEl = $('newStreetDistrict');
+      const prevPh = nameEl.placeholder;
+      nameEl.placeholder = 'Looking up street name…';
       try {
-        const response = await fetch(`${API_URL}/streets`, {
+        const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=17&addressdetails=1`, { headers: { 'Accept-Language': 'en' } });
+        const d = await r.json();
+        if (seq !== geocodeSeq) return;
+        const a = d.address || {};
+        const street = a.road || a.pedestrian || a.footway || a.residential || a.neighbourhood;
+        const district = a.suburb || a.neighbourhood || a.city_district || a.quarter || a.town || a.city;
+        if (street) nameEl.value = street;
+        if (district && !districtAt([lat, lng])) distEl.value = district;
+        if (!street) nameEl.focus();
+      } catch {
+        /* user can type it in */
+      } finally {
+        nameEl.placeholder = prevPh;
+      }
+    }
+
+    $('useLocationBtn').onclick = () => locate((ll) => { addMap.setView(ll, 18); setAddPoint(ll[0], ll[1]); });
+
+    $('addStreetForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!addCoords) { toast('Tap the map to choose where the street is', 'error'); return; }
+      const name = $('newStreetName').value.trim();
+      const dup = state.streets.find(s => s.name.toLowerCase() === name.toLowerCase() && s.district.toLowerCase() === $('newStreetDistrict').value.trim().toLowerCase());
+      if (dup && !confirm(`"${dup.name}" in ${dup.district} already exists. Add it anyway?`)) return;
+      const btn = $('addStreetSubmit');
+      setBusy(btn, true, 'Adding…');
+      try {
+        const street = await api('/streets', { method: 'POST', body: JSON.stringify({ name, district: $('newStreetDistrict').value.trim(), latitude: addCoords.lat, longitude: addCoords.lng }) });
+        closeModal('addModal');
+        toast(`${street.name} added`);
+        await loadStreets({ quiet: true });
+        showDetail(street.id);
+        focusStreet(street.id);
+      } catch (err) {
+        if (!err.handled) toast(err.message, 'error');
+      } finally {
+        setBusy(btn, false);
+      }
+    });
+
+    // ---------- Log visit ----------
+    function openVisitModal(id) {
+      const s = state.streets.find(x => String(x.id) === String(id));
+      if (!s) return;
+      state.visitStreetId = s.id;
+      if (window.innerWidth < 768) toggleSidebar(false);
+      $('visitForm').reset();
+      $('visitModalStreet').textContent = `${s.name} · ${s.district}`;
+      $('visitDate').value = todayISO();
+      $('visitDate').max = todayISO();
+      $('visitTeam').value = store.get('lwi_last_team') || '';
+      $('visitWarning').classList.add('hidden');
+      openModal('visitModal');
+      setTimeout(() => $('visitAttendance').focus(), 100);
+    }
+
+    const visitNum = (id) => Math.max(0, parseInt($(id).value, 10) || 0);
+    ['visitAttendance', 'visitConverts'].forEach(id => $(id).addEventListener('input', () => {
+      const bad = visitNum('visitConverts') > visitNum('visitAttendance') && $('visitAttendance').value !== '';
+      $('visitWarning').textContent = 'Converts is higher than people reached — double-check the numbers.';
+      $('visitWarning').classList.toggle('hidden', !bad);
+    }));
+
+    $('visitForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const team = $('visitTeam').value.split(',').map(t => t.trim()).filter(Boolean);
+      const btn = $('visitSubmit');
+      setBusy(btn, true, 'Saving…');
+      try {
+        await api('/visits', {
           method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${TOKEN}`,
-            'Content-Type': 'application/json'
-          },
           body: JSON.stringify({
-            name: document.getElementById('newStreetName').value,
-            district: document.getElementById('newStreetDistrict').value,
-            latitude: newStreetCoords.lat,
-            longitude: newStreetCoords.lng
+            street_id: state.visitStreetId,
+            visit_date: $('visitDate').value,
+            attendance: visitNum('visitAttendance'),
+            decisions: visitNum('visitConverts'),
+            follow_ups: visitNum('visitFollowUps'),
+            team_members: team,
+            notes: $('visitNotes').value.trim()
           })
         });
-
-        if (handleAuthError(response)) return;
-        if (response.ok) {
-          alert('✅ Street added successfully!');
-          closeAddModal();
-          loadStreets();
-        } else {
-          const data = await response.json().catch(() => ({}));
-          alert(data.error || data.message || 'Failed to add street');
-        }
-      } catch (error) {
-        alert('Error adding street');
+        store.set('lwi_last_team', team.join(', '));
+        closeModal('visitModal');
+        toast('Visit saved 🙏');
+        await loadStreets({ quiet: true });
+      } catch (err) {
+        if (!err.handled) toast(err.message, 'error');
+      } finally {
+        setBusy(btn, false);
       }
     });
 
-    document.getElementById('visitForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      
-      const visitData = {
-        street_id: currentStreetId,
-        visit_date: document.getElementById('visitDate').value,
-        team_members: [],
-        attendance: parseInt(document.getElementById('visitAttendance').value, 10) || 0,
-        decisions: parseInt(document.getElementById('visitConverts').value, 10) || 0,
-        follow_ups: 0,
-        notes: ''
-      };
+    // ---------- Import all streets in the division (admin) ----------
+    const OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
+    const metres = (line) => line.reduce((t, p, i) => i ? t + map.distance([line[i - 1][1], line[i - 1][0]], [p[1], p[0]]) : 0, 0);
 
-      try {
-        const response = await fetch(`${API_URL}/visits`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${TOKEN}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(visitData)
-        });
-
-        if (handleAuthError(response)) return;
-        if (response.ok) {
-          alert('✅ Visit logged!');
-          closeVisitModal();
-          loadStreets();
-        } else {
-          alert('Failed to log visit');
-        }
-      } catch (error) {
-        alert('Error logging visit');
+    async function fetchDivisionStreets() {
+      const poly = division.outer.map(([lng, lat]) => `${lat} ${lng}`).join(' ');
+      const query = `[out:json][timeout:90];way["highway"~"^(trunk|primary|secondary|tertiary|unclassified|residential|living_street|pedestrian|service)$"]["name"](poly:"${poly}");out tags geom;`;
+      let lastErr;
+      for (const url of OVERPASS) {
+        try {
+          const r = await fetch(url, { method: 'POST', body: new URLSearchParams({ data: query }) });
+          if (r.ok) return (await r.json()).elements || [];
+          lastErr = new Error(`Map server busy (${r.status})`);
+        } catch (e) { lastErr = e; }
       }
-    });
+      throw new Error(lastErr?.message?.includes('busy') ? lastErr.message + '. Try again in a minute.' : 'Could not reach the OpenStreetMap server.');
+    }
+
+    $('importBtn').onclick = () => {
+      if (!division.outer) { toast('Division boundary not loaded yet', 'error'); return; }
+      confirmAction('Load all streets in Kaneshie Division?',
+        'Every named street inside the division boundary will be added from OpenStreetMap. Streets you already have are skipped. This can take up to a minute.',
+        async () => {
+          const ways = await fetchDivisionStreets();
+          const groups = new Map();
+          for (const w of ways) {
+            if (!w.geometry?.length) continue;
+            const line = w.geometry.map(g => [g.lon, g.lat]);
+            const mid = line[Math.floor(line.length / 2)];
+            const district = districtAt([mid[1], mid[0]]) || 'Kaneshie';
+            const key = `${w.tags.name.trim().toLowerCase()}|${district}`;
+            const g = groups.get(key) || { name: w.tags.name.trim(), district, osm_ids: [], coordinates: [], length_m: 0 };
+            g.osm_ids.push(w.id); g.coordinates.push(line); g.length_m += metres(line);
+            groups.set(key, g);
+          }
+          const streets = [...groups.values()].map(g => ({ name: g.name, district: g.district, osm_ids: g.osm_ids, length_m: Math.round(g.length_m), geometry: { type: 'MultiLineString', coordinates: g.coordinates } }));
+          if (!streets.length) throw new Error('No named streets found inside the boundary.');
+          let added = 0, skipped = 0;
+          for (let i = 0; i < streets.length; i += 150) {
+            const res = await api('/streets/import', { method: 'POST', body: JSON.stringify({ streets: streets.slice(i, i + 150) }) });
+            added += res.added; skipped += res.skipped;
+          }
+          toast(`Added ${added} streets${skipped ? ` · ${skipped} already existed` : ''}`);
+          await loadStreets({ quiet: true });
+        }, { okLabel: 'Load streets', danger: false });
+    };
+
+    // ---------- Boot ----------
+    $('loginEmail').value = store.get('lwi_last_email') || '';
+    if (state.token) onSignedIn();
+    else { $('mapLoading').classList.add('hidden'); showLogin(); }
+  })();
   </script>
-
 </body>
 </html>
