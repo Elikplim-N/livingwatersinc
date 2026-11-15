@@ -39,3 +39,37 @@ CREATE TABLE IF NOT EXISTS visits (
 );
 
 CREATE INDEX IF NOT EXISTS visits_street_id_idx ON visits(street_id);
+
+-- People who gave their lives to Christ during outreach (details for follow-up)
+CREATE TABLE IF NOT EXISTS converts (
+  id             uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  street_id      text,                        -- streets.id (kept as text so it works with any id type)
+  full_name      text NOT NULL,
+  age            integer,
+  phone          text NOT NULL DEFAULT '',
+  location       text NOT NULL DEFAULT '',    -- house no., landmark, directions
+  latitude       double precision,
+  longitude      double precision,
+  accuracy_m     integer,
+  notes          text NOT NULL DEFAULT '',
+  decision_date  date NOT NULL DEFAULT current_date,
+  followed_up_at date,
+  created_by     text,
+  created_at     timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS converts_street_id_idx ON converts(street_id);
+
+-- Field collectors: sign in with just name + phone (no password)
+CREATE TABLE IF NOT EXISTS collectors (
+  id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name         text NOT NULL,
+  phone        text NOT NULL UNIQUE,
+  created_at   timestamptz NOT NULL DEFAULT now(),
+  last_seen_at timestamptz NOT NULL DEFAULT now()
+);
+
+ALTER TABLE converts ADD COLUMN IF NOT EXISTS collector_name  text;
+ALTER TABLE converts ADD COLUMN IF NOT EXISTS collector_phone text;
+ALTER TABLE converts ADD COLUMN IF NOT EXISTS client_id       text;  -- prevents duplicates when an offline entry is retried
+CREATE UNIQUE INDEX IF NOT EXISTS converts_client_id_idx ON converts(client_id);

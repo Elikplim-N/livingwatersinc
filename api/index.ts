@@ -14,8 +14,10 @@ const JWT_SECRET = process.env.JWT_SECRET || (process.env.NODE_ENV === 'producti
 
 interface AuthUser {
   userId: string;
-  email: string;
+  email?: string;
   role: string;
+  name?: string;
+  phone?: string;
 }
 
 class HttpError extends Error {
@@ -30,13 +32,13 @@ function setCORS(res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 }
 
-function requireAuth(req: VercelRequest): AuthUser {
+function requireAuth(req: VercelRequest, roles: string[] = ['admin']): AuthUser {
   if (!JWT_SECRET) throw new HttpError(500, 'Server misconfigured: JWT_SECRET is not set');
   const token = req.headers.authorization?.replace(/^Bearer\s+/i, '');
   if (!token) throw new HttpError(401, 'Please sign in');
   try {
     const auth = jwt.verify(token, JWT_SECRET) as AuthUser;
-    if (auth.role === 'admin') return auth;
+    if (roles.includes(auth.role)) return auth;
   } catch {
     throw new HttpError(401, 'Your session has expired. Please sign in again.');
   }
@@ -90,6 +92,40 @@ CREATE TABLE IF NOT EXISTS visits (
 );
 
 CREATE INDEX IF NOT EXISTS visits_street_id_idx ON visits(street_id);
+
+-- People who gave their lives to Christ during outreach (details for follow-up)
+CREATE TABLE IF NOT EXISTS converts (
+  id             uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  street_id      text,                        -- streets.id (kept as text so it works with any id type)
+  full_name      text NOT NULL,
+  age            integer,
+  phone          text NOT NULL DEFAULT '',
+  location       text NOT NULL DEFAULT '',    -- house no., landmark, directions
+  latitude       double precision,
+  longitude      double precision,
+  accuracy_m     integer,
+  notes          text NOT NULL DEFAULT '',
+  decision_date  date NOT NULL DEFAULT current_date,
+  followed_up_at date,
+  created_by     text,
+  created_at     timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS converts_street_id_idx ON converts(street_id);
+
+-- Field collectors: sign in with just name + phone (no password)
+CREATE TABLE IF NOT EXISTS collectors (
+  id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name         text NOT NULL,
+  phone        text NOT NULL UNIQUE,
+  created_at   timestamptz NOT NULL DEFAULT now(),
+  last_seen_at timestamptz NOT NULL DEFAULT now()
+);
+
+ALTER TABLE converts ADD COLUMN IF NOT EXISTS collector_name  text;
+ALTER TABLE converts ADD COLUMN IF NOT EXISTS collector_phone text;
+ALTER TABLE converts ADD COLUMN IF NOT EXISTS client_id       text;  -- prevents duplicates when an offline entry is retried
+CREATE UNIQUE INDEX IF NOT EXISTS converts_client_id_idx ON converts(client_id);
 `;
 
 let schemaReady = false;
@@ -164,7 +200,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       try {
         await client.query('BEGIN');
         // Start clean: remove all old data and accounts, leaving only this admin
-        await client.query('TRUNCATE visits, streets, auth_credentials, profiles RESTART IDENTITY CASCADE');
+        await client.query('TRUNCATE converts, collectors, visits, streets, auth_credentials, profiles RESTART IDENTITY CASCADE');
         const p = await client.query(`INSERT INTO profiles (full_name, role) VALUES ($1, 'admin') RETURNING id`, [full_name.trim()]);
         await client.query('INSERT INTO auth_credentials (user_id, email, password_hash) VALUES ($1, $2, $3)', [
           p.rows[0].id, email.trim(), await bcrypt.hash(String(password), 10)
@@ -205,16 +241,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!cur.rows[0] || !(await bcrypt.compare(String(req.body?.password || ''), cur.rows[0].password_hash))) {
         throw new HttpError(400, 'Password is incorrect');
       }
+      await ensureSchema();
       const client = await pool.connect();
       try {
         await client.query('BEGIN');
+        const c = await client.query('DELETE FROM converts');
+        await client.query('DELETE FROM collectors');
         const v = await client.query('DELETE FROM visits');
         const s = await client.query('DELETE FROM streets');
         await client.query('DELETE FROM auth_credentials WHERE user_id <> $1', [auth.userId]);
         const a = await client.query('DELETE FROM profiles WHERE id <> $1', [auth.userId]);
         await client.query(`UPDATE profiles SET role = 'admin' WHERE id = $1`, [auth.userId]);
         await client.query('COMMIT');
-        return res.json({ visits: v.rowCount, streets: s.rowCount, accounts: a.rowCount });
+        return res.json({ converts: c.rowCount, visits: v.rowCount, streets: s.rowCount, accounts: a.rowCount });
       } catch (err) {
         await client.query('ROLLBACK');
         throw err;
@@ -331,9 +370,132 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       if (method === 'DELETE' && id) {
         if (auth.role !== 'admin') throw new HttpError(403, 'Only admins can delete streets');
+        await ensureSchema();
+        await pool.query('UPDATE converts SET street_id = NULL WHERE street_id = $1', [String(id)]);
         await pool.query('DELETE FROM visits WHERE street_id = $1', [id]);
         const result = await pool.query('DELETE FROM streets WHERE id = $1', [id]);
         if (!result.rowCount) throw new HttpError(404, 'Street not found');
+        return res.json({ ok: true });
+      }
+    }
+
+    // ---- Field collectors (name + phone, no password) ----
+    if (resource === 'collect' && id === 'join' && method === 'POST') {
+      if (!JWT_SECRET) throw new HttpError(500, 'Server misconfigured: JWT_SECRET is not set');
+      await ensureSchema();
+      const name = String(req.body?.name || '').trim().slice(0, 100);
+      const phone = String(req.body?.phone || '').replace(/[^\d+]/g, '').slice(0, 20);
+      if (name.length < 2) throw new HttpError(400, 'Please enter your full name');
+      if (phone.replace(/\D/g, '').length < 9) throw new HttpError(400, 'Please enter a valid phone number');
+      const result = await pool.query(
+        `INSERT INTO collectors (name, phone) VALUES ($1, $2)
+         ON CONFLICT (phone) DO UPDATE SET name = EXCLUDED.name, last_seen_at = now()
+         RETURNING id, name, phone`,
+        [name, phone]
+      );
+      const c = result.rows[0];
+      const token = jwt.sign({ userId: c.id, role: 'collector', name: c.name, phone: c.phone }, JWT_SECRET, { expiresIn: '365d' });
+      return res.json({ token, collector: c });
+    }
+
+    if (resource === 'collect' && id === 'streets' && method === 'GET') {
+      requireAuth(req, ['admin', 'collector']);
+      const result = await pool.query('SELECT id, name, district FROM streets ORDER BY name');
+      res.setHeader('Cache-Control', 'private, max-age=300');
+      return res.json(result.rows);
+    }
+
+    if (resource === 'collect' && id === 'mine' && method === 'GET') {
+      const auth = requireAuth(req, ['collector']);
+      await ensureSchema();
+      const result = await pool.query(
+        `SELECT c.id, c.client_id, c.full_name, c.age, c.phone, c.location, c.latitude, c.longitude, c.decision_date, c.created_at,
+                s.name AS street_name
+         FROM converts c LEFT JOIN streets s ON s.id::text = c.street_id
+         WHERE c.created_by = $1 ORDER BY c.created_at DESC LIMIT 200`,
+        [String(auth.userId)]
+      );
+      return res.json(result.rows);
+    }
+
+    if (resource === 'collectors' && method === 'GET') {
+      requireAuth(req);
+      await ensureSchema();
+      const result = await pool.query(
+        `SELECT k.id, k.name, k.phone, k.created_at, k.last_seen_at, count(c.id)::int AS converts
+         FROM collectors k LEFT JOIN converts c ON c.created_by = k.id::text
+         GROUP BY k.id ORDER BY k.last_seen_at DESC`
+      );
+      return res.json(result.rows);
+    }
+
+    // ---- Converts ----
+    if (resource === 'converts') {
+      const auth = requireAuth(req, method === 'POST' && !id ? ['admin', 'collector'] : ['admin']);
+      await ensureSchema();
+
+      if (method === 'GET' && !id) {
+        const result = await pool.query(
+          `SELECT c.*, s.name AS street_name, s.district AS street_district
+           FROM converts c LEFT JOIN streets s ON s.id::text = c.street_id
+           ORDER BY c.decision_date DESC, c.created_at DESC`
+        );
+        return res.json(result.rows);
+      }
+
+      if ((method === 'POST' && !id) || (method === 'PUT' && id)) {
+        const b = req.body || {};
+        const clientId = b.client_id ? String(b.client_id).slice(0, 64) : null;
+        if (method === 'POST' && clientId) {
+          const dup = await pool.query('SELECT * FROM converts WHERE client_id = $1', [clientId]);
+          if (dup.rows[0]) return res.status(200).json(dup.rows[0]); // already received (offline retry)
+        }
+        const fullName = String(b.full_name || '').trim().slice(0, 200);
+        if (!fullName) throw new HttpError(400, 'Full name is required');
+        const age = b.age === '' || b.age == null ? null : Number.parseInt(String(b.age), 10);
+        if (age !== null && (!Number.isFinite(age) || age < 0 || age > 120)) throw new HttpError(400, 'Age must be between 0 and 120');
+        const lat = b.latitude == null || b.latitude === '' ? null : Number(b.latitude);
+        const lng = b.longitude == null || b.longitude === '' ? null : Number(b.longitude);
+        if ((lat === null) !== (lng === null)) throw new HttpError(400, 'Give both latitude and longitude, or neither');
+        if (lat !== null && (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng as number) > 180)) {
+          throw new HttpError(400, 'Coordinates are not valid');
+        }
+        const date = (v: unknown) => (v && !Number.isNaN(Date.parse(String(v))) ? String(v).slice(0, 10) : null);
+        const values = [
+          b.street_id ? String(b.street_id) : null,
+          fullName,
+          age,
+          String(b.phone || '').trim().slice(0, 40),
+          String(b.location || '').trim().slice(0, 500),
+          lat,
+          lng,
+          b.accuracy_m == null || b.accuracy_m === '' ? null : Math.round(Number(b.accuracy_m)) || null,
+          String(b.notes || '').trim().slice(0, 2000),
+          date(b.decision_date) || new Date().toISOString().slice(0, 10),
+          date(b.followed_up_at)
+        ];
+        const result = method === 'POST'
+          ? await pool.query(
+              `INSERT INTO converts (street_id, full_name, age, phone, location, latitude, longitude, accuracy_m, notes, decision_date, followed_up_at,
+                                     created_by, collector_name, collector_phone, client_id)
+               VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+               ON CONFLICT (client_id) DO UPDATE SET client_id = EXCLUDED.client_id
+               RETURNING *`,
+              [...values, String(auth.userId), auth.role === 'collector' ? auth.name : 'Admin', auth.role === 'collector' ? auth.phone : null, clientId]
+            )
+          : await pool.query(
+              `UPDATE converts SET street_id=$1, full_name=$2, age=$3, phone=$4, location=$5, latitude=$6, longitude=$7,
+                 accuracy_m=$8, notes=$9, decision_date=$10, followed_up_at=$11
+               WHERE id = $12 RETURNING *`,
+              [...values, id]
+            );
+        if (!result.rows[0]) throw new HttpError(404, 'Convert not found');
+        return res.status(method === 'POST' ? 201 : 200).json(result.rows[0]);
+      }
+
+      if (method === 'DELETE' && id) {
+        const result = await pool.query('DELETE FROM converts WHERE id = $1', [id]);
+        if (!result.rowCount) throw new HttpError(404, 'Convert not found');
         return res.json({ ok: true });
       }
     }
