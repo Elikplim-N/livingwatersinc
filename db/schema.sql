@@ -39,3 +39,13 @@ CREATE TABLE IF NOT EXISTS visits (
 );
 
 CREATE INDEX IF NOT EXISTS visits_street_id_idx ON visits(street_id);
+
+-- One-time login codes emailed to admins (also created automatically by the API)
+CREATE TABLE IF NOT EXISTS login_otps (
+  id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id    text NOT NULL,
+  code_hash  text NOT NULL,
+  attempts   integer NOT NULL DEFAULT 0,
+  expires_at timestamptz NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
+);

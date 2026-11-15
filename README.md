@@ -4,7 +4,7 @@ A map-based outreach tracker for Living Waters Incorporated. Teams pin the stree
 
 ## Features
 
-- **Sign-in screen** with saved sessions (30 days)
+- **Admin-only sign in with email code (OTP)**: email + password, then a 6-digit code emailed every time (expires in 10 min, 5 tries). Sessions last 12 hours
 - **Live map** (dark theme) with clustered pins: green = visited in the last 30 days, blue = visited earlier, grey = not visited yet
 - **Kaneshie Division boundary** (Darkuman + Kaneshie districts) drawn on the map; everything outside is dimmed
 - **Dashboard stats** for the division: streets, % reached, people reached, converts, with a coverage bar. *Reached* = streets inside the division with at least one visit ÷ all streets inside the division
@@ -35,10 +35,14 @@ scripts/db-setup.mjs  Creates tables and user accounts
    npm install
    DATABASE_URL="postgresql://..." npm run db:setup -- admin@example.com "Admin Name" "a-strong-password" admin
    ```
-   Run the same command with `member` instead of `admin` to add team members (re-running it for an existing email resets that password).
-3. In Vercel, import this repo and set the environment variables `DATABASE_URL` and `JWT_SECRET` (see `.env.example`).
-4. Deploy. The frontend and API are served from the same domain — no URLs to configure.
-5. Sign in as admin and tap **Load all streets in Kaneshie Division** once.
+   Only **admin** accounts can sign in. Run the command again for each admin (re-running it for an existing email resets that password).
+3. Set up free email for login codes with Gmail:
+   - Use (or create) a Gmail account for the app and turn on **2-Step Verification**.
+   - Create an **App Password** at https://myaccount.google.com/apppasswords.
+4. In Vercel, import this repo and set the environment variables (see `.env.example`):
+   `DATABASE_URL`, `JWT_SECRET`, `SMTP_USER` (the Gmail address), `SMTP_PASS` (the app password).
+5. Deploy. The frontend and API are served from the same domain — no URLs to configure.
+6. Sign in as admin and tap **Load all streets in Kaneshie Division** once.
 
 ## Division boundary
 
@@ -51,7 +55,7 @@ npm install
 npx vercel dev
 ```
 
-Then open the URL it prints. Requires a `.env` file with `DATABASE_URL` and `JWT_SECRET`.
+Then open the URL it prints. Requires a `.env` file with `DATABASE_URL` and `JWT_SECRET`. Without `SMTP_USER`/`SMTP_PASS`, login codes are printed in the terminal instead of emailed (local only).
 
 If you change Tailwind classes in `index.html`, rebuild the stylesheet:
 
@@ -65,11 +69,12 @@ All endpoints except login need `Authorization: Bearer <token>`.
 
 | Method | Path | Notes |
 | --- | --- | --- |
-| POST | `/api/auth/login` | `{ email, password }` → `{ token, user }` |
+| POST | `/api/auth/login` | `{ email, password }` → emails a code, returns `{ challenge, email_hint }` (admins only) |
+| POST | `/api/auth/verify` | `{ challenge, code }` → `{ token, user }` |
 | GET | `/api/auth/me` | Current user |
 | GET | `/api/streets` | All streets with their visits |
 | POST | `/api/streets` | `{ name, district, latitude, longitude }` |
 | POST | `/api/streets/import` | Admin only. `{ streets: [{ name, district, osm_ids, geometry, length_m }] }`, skips existing name+district |
 | DELETE | `/api/streets/:id` | Admin only |
 | POST | `/api/visits` | `{ street_id, visit_date, attendance, decisions, follow_ups, team_members[], notes }` |
-| DELETE | `/api/visits/:id` | Your own visits, or any as admin |
+| DELETE | `/api/visits/:id` | |
