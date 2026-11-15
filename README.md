@@ -16,10 +16,22 @@ A map-based outreach tracker for Living Waters Incorporated. Teams pin the stree
 - **Delete** visits (your own, or any as admin) and streets (admin only), with confirmation
 - Works on phones (bottom-sheet forms, safe-area aware) and desktop
 
+## Field collectors (no password)
+
+Share **`https://<your-app>/collect`** (Admin → Field collectors → Share). Collectors enter their **name and phone number once** and can record converts straight away:
+
+- Full name, age, phone, street, where they live, notes
+- Optional GPS (one tap, shows accuracy). It can also be added later when someone visits back
+- Works on a weak signal: entries save on the phone and send automatically when online (no duplicates)
+- New phone? Enter the same phone number and their entries come back
+
+The admin sees every convert with who collected it, can follow up (call, WhatsApp, directions, "Visited back" + capture GPS), edit, delete and export to CSV.
+
 ## Project layout
 
 ```
-index.html          The whole frontend (vanilla JS + Leaflet)
+index.html          Admin app (vanilla JS + Leaflet)
+collect.html        Field collector app (/collect), no dependencies
 app.css             Prebuilt Tailwind CSS (regenerate with `npm run build:css`)
 api/index.ts        Vercel serverless API (/api/*)
 division.geojson    Kaneshie Division + Darkuman/Kaneshie district boundaries

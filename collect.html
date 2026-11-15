@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#FFF6F2" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="LWI Collect" />
+  <title>LWI Collect</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%23FF9A76'/><stop offset='1' stop-color='%23F2547D'/></linearGradient></defs><rect width='32' height='32' rx='8' fill='url(%23g)'/><path d='M16 24s-7-4.3-7-9.5A4 4 0 0116 12a4 4 0 017 2.5C23 19.7 16 24 16 24z' fill='white'/></svg>" />
+  <style>
+    :root {
+      --bg: #FFF6F2; --card: #FFFFFF; --ink: #2A1E1B; --muted: #8E7F7A; --faint: #B9ACA7; --line: #F1E4DF;
+      --accent: #F2547D; --accent-2: #FF9A76; --accent-soft: #FFE8EE; --green: #1F9D63; --green-soft: #E3F6EC; --amber: #C77A12; --amber-soft: #FFF2DC;
+      --grad: linear-gradient(135deg, #FF9A76 0%, #F2547D 100%);
+      --radius: 14px;
+      --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font); -webkit-font-smoothing: antialiased; }
+    body { min-height: 100dvh; padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); overscroll-behavior-y: none; }
+    button, input, textarea { font: inherit; color: inherit; }
+    button { cursor: pointer; border: 0; background: none; padding: 0; }
+    .hidden { display: none !important; }
+    .wrap { max-width: 560px; margin: 0 auto; padding: 0 16px 120px; }
+
+    /* Large title nav (iOS) */
+    .nav { display: flex; align-items: flex-end; justify-content: space-between; padding: 18px 0 10px; }
+    .eyebrow { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+    .large-title { font-size: 34px; line-height: 1.1; font-weight: 800; letter-spacing: -.02em; margin: 2px 0 0; }
+    .avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--grad); color: #fff; font-weight: 700; display: grid; place-items: center; box-shadow: 0 4px 12px rgba(242,84,125,.3); }
+
+    /* Cards & grouped lists */
+    .section-label { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; margin: 22px 4px 7px; }
+    .section-foot { font-size: 12.5px; color: var(--muted); margin: 7px 4px 0; line-height: 1.4; }
+    .group { background: var(--card); border-radius: var(--radius); overflow: hidden; box-shadow: 0 1px 2px rgba(42,30,27,.04); }
+    .row { display: flex; align-items: center; gap: 12px; min-height: 50px; padding: 0 16px; position: relative; }
+    .row + .row::before { content: ''; position: absolute; top: 0; left: 16px; right: 0; height: 1px; background: var(--line); }
+    .row label { width: 92px; flex-shrink: 0; font-size: 16px; }
+    .row input, .row textarea { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font-size: 16px; padding: 14px 0; }
+    .row textarea { resize: none; min-height: 76px; line-height: 1.4; }
+    .row input::placeholder, .row textarea::placeholder { color: var(--faint); }
+    .row.stack { flex-direction: column; align-items: stretch; gap: 0; padding-top: 10px; }
+    .row.stack label { width: auto; font-size: 13px; color: var(--muted); }
+    .row.stack textarea, .row.stack input { padding: 4px 0 12px; }
+
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 8px; }
+    .stat { background: var(--card); border-radius: var(--radius); padding: 12px 14px; box-shadow: 0 1px 2px rgba(42,30,27,.04); }
+    .stat b { display: block; font-size: 24px; font-weight: 800; letter-spacing: -.02em; }
+    .stat span { font-size: 12px; color: var(--muted); }
+
+    .cta { width: 100%; margin-top: 16px; border-radius: 20px; padding: 18px; background: var(--grad); color: #fff; display: flex; align-items: center; gap: 14px; text-align: left; box-shadow: 0 10px 24px rgba(242,84,125,.28); transition: transform .12s; }
+    .cta:active { transform: scale(.98); }
+    .cta .plus { width: 46px; height: 46px; border-radius: 14px; background: rgba(255,255,255,.22); display: grid; place-items: center; font-size: 28px; font-weight: 300; }
+    .cta b { font-size: 18px; display: block; } .cta small { opacity: .9; font-size: 13.5px; }
+
+    .entry { display: flex; align-items: center; gap: 12px; padding: 12px 16px; position: relative; }
+    .entry + .entry::before { content: ''; position: absolute; top: 0; left: 64px; right: 0; height: 1px; background: var(--line); }
+    .entry .ini { width: 38px; height: 38px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-weight: 700; display: grid; place-items: center; flex-shrink: 0; }
+    .entry .main { flex: 1; min-width: 0; }
+    .entry .name { font-size: 16px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .entry .sub { font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+    .pill { font-size: 11.5px; font-weight: 600; padding: 3px 8px; border-radius: 99px; white-space: nowrap; }
+    .pill.ok { background: var(--green-soft); color: var(--green); }
+    .pill.wait { background: var(--amber-soft); color: var(--amber); }
+    .empty { text-align: center; padding: 28px 16px; color: var(--muted); font-size: 14px; }
+
+    .btn { width: 100%; height: 52px; border-radius: 14px; font-size: 17px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: opacity .15s, transform .12s; }
+    .btn:active { transform: scale(.985); }
+    .btn:disabled { opacity: .55; }
+    .btn-primary { background: var(--grad); color: #fff; box-shadow: 0 8px 20px rgba(242,84,125,.25); }
+    .btn-soft { background: var(--accent-soft); color: var(--accent); }
+    .link { color: var(--accent); font-weight: 600; font-size: 15px; }
+
+    /* GPS row */
+    .gps-row { width: 100%; text-align: left; }
+    .gps-ic { width: 30px; height: 30px; border-radius: 8px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; flex-shrink: 0; }
+    .gps-ic.ok { background: var(--green-soft); color: var(--green); }
+    .chev { color: var(--faint); margin-left: auto; }
+
+    /* Sheet (iOS modal) */
+    .sheet { position: fixed; inset: 0; z-index: 50; background: var(--bg); transform: translateY(100%); transition: transform .32s cubic-bezier(.32,.72,0,1); overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: env(safe-area-inset-bottom); }
+    .sheet.open { transform: translateY(0); }
+    .sheet-bar { position: sticky; top: 0; z-index: 2; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: calc(env(safe-area-inset-top) + 10px) 16px 10px; background: rgba(255,246,242,.86); backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px); border-bottom: 1px solid var(--line); }
+    .sheet-bar h2 { margin: 0; font-size: 17px; font-weight: 700; }
+    .sheet-bar .left { justify-self: start; } .sheet-bar .right { justify-self: end; }
+    .bar-btn { color: var(--accent); font-size: 17px; padding: 6px 2px; }
+    .bar-btn.bold { font-weight: 700; }
+    .bar-btn:disabled { color: var(--faint); }
+
+    .toast { position: fixed; left: 50%; top: calc(env(safe-area-inset-top) + 12px); transform: translate(-50%, -250%); opacity: 0; z-index: 100; background: rgba(42,30,27,.92); color: #fff; padding: 11px 18px; border-radius: 99px; font-size: 15px; font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,.2); transition: transform .3s cubic-bezier(.32,.72,0,1), opacity .2s; max-width: calc(100% - 32px); text-align: center; }
+    .toast.show { transform: translate(-50%, 0); opacity: 1; }
+    .err { color: #D63B4F; font-size: 14px; margin: 10px 4px 0; }
+    .spin { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%; animation: s .7s linear infinite; }
+    .spin.dark { border-color: rgba(242,84,125,.25); border-top-color: var(--accent); }
+    @keyframes s { to { transform: rotate(360deg); } }
+    .hero { text-align: center; padding: 48px 8px 8px; }
+    .hero .logo { width: 72px; height: 72px; margin: 0 auto 18px; border-radius: 22px; background: var(--grad); display: grid; place-items: center; box-shadow: 0 14px 30px rgba(242,84,125,.3); }
+    .hero h1 { font-size: 30px; font-weight: 800; letter-spacing: -.02em; margin: 0; }
+    .hero p { color: var(--muted); font-size: 16px; margin: 8px 0 0; line-height: 1.45; }
+    .offline { background: var(--amber-soft); color: var(--amber); font-size: 13px; font-weight: 600; text-align: center; padding: 8px 12px; border-radius: 12px; margin-top: 12px; }
+  </style>
+</head>
+<body>
+
+  <!-- ===== JOIN (once) ===== -->
+  <section id="joinView" class="wrap hidden">
+    <div class="hero">
+      <div class="logo"><svg width="36" height="36" viewBox="0 0 24 24" fill="#fff"><path d="M12 21s-8-4.9-8-11a4.6 4.6 0 018-3.1A4.6 4.6 0 0120 10c0 6.1-8 11-8 11z"/></svg></div>
+      <h1>Welcome 👋</h1>
+      <p>Living Waters outreach.<br>Enter your name and phone number once to start collecting.</p>
+    </div>
+    <form id="joinForm" novalidate>
+      <div class="section-label">About you</div>
+      <div class="group">
+        <div class="row"><label for="jName">Name</label><input id="jName" autocomplete="name" placeholder="Your full name" required /></div>
+        <div class="row"><label for="jPhone">Phone</label><input id="jPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="024 000 0000" required /></div>
+      </div>
+      <p id="joinErr" class="err hidden"></p>
+      <div style="margin-top:22px"><button id="joinBtn" class="btn btn-primary" type="submit">Continue</button></div>
+      <p class="section-foot" style="text-align:center;margin-top:14px">You'll stay signed in on this phone.<br>New phone? Enter the <b>same phone number</b> and your entries come back.</p>
+    </form>
+  </section>
+
+  <!-- ===== HOME ===== -->
+  <section id="homeView" class="wrap hidden">
+    <div class="nav">
+      <div>
+        <div class="eyebrow" id="hello">Hi</div>
+        <h1 class="large-title">Collect</h1>
+      </div>
+      <button class="avatar" id="meBtn" aria-label="Account">?</button>
+    </div>
+    <div id="offlineNote" class="offline hidden">You're offline. Entries are saved on this phone and will send when you're back online.</div>
+
+    <div class="stats">
+      <div class="stat"><b id="sToday">0</b><span>Today</span></div>
+      <div class="stat"><b id="sAll">0</b><span>All mine</span></div>
+      <div class="stat"><b id="sWait">0</b><span>To send</span></div>
+    </div>
+
+    <button class="cta" id="newBtn">
+      <span class="plus">＋</span>
+      <span><b>New convert</b><small>Record name, age, contact &amp; location</small></span>
+    </button>
+
+    <div class="section-label">My entries</div>
+    <div class="group" id="entries"></div>
+  </section>
+
+  <!-- ===== FORM SHEET ===== -->
+  <div id="formSheet" class="sheet" aria-hidden="true">
+    <div class="sheet-bar">
+      <button class="bar-btn left" id="cancelBtn" type="button">Cancel</button>
+      <h2>New Convert</h2>
+      <button class="bar-btn bold right" id="saveTopBtn" type="button">Save</button>
+    </div>
+    <form id="cvForm" class="wrap" novalidate style="padding-bottom:40px">
+      <div class="section-label">Person</div>
+      <div class="group">
+        <div class="row"><label for="fName">Full name</label><input id="fName" autocomplete="off" autocapitalize="words" placeholder="Required" /></div>
+        <div class="row"><label for="fAge">Age</label><input id="fAge" type="number" inputmode="numeric" min="0" max="120" placeholder="Optional" /></div>
+        <div class="row"><label for="fPhone">Phone</label><input id="fPhone" type="tel" inputmode="tel" autocomplete="off" placeholder="024 000 0000" /></div>
+      </div>
+
+      <div class="section-label">Location</div>
+      <div class="group">
+        <div class="row"><label for="fStreet">Street</label><input id="fStreet" list="streetList" autocomplete="off" placeholder="Type or pick a street" /></div>
+        <div class="row stack"><label for="fWhere">Where they live</label><textarea id="fWhere" rows="2" placeholder="House no., landmark, directions…"></textarea></div>
+        <button type="button" class="row gps-row" id="gpsBtn">
+          <span class="gps-ic" id="gpsIc"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/><path stroke-linecap="round" d="M12 1v3m0 16v3M1 12h3m16 0h3"/></svg></span>
+          <span style="flex:1"><span id="gpsText" style="display:block;font-size:16px">Add GPS location</span><span id="gpsSub" style="display:block;font-size:12.5px;color:var(--muted)">Optional, can be added on follow-up</span></span>
+          <span class="chev" id="gpsChev">›</span>
+        </button>
+      </div>
+      <datalist id="streetList"></datalist>
+
+      <div class="section-label">Notes</div>
+      <div class="group">
+        <div class="row stack"><textarea id="fNotes" rows="3" placeholder="Prayer requests, best time to call…" style="padding-top:2px"></textarea></div>
+      </div>
+      <p id="formErr" class="err hidden"></p>
+
+      <div style="display:grid;gap:10px;margin-top:24px">
+        <button class="btn btn-primary" type="submit" id="saveBtn">Save</button>
+        <button class="btn btn-soft" type="button" id="saveAnotherBtn">Save &amp; add another</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ===== ACCOUNT SHEET ===== -->
+  <div id="meSheet" class="sheet" aria-hidden="true">
+    <div class="sheet-bar">
+      <span class="left"></span><h2>Account</h2>
+      <button class="bar-btn bold right" id="meDone" type="button">Done</button>
+    </div>
+    <div class="wrap">
+      <div class="section-label">Signed in as</div>
+      <div class="group">
+        <div class="row"><label>Name</label><span id="meName" style="color:var(--muted)"></span></div>
+        <div class="row"><label>Phone</label><span id="mePhone" style="color:var(--muted)"></span></div>
+      </div>
+      <p class="section-foot">Your entries are labelled with your name so the admin knows who collected them.</p>
+      <div style="margin-top:24px"><button class="btn btn-soft" id="switchBtn" type="button">Not you? Switch person</button></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+  (() => {
+    const API = '/api';
+    const $ = (id) => document.getElementById(id);
+    const ls = {
+      get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+      set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+      del(k) { try { localStorage.removeItem(k); } catch {} }
+    };
+    const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+    const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : 'x' + Date.now().toString(36) + Math.random().toString(36).slice(2));
+    const today = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
+
+    let me = ls.get('lwi_collector', null);           // { token, name, phone }
+    let entries = ls.get('lwi_entries', []);          // newest first; { client_id, full_name, ..., status: 'pending'|'sent' }
+    let streets = ls.get('lwi_streets', []);
+    let gps = null, syncing = false;
+
+    // ---------- UI helpers ----------
+    let toastTimer;
+    function toast(msg) {
+      const t = $('toast'); t.textContent = msg; t.classList.add('show');
+      clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+    }
+    function openSheet(id) { $(id).classList.add('open'); $(id).setAttribute('aria-hidden', 'false'); document.body.style.overflow = 'hidden'; }
+    function closeSheet(id) { $(id).classList.remove('open'); $(id).setAttribute('aria-hidden', 'true'); document.body.style.overflow = ''; }
+    function busy(btn, on, label) {
+      if (on) { btn.dataset.l = btn.innerHTML; btn.innerHTML = `<span class="spin"></span>${label || ''}`; btn.disabled = true; }
+      else { btn.innerHTML = btn.dataset.l || btn.innerHTML; btn.disabled = false; }
+    }
+    const tick = () => { try { navigator.vibrate && navigator.vibrate(12); } catch {} };
+
+    async function api(path, opts = {}) {
+      const res = await fetch(API + path, { ...opts, headers: { 'Content-Type': 'application/json', ...(me?.token ? { Authorization: `Bearer ${me.token}` } : {}) } });
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 401) { signOut(); throw Object.assign(new Error('Please enter your details again'), { auth: true }); }
+      if (!res.ok) throw Object.assign(new Error(data.error || 'Something went wrong'), { status: res.status });
+      return data;
+    }
+
+    // ---------- Views ----------
+    function show() {
+      $('joinView').classList.toggle('hidden', !!me);
+      $('homeView').classList.toggle('hidden', !me);
+      if (!me) { setTimeout(() => $('jName').focus(), 50); return; }
+      const first = me.name.split(' ')[0];
+      $('hello').textContent = `Hi, ${first}`;
+      $('meBtn').textContent = first[0]?.toUpperCase() || '?';
+      $('meName').textContent = me.name; $('mePhone').textContent = me.phone;
+      renderEntries();
+    }
+
+    function renderEntries() {
+      const t = today();
+      $('sToday').textContent = entries.filter(e => String(e.created_at || '').slice(0, 10) === t || e.decision_date === t).length;
+      $('sAll').textContent = entries.length;
+      const waiting = entries.filter(e => e.status === 'pending').length;
+      $('sWait').textContent = waiting;
+      $('sWait').style.color = waiting ? 'var(--amber)' : '';
+      $('entries').innerHTML = entries.length ? entries.slice(0, 60).map(e => `
+        <div class="entry">
+          <div class="ini">${esc((e.full_name || '?')[0].toUpperCase())}</div>
+          <div class="main">
+            <div class="name">${esc(e.full_name)}${e.age != null && e.age !== '' ? `<span style="color:var(--muted);font-weight:400">, ${esc(e.age)}</span>` : ''}</div>
+            <div class="sub">${esc([e.street_name, e.phone, e.latitude != null ? '📍' : ''].filter(Boolean).join(' · ') || 'No street')}</div>
+          </div>
+          ${e.status === 'pending' ? '<span class="pill wait">Sending…</span>' : '<span class="pill ok">✓ Sent</span>'}
+        </div>`).join('')
+        : `<div class="empty">No entries yet.<br>Tap <b>New convert</b> to record someone.</div>`;
+    }
+
+    function setOffline() { $('offlineNote').classList.toggle('hidden', navigator.onLine); }
+    window.addEventListener('online', () => { setOffline(); sync(); });
+    window.addEventListener('offline', setOffline);
+
+    // ---------- Join ----------
+    $('joinForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = $('jName').value.trim(), phone = $('jPhone').value.trim();
+      const err = $('joinErr');
+      err.classList.add('hidden');
+      if (name.length < 2) { err.textContent = 'Please enter your full name.'; err.classList.remove('hidden'); return; }
+      if (phone.replace(/\D/g, '').length < 9) { err.textContent = 'Please enter a valid phone number.'; err.classList.remove('hidden'); return; }
+      busy($('joinBtn'), true);
+      try {
+        const data = await api('/collect/join', { method: 'POST', body: JSON.stringify({ name, phone }) });
+        me = { token: data.token, name: data.collector.name, phone: data.collector.phone };
+        ls.set('lwi_collector', me);
+        tick(); show(); loadMine(); loadStreets();
+      } catch (ex) {
+        err.textContent = navigator.onLine ? ex.message : 'You need internet the first time. Please connect and try again.';
+        err.classList.remove('hidden');
+      } finally { busy($('joinBtn'), false); }
+    });
+
+    function signOut() {
+      me = null; ls.del('lwi_collector');
+      closeSheet('meSheet'); show();
+    }
+    $('meBtn').onclick = () => openSheet('meSheet');
+    $('meDone').onclick = () => closeSheet('meSheet');
+    $('switchBtn').onclick = () => {
+      const waiting = entries.filter(e => e.status === 'pending').length;
+      if (waiting) { toast(`${waiting} entr${waiting === 1 ? 'y' : 'ies'} still sending. Connect to the internet first.`); sync(); return; }
+      if (!confirm('Switch to a different person on this phone?')) return;
+      entries = []; ls.set('lwi_entries', entries);
+      signOut();
+    };
+
+    // ---------- Streets (cached for instant typing) ----------
+    function fillStreets() {
+      $('streetList').innerHTML = streets.map(s => `<option value="${esc(s.name)}">${esc(s.district || '')}</option>`).join('');
+    }
+    async function loadStreets() {
+      try { streets = await api('/collect/streets'); ls.set('lwi_streets', streets); fillStreets(); } catch {}
+    }
+
+    // ---------- Form ----------
+    function resetForm(keepStreet) {
+      const street = $('fStreet').value;
+      $('cvForm').reset();
+      if (keepStreet) $('fStreet').value = street;
+      setGps(null);
+      $('formErr').classList.add('hidden');
+    }
+    $('newBtn').onclick = () => { resetForm(true); openSheet('formSheet'); setTimeout(() => $('fName').focus(), 350); };
+    $('cancelBtn').onclick = () => {
+      if ($('fName').value.trim() && !confirm('Discard this entry?')) return;
+      closeSheet('formSheet');
+    };
+
+    function setGps(g) {
+      gps = g;
+      $('gpsIc').classList.toggle('ok', !!g);
+      $('gpsText').textContent = g ? 'GPS location added' : 'Add GPS location';
+      $('gpsSub').textContent = g ? `Accurate to ±${Math.round(g.accuracy)} m · tap to remove` : 'Optional, can be added on follow-up';
+      $('gpsChev').textContent = g ? '✕' : '›';
+    }
+    $('gpsBtn').onclick = () => {
+      if (gps) { setGps(null); return; }
+      if (!navigator.geolocation) { toast('GPS not available on this phone'); return; }
+      $('gpsText').textContent = 'Getting location…';
+      $('gpsIc').innerHTML = '<span class="spin dark"></span>';
+      const restoreIcon = () => { $('gpsIc').innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/><path stroke-linecap="round" d="M12 1v3m0 16v3M1 12h3m16 0h3"/></svg>'; };
+      navigator.geolocation.getCurrentPosition((pos) => {
+        restoreIcon(); tick();
+        setGps({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy });
+        if (pos.coords.accuracy > 50) toast(`GPS is rough (±${Math.round(pos.coords.accuracy)} m). Step outside and tap again.`);
+      }, (err) => {
+        restoreIcon(); setGps(null);
+        toast(err.code === 1 ? 'Allow location access in your browser settings' : 'Could not get GPS. You can add it later.');
+      }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+    };
+
+    function save(another) {
+      const name = $('fName').value.trim();
+      const err = $('formErr');
+      if (!name) { err.textContent = 'Full name is required.'; err.classList.remove('hidden'); $('fName').focus(); return; }
+      const age = $('fAge').value.trim();
+      if (age && (+age < 0 || +age > 120)) { err.textContent = 'Age should be between 0 and 120.'; err.classList.remove('hidden'); return; }
+      const streetText = $('fStreet').value.trim();
+      const street = streets.find(s => s.name.toLowerCase() === streetText.toLowerCase());
+      let where = $('fWhere').value.trim();
+      if (streetText && !street) where = `${streetText}${where ? ' — ' + where : ''}`;
+      const entry = {
+        client_id: uuid(),
+        full_name: name,
+        age: age === '' ? null : parseInt(age, 10),
+        phone: $('fPhone').value.trim(),
+        street_id: street?.id ?? null,
+        street_name: street?.name || streetText || '',
+        location: where,
+        latitude: gps?.lat ?? null, longitude: gps?.lng ?? null, accuracy_m: gps ? Math.round(gps.accuracy) : null,
+        notes: $('fNotes').value.trim(),
+        decision_date: today(),
+        created_at: new Date().toISOString(),
+        status: 'pending'
+      };
+      entries.unshift(entry);
+      ls.set('lwi_entries', entries);
+      tick();
+      toast(`${name.split(' ')[0]} saved ✓`);
+      renderEntries();
+      if (another) { resetForm(true); $('fName').focus(); document.querySelector('#formSheet').scrollTop = 0; }
+      else closeSheet('formSheet');
+      sync();
+    }
+    $('cvForm').addEventListener('submit', (e) => { e.preventDefault(); save(false); });
+    $('saveTopBtn').onclick = () => save(false);
+    $('saveAnotherBtn').onclick = () => save(true);
+
+    // ---------- Background sync (works offline) ----------
+    async function sync() {
+      if (syncing || !me || !navigator.onLine) return;
+      syncing = true;
+      try {
+        for (const e of entries.filter(x => x.status === 'pending').reverse()) {
+          const { status, street_name, created_at, ...body } = e;
+          try {
+            const saved = await api('/converts', { method: 'POST', body: JSON.stringify(body) });
+            e.status = 'sent'; e.id = saved.id;
+            ls.set('lwi_entries', entries);
+            renderEntries();
+          } catch (ex) {
+            if (ex.auth) break;
+            if (ex.status === 400) { e.status = 'sent'; e.error = ex.message; continue; } // bad data: don't block the queue
+            break; // network/server issue: try later
+          }
+        }
+      } finally { syncing = false; }
+    }
+    setInterval(sync, 20000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) sync(); });
+
+    async function loadMine() {
+      try {
+        const server = await api('/collect/mine');
+        const local = new Set(entries.map(e => e.client_id));
+        const extra = server.filter(s => !s.client_id || !local.has(s.client_id)).map(s => ({ ...s, decision_date: String(s.decision_date).slice(0, 10), status: 'sent' }));
+        if (extra.length) {
+          entries = [...entries, ...extra].sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+          ls.set('lwi_entries', entries.slice(0, 300));
+          renderEntries();
+        }
+      } catch {}
+    }
+
+    // ---------- Start ----------
+    fillStreets();
+    setOffline();
+    show();
+    if (me) { sync(); loadStreets(); loadMine(); }
+  })();
+  </script>
+</body>
+</html>

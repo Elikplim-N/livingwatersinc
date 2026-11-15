@@ -3,82 +3,106 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#09090b" />
+  <meta name="theme-color" content="#FFF6F2" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>LWI Street Tracker</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%232563eb'/><path d='M16 6c-4 0-7 3-7 7 0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7z' fill='white'/><circle cx='16' cy='13' r='3' fill='%232563eb'/></svg>" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23F2547D'/><path d='M16 6c-4 0-7 3-7 7 0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7z' fill='white'/><circle cx='16' cy='13' r='3' fill='%23F2547D'/></svg>" />
 
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/app.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
 
   <style>
+    /* Warm light iOS-style theme (pink / peach). Ink #2A1E1B, muted #86776F, line #F1E4DF, accent #F2547D */
     html, body { height: 100%; }
-    body { overscroll-behavior: none; }
-    #map { position: absolute; inset: 0; z-index: 0; background: #18181b; }
-    .leaflet-container { font-family: inherit; background: #18181b; }
-    .leaflet-control-zoom { border: none !important; box-shadow: 0 8px 24px rgba(0,0,0,.35) !important; }
-    .leaflet-control-zoom a { background: #18181b !important; color: #fff !important; border-color: #27272a !important; }
-    .leaflet-control-zoom a:hover { background: #27272a !important; }
-    .leaflet-control-attribution { background: rgba(9,9,11,.7) !important; color: #71717a !important; }
-    .leaflet-control-attribution a { color: #a1a1aa !important; }
+    body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent; letter-spacing: -.005em; }
+    #map { position: absolute; inset: 0; z-index: 0; background: #F3ECE8; }
+    .leaflet-container { font-family: inherit; background: #F3ECE8; }
+    .leaflet-control-zoom { border: none !important; box-shadow: 0 6px 20px rgba(42,30,27,.12) !important; border-radius: 12px !important; overflow: hidden; }
+    .leaflet-control-zoom a { background: rgba(255,255,255,.95) !important; color: #2A1E1B !important; border-color: #F1E4DF !important; width: 36px !important; height: 36px !important; line-height: 36px !important; }
+    .leaflet-control-zoom a:hover { background: #FFF6F2 !important; }
+    .leaflet-control-attribution { background: rgba(255,255,255,.75) !important; color: #86776F !important; border-radius: 8px 0 0 0; }
+    .leaflet-control-attribution a { color: #86776F !important; }
 
-    .lwi-popup .leaflet-popup-content-wrapper { background: #09090b; color: #fff; border: 1px solid #27272a; border-radius: 14px; box-shadow: 0 20px 40px rgba(0,0,0,.5); }
-    .lwi-popup .leaflet-popup-tip { background: #09090b; border: 1px solid #27272a; }
+    .lwi-popup .leaflet-popup-content-wrapper { background: #fff; color: #2A1E1B; border-radius: 16px; box-shadow: 0 16px 40px rgba(42,30,27,.18); }
+    .lwi-popup .leaflet-popup-tip { background: #fff; }
     .lwi-popup .leaflet-popup-content { margin: 14px 16px; }
-    .lwi-popup a.leaflet-popup-close-button { color: #71717a; }
+    .lwi-popup a.leaflet-popup-close-button { color: #A39591; }
 
-    .pin { width: 28px; height: 28px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); display: grid; place-items: center; box-shadow: 0 4px 12px rgba(0,0,0,.45); border: 2px solid #fff; transition: transform .15s; }
+    .pin { width: 28px; height: 28px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); display: grid; place-items: center; box-shadow: 0 4px 12px rgba(42,30,27,.3); border: 2px solid #fff; transition: transform .15s; }
     .pin::after { content: ''; width: 9px; height: 9px; border-radius: 50%; background: #fff; }
-    .pin.visited { background: #2563eb; }
-    .pin.recent { background: #16a34a; }
-    .pin.unvisited { background: #52525b; }
-    .pin.new { background: #f59e0b; }
+    .pin.visited { background: #F2547D; }
+    .pin.recent { background: #1F9D63; }
+    .pin.unvisited { background: #A39591; }
+    .pin.new { background: #FF9A76; }
     .leaflet-marker-icon:hover .pin { transform: rotate(-45deg) scale(1.15); }
 
-    .marker-cluster { background: rgba(37,99,235,.25); border-radius: 50%; }
-    .marker-cluster div { width: 32px; height: 32px; margin: 4px; border-radius: 50%; background: #1d4ed8; color: #fff; font: 700 12px/32px Inter, sans-serif; text-align: center; border: 2px solid #fff; }
+    .marker-cluster { background: rgba(242,84,125,.22); border-radius: 50%; }
+    .marker-cluster div { width: 32px; height: 32px; margin: 4px; border-radius: 50%; background: linear-gradient(135deg,#FF9A76,#F2547D); color: #fff; font: 700 12px/32px -apple-system, BlinkMacSystemFont, sans-serif; text-align: center; border: 2px solid #fff; }
 
-    .you-dot { width: 16px; height: 16px; border-radius: 50%; background: #3b82f6; border: 3px solid #fff; box-shadow: 0 0 0 6px rgba(59,130,246,.3); }
+    .tab { color: #86776F; transition: all .15s; }
+    .tab.active { background: #fff; color: #2A1E1B; box-shadow: 0 1px 4px rgba(42,30,27,.12); }
+    .cv-dot { width: 14px; height: 14px; border-radius: 50%; background: #8B5CF6; border: 2px solid #fff; box-shadow: 0 2px 6px rgba(42,30,27,.35); }
+    .you-dot { width: 16px; height: 16px; border-radius: 50%; background: #0A84FF; border: 3px solid #fff; box-shadow: 0 0 0 6px rgba(10,132,255,.25); }
+    .on-accent, .on-accent * { color: #fff !important; }
+    .brand-grad { background: linear-gradient(135deg, #FF9A76 0%, #F2547D 100%); }
+    .card-shadow { box-shadow: 0 1px 2px rgba(42,30,27,.05), 0 6px 20px rgba(42,30,27,.06); }
 
     .modal { display: none; }
-    .modal.active { display: flex; animation: fade .15s ease-out; }
-    .modal.active > .panel { animation: rise .2s ease-out; }
+    .modal.active { display: flex; animation: fade .18s ease-out; }
+    .modal.active > .panel { animation: rise .32s cubic-bezier(.32,.72,0,1); }
     @keyframes fade { from { opacity: 0 } }
-    @keyframes rise { from { transform: translateY(16px); opacity: 0 } }
+    @keyframes rise { from { transform: translateY(40px); opacity: 0 } }
 
-    .toast { animation: rise .2s ease-out; }
-    .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; }
+    .toast { animation: rise .25s cubic-bezier(.32,.72,0,1); }
+    .spinner { width: 16px; height: 16px; border: 2px solid rgba(42,30,27,.15); border-top-color: currentColor; border-radius: 50%; animation: spin .7s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg) } }
 
     input[type=number]::-webkit-inner-spin-button { opacity: .4; }
-    input[type=date]::-webkit-calendar-picker-indicator { filter: invert(1); opacity: .6; }
+    input[type=date]::-webkit-calendar-picker-indicator { opacity: .5; }
     .scroll-thin::-webkit-scrollbar { width: 6px; }
-    .scroll-thin::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
+    .scroll-thin::-webkit-scrollbar-thumb { background: #EBDDD8; border-radius: 3px; }
 
-    .field { width: 100%; padding: .625rem .75rem; background: #18181b; border: 1px solid #3f3f46; border-radius: .5rem; font-size: .875rem; color: #fff; outline: none; transition: border-color .15s, box-shadow .15s; }
-    .field:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.25); }
-    .field::placeholder { color: #71717a; }
-    .label { display: block; font-size: .75rem; font-weight: 500; color: #a1a1aa; margin-bottom: .375rem; }
-    .btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; font-weight: 600; font-size: .875rem; border-radius: .5rem; padding: .625rem 1rem; transition: background .15s, opacity .15s; }
+    .field { width: 100%; padding: .7rem .85rem; background: #FFFFFF; border: 1px solid #EBDDD8; border-radius: .75rem; font-size: 1rem; color: #2A1E1B; outline: none; transition: border-color .15s, box-shadow .15s; }
+    .field:focus { border-color: #F2547D; box-shadow: 0 0 0 4px rgba(242,84,125,.15); }
+    .field::placeholder { color: #B9ACA7; }
+    select.field { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2386776F' stroke-width='3'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right .85rem center; padding-right: 2.2rem; }
+    .label { display: block; font-size: .8rem; font-weight: 500; color: #86776F; margin-bottom: .375rem; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; font-weight: 600; font-size: .95rem; border-radius: .85rem; padding: .7rem 1.1rem; transition: background .15s, opacity .15s, transform .1s; }
+    .btn:active:not(:disabled) { transform: scale(.98); }
     .btn:disabled { opacity: .6; cursor: not-allowed; }
-    .btn-primary { background: #2563eb; color: #fff; } .btn-primary:hover:not(:disabled) { background: #1d4ed8; }
-    .btn-ghost { background: #27272a; color: #fff; } .btn-ghost:hover:not(:disabled) { background: #3f3f46; }
-    .btn-danger { background: transparent; color: #f87171; } .btn-danger:hover { background: rgba(248,113,113,.1); }
-    .chip { padding: .375rem .75rem; font-size: .75rem; font-weight: 500; border-radius: 9999px; color: #a1a1aa; transition: all .15s; white-space: nowrap; }
-    .chip.active { background: #fff; color: #09090b; }
-    .chip:not(.active):hover { color: #fff; background: #27272a; }
+    .btn-primary { background: linear-gradient(135deg, #FF9A76 0%, #F2547D 100%); color: #fff; box-shadow: 0 6px 16px rgba(242,84,125,.25); } .btn-primary:hover:not(:disabled) { filter: brightness(.97); }
+    .btn-ghost { background: #F6ECE8; color: #2A1E1B; } .btn-ghost:hover:not(:disabled) { background: #EBDDD8; }
+    .btn-sm { padding: .4rem .7rem; font-size: .8rem; border-radius: .65rem; }
+    .btn-green { background: #1F9D63; color: #fff; box-shadow: 0 6px 16px rgba(31,157,99,.22); } .btn-green:hover:not(:disabled) { background: #17915A; }
+    .btn-red { background: #E5484D; color: #fff; } .btn-red:hover:not(:disabled) { background: #D13B40; }
+    .btn-danger { background: transparent; color: #E5484D; } .btn-danger:hover { background: rgba(229,72,77,.08); }
+    .chip { padding: .4rem .8rem; font-size: .8rem; font-weight: 600; border-radius: 9999px; color: #86776F; transition: all .15s; white-space: nowrap; }
+    .chip.active { background: #FFE8EE; color: #E2456E; }
+    .chip:not(.active):hover { color: #2A1E1B; background: #F6ECE8; }
+
+    /* iOS bottom tab bar (phones) */
+    #tabbar { padding-bottom: env(safe-area-inset-bottom); }
+    .tb-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 7px 0 5px; font-size: 10.5px; font-weight: 600; color: #A39591; }
+    .tb-item svg { width: 25px; height: 25px; }
+    .tb-item.active { color: #F2547D; }
+    @media (max-width: 767px) {
+      .above-tabbar { bottom: calc(env(safe-area-inset-bottom) + 70px) !important; }
+      #sidebar { width: 100vw; max-width: none; padding-bottom: calc(env(safe-area-inset-bottom) + 56px); border-right: 0; }
+      .modal { z-index: 2600 !important; }
+      .leaflet-bottom { bottom: calc(env(safe-area-inset-bottom) + 56px); }
+      [data-close-sidebar] { display: none; }
+    }
   </style>
 </head>
 <body class="bg-zinc-950 text-white antialiased font-sans overflow-hidden">
 
   <!-- ============ LOGIN ============ -->
   <div id="loginScreen" class="hidden fixed inset-0 z-[3000] bg-zinc-950 flex items-center justify-center p-4">
-    <div class="absolute inset-0 opacity-40 pointer-events-none" style="background: radial-gradient(600px circle at 50% 0%, rgba(37,99,235,.35), transparent 70%);"></div>
+    <div class="absolute inset-0 opacity-40 pointer-events-none" style="background: radial-gradient(600px circle at 50% 0%, rgba(255,154,118,.45), transparent 70%);"></div>
     <form id="loginForm" class="relative w-full max-w-sm">
       <div class="flex flex-col items-center text-center mb-8">
-        <div class="w-14 h-14 rounded-2xl bg-blue-600 grid place-items-center shadow-lg shadow-blue-600/30 mb-4">
+        <div class="w-16 h-16 rounded-[22px] brand-grad on-accent grid place-items-center shadow-lg shadow-blue-600/30 mb-4">
           <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21s-7-7.5-7-12a7 7 0 1114 0c0 4.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>
         </div>
         <h1 class="text-2xl font-bold tracking-tight">LWI Street Tracker</h1>
@@ -103,7 +127,7 @@
 
     <form id="setupForm" class="hidden relative w-full max-w-sm">
       <div class="flex flex-col items-center text-center mb-6">
-        <div class="w-14 h-14 rounded-2xl bg-blue-600 grid place-items-center shadow-lg shadow-blue-600/30 mb-4">
+        <div class="w-16 h-16 rounded-[22px] brand-grad on-accent grid place-items-center shadow-lg shadow-blue-600/30 mb-4">
           <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3l7 4v5c0 4.5-3 8-7 9-4-1-7-4.5-7-9V7l7-4z"/><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4"/></svg>
         </div>
         <h1 class="text-2xl font-bold tracking-tight">Welcome! Create the admin</h1>
@@ -131,7 +155,7 @@
 
       <!-- Header -->
       <header class="px-4 pt-4 pb-3 flex items-center gap-3">
-        <div class="w-9 h-9 rounded-xl bg-blue-600 grid place-items-center shrink-0">
+        <div class="w-9 h-9 rounded-xl brand-grad on-accent grid place-items-center shrink-0">
           <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21s-7-7.5-7-12a7 7 0 1114 0c0 4.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>
         </div>
         <div class="flex-1 min-w-0">
@@ -148,6 +172,42 @@
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
       </header>
+
+      <!-- TABS -->
+      <div id="tabBar" class="px-4 pb-3 max-md:!hidden">
+        <div class="flex bg-zinc-800/70 rounded-xl p-1 gap-1">
+          <button data-tab="streets" class="tab flex-1 py-1.5 text-sm font-semibold rounded-lg">Streets</button>
+          <button data-tab="converts" class="tab flex-1 py-1.5 text-sm font-semibold rounded-lg">Converts <span id="convertsTabCount" class="ml-1 text-[11px] bg-emerald-600 on-accent px-1.5 py-0.5 rounded-full">0</span></button>
+        </div>
+      </div>
+
+      <!-- CONVERTS VIEW -->
+      <section id="convertsView" class="hidden flex-1 flex flex-col min-h-0">
+        <div class="px-4 pb-3 space-y-2.5 border-b border-zinc-800">
+          <div class="grid grid-cols-3 gap-2">
+            <div class="bg-zinc-800/60 rounded-xl p-2.5"><p class="text-[10px] uppercase tracking-wider text-zinc-400">Recorded</p><p id="cvTotal" class="text-lg font-bold mt-0.5 text-emerald-400">0</p></div>
+            <div class="bg-zinc-800/60 rounded-xl p-2.5"><p class="text-[10px] uppercase tracking-wider text-zinc-400">Followed up</p><p id="cvFollowed" class="text-lg font-bold mt-0.5">0</p></div>
+            <div class="bg-zinc-800/60 rounded-xl p-2.5"><p class="text-[10px] uppercase tracking-wider text-zinc-400">With GPS</p><p id="cvGps" class="text-lg font-bold mt-0.5">0</p></div>
+          </div>
+          <div class="relative">
+            <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path stroke-linecap="round" d="M20 20l-3.5-3.5"/></svg>
+            <input id="cvSearch" type="search" placeholder="Search name, phone, street…" class="field py-2" style="padding-left:2.25rem" />
+          </div>
+          <div class="flex items-center gap-1 overflow-x-auto" id="cvFilters">
+            <button class="chip active" data-cvfilter="all">All</button>
+            <button class="chip" data-cvfilter="pending">Needs follow-up</button>
+            <button class="chip" data-cvfilter="nogps">No GPS</button>
+          </div>
+        </div>
+        <div id="convertsList" class="flex-1 overflow-y-auto scroll-thin"></div>
+        <div class="p-3 border-t border-zinc-800 flex gap-2">
+          <button id="exportCsvBtn" class="btn btn-ghost text-xs" title="Download as spreadsheet (CSV)">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
+            Export
+          </button>
+          <button data-action="add-convert" class="btn btn-green flex-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 5v14M5 12h14"/></svg> Add convert</button>
+        </div>
+      </section>
 
       <!-- LIST VIEW -->
       <section id="listView" class="flex-1 flex flex-col min-h-0">
@@ -227,6 +287,11 @@
           </div>
         </div>
         <div class="flex-1 overflow-y-auto scroll-thin p-4">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-xs font-semibold uppercase tracking-wider text-zinc-400">Converts from this street</h3>
+            <button id="detailAddConvert" class="text-xs font-semibold text-emerald-400 hover:text-emerald-300">+ Add</button>
+          </div>
+          <div id="detailConvertsList" class="space-y-2 mb-6"></div>
           <h3 class="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-3">Visit history</h3>
           <div id="visitHistory" class="space-y-2"></div>
           <button id="deleteStreetBtn" class="hidden btn btn-danger w-full mt-6 text-xs">Delete this street</button>
@@ -240,10 +305,10 @@
 
       <!-- Top bar (mobile) -->
       <div class="absolute top-3 left-3 right-3 z-[1000] flex items-center gap-2 pointer-events-none" style="top: max(.75rem, env(safe-area-inset-top));">
-        <button id="sidebarToggle" class="pointer-events-auto md:hidden bg-zinc-900/95 backdrop-blur border border-zinc-700/60 shadow-lg rounded-xl px-3 py-2.5 flex items-center gap-2 text-sm font-semibold">
+        <button id="sidebarToggle" class="hidden pointer-events-auto bg-zinc-900/95 backdrop-blur border border-zinc-700/60 shadow-lg rounded-xl px-3 py-2.5 flex items-center gap-2 text-sm font-semibold">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
           Streets
-          <span id="badgeCount" class="bg-blue-600 text-[11px] px-1.5 py-0.5 rounded-full">0</span>
+          <span id="badgeCount" class="brand-grad on-accent text-[11px] px-1.5 py-0.5 rounded-full">0</span>
         </button>
       </div>
 
@@ -255,23 +320,24 @@
       </div>
 
       <!-- Floating actions -->
-      <div class="absolute right-3 z-[1000] flex flex-col gap-2" style="bottom: max(1.5rem, calc(env(safe-area-inset-bottom) + 1rem));">
+      <div class="above-tabbar absolute right-3 z-[1000] flex flex-col gap-2" style="bottom: max(1.5rem, calc(env(safe-area-inset-bottom) + 1rem));">
         <button id="fitDivisionBtn" title="Show whole division" class="w-12 h-12 rounded-full bg-zinc-900/95 border border-zinc-700/60 shadow-lg grid place-items-center hover:bg-zinc-800">
           <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4h4M20 8V4h-4M4 16v4h4M20 16v4h-4"/><path stroke-linejoin="round" d="M8 9l4-2 4 3-1 6-5 1-3-4z"/></svg>
         </button>
         <button id="locateBtn" title="My location" class="w-12 h-12 rounded-full bg-zinc-900/95 border border-zinc-700/60 shadow-lg grid place-items-center hover:bg-zinc-800">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path stroke-linecap="round" d="M12 2v3m0 14v3M2 12h3m14 0h3"/><circle cx="12" cy="12" r="7"/></svg>
         </button>
-        <button data-action="add-street" title="Add street" class="w-14 h-14 rounded-full bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/40 grid place-items-center">
+        <button data-action="add-street" title="Add street" class="w-14 h-14 rounded-full brand-grad on-accent shadow-lg shadow-blue-600/40 grid place-items-center">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
         </button>
       </div>
 
       <!-- Legend -->
-      <div class="absolute left-3 z-[1000] bg-zinc-900/95 backdrop-blur border border-zinc-800 rounded-xl shadow-lg px-3 py-2 flex items-center gap-3 text-[11px] text-zinc-300" style="bottom: max(1.5rem, calc(env(safe-area-inset-bottom) + 1rem));">
+      <div class="above-tabbar absolute left-3 z-[1000] bg-zinc-900/95 backdrop-blur border border-zinc-800 rounded-xl card-shadow px-3 py-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-zinc-300 max-w-[62vw] sm:max-w-none" style="bottom: max(1.5rem, calc(env(safe-area-inset-bottom) + 1rem));">
         <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full bg-emerald-600"></i>Last 30 days</span>
         <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full bg-blue-600"></i>Visited</span>
         <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full bg-zinc-500"></i>Not yet</span>
+        <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full bg-violet-500 ring-2 ring-zinc-900"></i>Convert</span>
         <span class="hidden sm:flex items-center gap-1.5"><i class="w-4 h-0.5 bg-amber-400"></i>Division</span>
       </div>
 
@@ -281,6 +347,14 @@
       </div>
     </main>
   </div>
+
+  <!-- ============ iOS TAB BAR (phones) ============ -->
+  <nav id="tabbar" class="md:hidden fixed bottom-0 inset-x-0 z-[1700] flex border-t border-zinc-700/70" style="background:rgba(255,250,248,.88);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px)">
+    <button class="tb-item active" data-tb="map"><svg fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24"><path stroke-linejoin="round" d="M9 4L3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5 9 4z"/><path d="M9 4v13M15 6.5v13"/></svg>Map</button>
+    <button class="tb-item" data-tb="streets"><svg fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24"><path stroke-linecap="round" d="M8 6h13M8 12h13M8 18h13"/><circle cx="3.5" cy="6" r="1.2" fill="currentColor"/><circle cx="3.5" cy="12" r="1.2" fill="currentColor"/><circle cx="3.5" cy="18" r="1.2" fill="currentColor"/></svg>Streets</button>
+    <button class="tb-item" data-tb="converts"><svg fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24"><path stroke-linejoin="round" d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0112 7a4.3 4.3 0 017.5 2.8C19.5 15.4 12 20 12 20z"/></svg>Converts</button>
+    <button class="tb-item" data-tb="settings"><svg fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path stroke-linecap="round" d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Admin</button>
+  </nav>
 
   <!-- ============ ADD STREET MODAL ============ -->
   <div id="addModal" class="modal fixed inset-0 z-[2000] bg-black/70 backdrop-blur-sm items-end sm:items-center justify-center sm:p-4">
@@ -367,6 +441,63 @@
     </div>
   </div>
 
+  <!-- ============ CONVERT MODAL ============ -->
+  <div id="convertModal" class="modal fixed inset-0 z-[2000] bg-black/70 backdrop-blur-sm items-end sm:items-center justify-center sm:p-4">
+    <div class="panel bg-zinc-900 border border-zinc-800 w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl max-h-[95vh] flex flex-col shadow-2xl">
+      <div class="px-5 pt-5 pb-3 flex items-start justify-between">
+        <div class="min-w-0"><h2 id="cvModalTitle" class="text-lg font-bold">Add convert</h2><p id="cvModalSub" class="text-sm text-zinc-400 mt-0.5">Details for follow-up</p></div>
+        <button data-close class="p-2 -m-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M6 18L18 6M6 6l12 12"/></svg></button>
+      </div>
+      <form id="convertForm" class="overflow-y-auto px-5 pb-5 space-y-3">
+        <div><label class="label" for="cvName">Full name *</label><input id="cvName" required maxlength="200" autocomplete="off" class="field" placeholder="e.g. Ama Mensah" /></div>
+        <div class="grid grid-cols-3 gap-3">
+          <div><label class="label" for="cvAge">Age</label><input id="cvAge" type="number" inputmode="numeric" min="0" max="120" class="field" placeholder="—" /></div>
+          <div class="col-span-2"><label class="label" for="cvPhone">Phone / WhatsApp</label><input id="cvPhone" type="tel" inputmode="tel" maxlength="40" autocomplete="off" class="field" placeholder="e.g. 024 123 4567" /></div>
+        </div>
+        <div>
+          <label class="label" for="cvStreet">Street</label>
+          <select id="cvStreet" class="field"></select>
+        </div>
+        <div><label class="label" for="cvLocation">Where they live <span class="text-zinc-500 font-normal">(house no., landmark, directions)</span></label><textarea id="cvLocation" rows="2" maxlength="500" class="field resize-none" placeholder="e.g. Blue gate opposite the Total station, 2nd house"></textarea></div>
+
+        <div class="rounded-xl border border-zinc-800 bg-zinc-800/30 p-3 space-y-2.5">
+          <div class="flex items-center justify-between gap-2">
+            <p class="text-xs font-semibold text-zinc-300">GPS location <span class="text-zinc-500 font-normal">(optional, can add later)</span></p>
+            <button type="button" id="cvClearGps" class="hidden text-[11px] text-zinc-400 hover:text-red-400">Clear</button>
+          </div>
+          <div class="flex gap-2">
+            <button type="button" id="cvGpsBtn" class="btn btn-ghost flex-1 text-xs py-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="7"/><path stroke-linecap="round" d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg>
+              Use my GPS
+            </button>
+            <button type="button" id="cvPickBtn" class="btn btn-ghost flex-1 text-xs py-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21s-7-7.5-7-12a7 7 0 1114 0c0 4.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>
+              Pick on map
+            </button>
+          </div>
+          <div id="cvMapWrap" class="hidden rounded-lg overflow-hidden border border-zinc-700"><div id="cvMap" class="h-52"></div></div>
+          <div class="grid grid-cols-2 gap-2">
+            <input id="cvLat" inputmode="decimal" class="field py-2 text-xs" placeholder="Latitude e.g. 5.5712" />
+            <input id="cvLng" inputmode="decimal" class="field py-2 text-xs" placeholder="Longitude e.g. -0.2365" />
+          </div>
+          <p id="cvGpsStatus" class="text-[11px] text-zinc-500">No GPS yet. Fine for now; capture it when you visit them back.</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="label" for="cvDate">Decision date</label><input id="cvDate" type="date" class="field" /></div>
+          <div><label class="label" for="cvFollowed">Followed up on</label><input id="cvFollowed" type="date" class="field" /></div>
+        </div>
+        <div><label class="label" for="cvNotes">Notes</label><textarea id="cvNotes" rows="2" maxlength="2000" class="field resize-none" placeholder="Prayer requests, church they want to attend, best time to call…"></textarea></div>
+        <div class="flex gap-2 pt-2 flex-wrap">
+          <button type="button" id="cvDelete" class="hidden btn btn-danger">Delete</button>
+          <button type="button" data-close class="btn btn-ghost">Cancel</button>
+          <button type="button" id="cvSaveAnother" class="btn btn-ghost">Save &amp; add another</button>
+          <button type="submit" id="cvSave" class="btn btn-green flex-1">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- ============ ADMIN SETTINGS ============ -->
   <div id="settingsModal" class="modal fixed inset-0 z-[2000] bg-black/70 backdrop-blur-sm items-end sm:items-center justify-center sm:p-4">
     <div class="panel bg-zinc-900 border border-zinc-800 w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl max-h-[95vh] flex flex-col shadow-2xl">
@@ -375,6 +506,15 @@
         <button data-close class="p-2 -m-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M6 18L18 6M6 6l12 12"/></svg></button>
       </div>
       <div class="overflow-y-auto px-5 pb-5 space-y-6">
+        <div class="space-y-3">
+          <h3 class="text-xs font-semibold uppercase tracking-wider text-zinc-400">Field collectors</h3>
+          <p class="text-sm text-zinc-300">Share this link with your team. They enter their <b>name and phone once</b> (no password) and can start recording converts right away.</p>
+          <div class="flex gap-2">
+            <input id="collectLink" readonly class="field text-sm" onclick="this.select()" />
+            <button type="button" id="shareLinkBtn" class="btn btn-primary btn-sm shrink-0">Share</button>
+          </div>
+          <div id="collectorsList" class="rounded-xl border border-zinc-800 divide-y divide-zinc-800 text-sm"></div>
+        </div>
         <form id="accountForm" class="space-y-3">
           <h3 class="text-xs font-semibold uppercase tracking-wider text-zinc-400">Your login</h3>
           <div class="grid sm:grid-cols-2 gap-3">
@@ -390,7 +530,7 @@
           <p class="text-sm text-zinc-300">Delete <b>all streets and visits</b>, and remove every other account. Only your login stays. This cannot be undone.</p>
           <div><label class="label" for="resetPw">Your password</label><input id="resetPw" type="password" autocomplete="current-password" required class="field" /></div>
           <div><label class="label" for="resetWord">Type <b class="text-white">DELETE</b> to confirm</label><input id="resetWord" required class="field" autocomplete="off" /></div>
-          <button id="resetBtn" type="submit" class="btn w-full bg-red-600 hover:bg-red-700 text-white">Reset all data</button>
+          <button id="resetBtn" type="submit" class="btn btn-red w-full">Reset all data</button>
         </form>
       </div>
     </div>
@@ -403,7 +543,7 @@
       <p id="confirmText" class="text-sm text-zinc-400 mt-1"></p>
       <div class="flex gap-2 mt-5">
         <button data-close class="btn btn-ghost flex-1">Cancel</button>
-        <button id="confirmOk" class="btn flex-1 text-white">Delete</button>
+        <button id="confirmOk" class="btn btn-red flex-1">Delete</button>
       </div>
     </div>
   </div>
@@ -443,7 +583,10 @@
       selectedId: null,
       visitStreetId: null,
       markersById: new Map(),
-      lastLocation: null
+      lastLocation: null,
+      converts: [],
+      tab: store.get('lwi_tab') === 'converts' ? 'converts' : 'streets',
+      cvFilter: 'all'
     };
 
     // ---------- Helpers ----------
@@ -570,7 +713,31 @@
     });
 
     // Admin settings
+    async function loadCollectors() {
+      const el = $('collectorsList');
+      el.innerHTML = '<p class="p-3 text-xs text-zinc-400">Loading collectors…</p>';
+      try {
+        const list = await api('/collectors');
+        el.innerHTML = list.length ? list.map(k => `
+          <div class="flex items-center gap-3 p-3">
+            <div class="w-8 h-8 rounded-full bg-blue-500/15 text-blue-600 grid place-items-center font-bold text-xs shrink-0">${esc(k.name[0] || '?').toUpperCase()}</div>
+            <div class="flex-1 min-w-0"><p class="font-semibold truncate">${esc(k.name)}</p><p class="text-xs text-zinc-400">${esc(k.phone)} · active ${relDate(String(k.last_seen_at).slice(0, 10)).toLowerCase()}</p></div>
+            <span class="text-xs font-semibold text-emerald-400 shrink-0">${k.converts} converts</span>
+          </div>`).join('')
+          : '<p class="p-3 text-xs text-zinc-400">No collectors yet. Share the link above.</p>';
+      } catch { el.innerHTML = '<p class="p-3 text-xs text-zinc-400">Could not load collectors.</p>'; }
+    }
+    $('shareLinkBtn').onclick = async () => {
+      const url = $('collectLink').value;
+      try {
+        if (navigator.share) await navigator.share({ title: 'LWI Collect', text: 'Record converts for Living Waters outreach:', url });
+        else { await navigator.clipboard.writeText(url); toast('Link copied'); }
+      } catch {}
+    };
+
     $('settingsBtn').onclick = () => {
+      $('collectLink').value = `${location.origin}/collect`;
+      loadCollectors();
       $('accountForm').reset(); $('resetForm').reset();
       $('accName').value = state.user?.full_name || '';
       $('accEmail').value = state.user?.email || '';
@@ -598,7 +765,7 @@
       try {
         const r = await api('/admin/reset', { method: 'POST', body: JSON.stringify({ password: $('resetPw').value }) });
         closeModal('settingsModal');
-        toast(`Deleted ${r.streets} streets, ${r.visits} visits, ${r.accounts} other accounts`);
+        toast(`Deleted ${r.streets} streets, ${r.visits} visits, ${r.converts ?? 0} converts, ${r.accounts} other accounts`);
         state.selectedId = null; hideDetail();
         await loadStreets({ quiet: true });
       } catch (ex) { if (!ex.handled) toast(ex.message, 'error'); }
@@ -646,7 +813,7 @@
       const outer = toLatLngs(division.outer);
       if (mask) {
         const world = [[-90, -360], [-90, 360], [90, 360], [90, -360]];
-        L.polygon([world, outer], { stroke: false, fillColor: '#000', fillOpacity: 0.18, interactive: false }).addTo(target);
+        L.polygon([world, outer], { stroke: false, fillColor: '#2A1E1B', fillOpacity: 0.14, interactive: false }).addTo(target);
       }
       for (const d of division.districts) {
         if (mask) {
@@ -687,23 +854,23 @@
       return `
         <div style="min-width:200px">
           <div style="font-weight:700;font-size:15px">${esc(street.name)}</div>
-          <div style="color:#a1a1aa;font-size:12px;margin-bottom:10px">${esc(street.district)}</div>
+          <div style="color:#86776F;font-size:12px;margin-bottom:10px">${esc(street.district)}</div>
           ${v.length ? `
             <div style="display:flex;gap:12px;font-size:12px;margin-bottom:6px">
-              <span><b>${v.length}</b> <span style="color:#a1a1aa">visits</span></span>
-              <span><b>${fmt(sum(v, 'attendance'))}</b> <span style="color:#a1a1aa">people</span></span>
-              <span style="color:#34d399"><b>${fmt(sum(v, 'decisions'))}</b> converts</span>
+              <span><b>${v.length}</b> <span style="color:#86776F">visits</span></span>
+              <span><b>${fmt(sum(v, 'attendance'))}</b> <span style="color:#86776F">people</span></span>
+              <span style="color:#1F9D63"><b>${fmt(sum(v, 'decisions'))}</b> converts</span>
             </div>
-            <div style="color:#a1a1aa;font-size:12px;margin-bottom:12px">Last visit: ${relDate(v[0].visit_date)}</div>
-          ` : `<div style="color:#a1a1aa;font-size:12px;margin-bottom:12px">Not visited yet</div>`}
+            <div style="color:#86776F;font-size:12px;margin-bottom:12px">Last visit: ${relDate(v[0].visit_date)}</div>
+          ` : `<div style="color:#86776F;font-size:12px;margin-bottom:12px">Not visited yet</div>`}
           <div style="display:flex;gap:6px">
-            <button data-popup-log="${esc(street.id)}" style="flex:1;padding:8px;background:#2563eb;color:#fff;border:0;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">Log visit</button>
-            <button data-popup-open="${esc(street.id)}" style="padding:8px 12px;background:#27272a;color:#fff;border:0;border-radius:8px;font-size:13px;cursor:pointer">Details</button>
+            <button data-popup-log="${esc(street.id)}" style="flex:1;padding:8px;background:linear-gradient(135deg,#FF9A76,#F2547D);color:#fff;border:0;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer">Log visit</button>
+            <button data-popup-open="${esc(street.id)}" style="padding:8px 12px;background:#F6ECE8;color:#2A1E1B;border:0;border-radius:10px;font-size:13px;cursor:pointer">Details</button>
           </div>
         </div>`;
     }
 
-    const lineColor = { recent: '#22c55e', visited: '#3b82f6', unvisited: '#a1a1aa' };
+    const lineColor = { recent: '#1F9D63', visited: '#F2547D', unvisited: '#A39591' };
     function renderMap() {
       cluster.clearLayers();
       linesLayer.clearLayers();
@@ -764,7 +931,9 @@
     async function loadStreets({ quiet = false } = {}) {
       if (!quiet) $('mapLoading').classList.remove('hidden');
       try {
-        state.streets = await api('/streets');
+        const [streets, converts] = await Promise.all([api('/streets'), api('/converts').catch((e) => { if (e.handled) throw e; return state.converts; })]);
+        state.streets = streets;
+        state.converts = converts;
         renderAll();
         if (!quiet && !state.fitted && !division.outer) {
           const pts = state.streets.map(streetPoint).filter(Boolean);
@@ -783,6 +952,7 @@
     }
 
     function renderAll() {
+      renderConverts();
       renderStats();
       renderList();
       renderMap();
@@ -850,7 +1020,7 @@
               <p class="text-sm font-medium truncate">${esc(s.name)}</p>
               <p class="text-xs text-zinc-400 truncate">${division.outer && !inDivision(streetPoint(s)) ? '<span class="text-amber-400">Outside division</span> · ' : ''}${esc(s.district)}${v.length ? ` · ${relDate(v[0].visit_date)}` : ' · Not visited'}${converts ? ` · <span class="text-emerald-400">${converts} convert${converts === 1 ? '' : 's'}</span>` : ''}</p>
             </div>
-            <button data-log="${esc(s.id)}" class="shrink-0 text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-zinc-800 group-hover:bg-blue-600 hover:!bg-blue-700 transition">Log</button>
+            <button data-log="${esc(s.id)}" class="shrink-0 text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-zinc-800 group-hover:bg-blue-600 group-hover:text-[#fff] transition">Log</button>
           </div>`;
       }).join('');
     }
@@ -882,7 +1052,12 @@
       const v = s.visits || [];
       const st = streetStatus(s);
       $('listView').classList.add('hidden');
+      $('convertsView').classList.add('hidden');
+      $('tabBar').classList.add('hidden');
       $('detailView').classList.remove('hidden');
+      const sc = state.converts.filter(c => String(c.street_id) === String(s.id));
+      $('detailConvertsList').innerHTML = sc.length ? sc.map(convertCard).join('')
+        : `<p class="text-xs text-zinc-500 border border-dashed border-zinc-800 rounded-xl p-3 text-center">No convert details recorded for this street yet.</p>`;
       $('detailName').textContent = s.name;
       $('detailDistrict').textContent = s.district;
       const badge = { recent: ['Recently visited', 'bg-emerald-500/15 text-emerald-400'], visited: ['Visited', 'bg-blue-500/15 text-blue-400'], unvisited: ['Not visited', 'bg-zinc-700 text-zinc-300'] }[st];
@@ -921,12 +1096,14 @@
     function hideDetail() {
       state.selectedId = null;
       $('detailView').classList.add('hidden');
-      $('listView').classList.remove('hidden');
+      $('tabBar').classList.remove('hidden');
+      setTab(state.tab);
       renderList();
     }
 
     $('backBtn').onclick = hideDetail;
     $('detailLogBtn').onclick = () => openVisitModal(state.selectedId);
+    $('detailAddConvert').onclick = () => openConvertModal({ streetId: state.selectedId });
     $('detailZoomBtn').onclick = () => { focusStreet(state.selectedId); toggleSidebar(false); };
 
     $('visitHistory').addEventListener('click', (e) => {
@@ -952,7 +1129,7 @@
 
     // ---------- Modals ----------
     function openModal(id) { $(id).classList.add('active'); }
-    function closeModal(id) { $(id).classList.remove('active'); }
+    function closeModal(id) { $(id).classList.remove('active'); syncTabbar(); }
     document.querySelectorAll('.modal').forEach(m => {
       m.addEventListener('click', (e) => { if (e.target === m || e.target.closest('[data-close]')) closeModal(m.id); });
     });
@@ -966,7 +1143,7 @@
     let confirmHandler = null;
     function confirmAction(title, text, handler, { okLabel = 'Delete', danger = true } = {}) {
       $('confirmOk').textContent = okLabel;
-      $('confirmOk').className = `btn flex-1 text-white ${danger ? 'bg-red-600 hover:bg-red-700' : 'btn-primary'}`;
+      $('confirmOk').className = `btn flex-1 ${danger ? 'btn-red' : 'btn-primary'}`;
       $('confirmTitle').textContent = title;
       $('confirmText').textContent = text;
       confirmHandler = handler;
@@ -986,7 +1163,21 @@
       if (show === undefined) show = sb.classList.contains('-translate-x-full');
       sb.classList.toggle('-translate-x-full', !show);
       $('backdrop').classList.toggle('hidden', !show);
+      syncTabbar();
     }
+    function syncTabbar(force) {
+      const open = !$('sidebar').classList.contains('-translate-x-full');
+      const active = force || (open ? state.tab : 'map');
+      document.querySelectorAll('[data-tb]').forEach(b => b.classList.toggle('active', b.dataset.tb === active));
+    }
+    document.querySelectorAll('[data-tb]').forEach(b => b.onclick = () => {
+      const t = b.dataset.tb;
+      if (t === 'map') { toggleSidebar(false); return; }
+      if (t === 'settings') { $('settingsBtn').click(); syncTabbar('settings'); return; }
+      if (state.selectedId) hideDetail();
+      setTab(t);
+      toggleSidebar(true);
+    });
     $('sidebarToggle').onclick = () => toggleSidebar(true);
     $('backdrop').onclick = () => toggleSidebar(false);
     document.querySelector('[data-close-sidebar]').onclick = () => toggleSidebar(false);
@@ -1119,12 +1310,277 @@
         closeModal('visitModal');
         toast('Visit saved 🙏');
         await loadStreets({ quiet: true });
+        const n = visitNum('visitConverts');
+        if (n > 0) {
+          openConvertModal({ streetId: state.visitStreetId });
+          $('cvModalSub').textContent = `Record details for the ${n} convert${n === 1 ? '' : 's'} (use "Save & add another")`;
+        }
       } catch (err) {
         if (!err.handled) toast(err.message, 'error');
       } finally {
         setBusy(btn, false);
       }
     });
+
+    // ---------- Converts ----------
+    const convertsLayer = L.layerGroup().addTo(map);
+    const streetName = (id) => state.streets.find(s => String(s.id) === String(id))?.name || '';
+    const waNumber = (phone) => {
+      let d = String(phone || '').replace(/\D/g, '');
+      if (d.length === 10 && d.startsWith('0')) d = '233' + d.slice(1);
+      return d.length >= 9 ? d : '';
+    };
+
+    function setTab(tab) {
+      state.tab = tab; store.set('lwi_tab', tab);
+      document.querySelectorAll('[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+      $('listView').classList.toggle('hidden', tab !== 'streets');
+      $('convertsView').classList.toggle('hidden', tab !== 'converts');
+      if (typeof syncTabbar === 'function') syncTabbar();
+    }
+    document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => setTab(b.dataset.tab));
+    setTab(state.tab);
+
+    function convertCard(c) {
+      const wa = waNumber(c.phone);
+      const hasGps = c.latitude != null;
+      const street = c.street_name || streetName(c.street_id);
+      return `
+        <div class="bg-zinc-800/40 border border-zinc-800 rounded-xl p-3" data-convert="${esc(c.id)}">
+          <div class="flex items-start gap-2">
+            <div class="flex-1 min-w-0 cursor-pointer" data-cv-edit="${esc(c.id)}">
+              <p class="text-sm font-semibold truncate">${esc(c.full_name)}${c.age != null ? `<span class="text-zinc-400 font-normal">, ${c.age}</span>` : ''}</p>
+              <p class="text-xs text-zinc-400 truncate">${street ? esc(street) + ' · ' : ''}${relDate(c.decision_date)}${c.collector_name ? ` · by ${esc(c.collector_name)}` : ''}</p>
+              ${c.location ? `<p class="text-xs text-zinc-300 mt-1 line-clamp-2">${esc(c.location)}</p>` : ''}
+            </div>
+            <div class="flex flex-col items-end gap-1 shrink-0">
+              ${c.followed_up_at ? `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400">Followed up</span>` : `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400">Follow up</span>`}
+              <span class="text-[10px] ${hasGps ? 'text-sky-400' : 'text-zinc-500'}">${hasGps ? '📍 GPS' : 'No GPS'}</span>
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-1.5 mt-2.5">
+            ${c.phone ? `<a href="tel:${esc(c.phone.replace(/[^\d+]/g, ''))}" class="btn btn-ghost btn-sm">📞 Call</a>` : ''}
+            ${wa ? `<a href="https://wa.me/${wa}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">WhatsApp</a>` : ''}
+            ${hasGps ? `<a href="https://www.google.com/maps/dir/?api=1&destination=${c.latitude},${c.longitude}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">Directions</a>` : ''}
+            <button data-cv-follow="${esc(c.id)}" class="btn btn-ghost btn-sm ml-auto">${c.followed_up_at ? 'Edit' : '✓ Visited back'}</button>
+          </div>
+        </div>`;
+    }
+
+    function filteredConverts() {
+      const term = $('cvSearch').value.trim().toLowerCase();
+      return state.converts.filter(c => {
+        if (state.cvFilter === 'pending' && c.followed_up_at) return false;
+        if (state.cvFilter === 'nogps' && c.latitude != null) return false;
+        return !term || `${c.full_name} ${c.phone} ${c.location} ${c.street_name || streetName(c.street_id)} ${c.notes} ${c.collector_name || ''}`.toLowerCase().includes(term);
+      });
+    }
+
+    function renderConverts() {
+      const all = state.converts;
+      $('convertsTabCount').textContent = all.length;
+      $('cvTotal').textContent = fmt(all.length);
+      $('cvFollowed').textContent = fmt(all.filter(c => c.followed_up_at).length);
+      $('cvGps').textContent = fmt(all.filter(c => c.latitude != null).length);
+      const list = filteredConverts();
+      $('convertsList').innerHTML = !all.length
+        ? `<div class="p-8 text-center"><div class="w-12 h-12 mx-auto rounded-full bg-emerald-500/15 grid place-items-center mb-3 text-xl">🙏</div><p class="text-sm font-semibold">No converts recorded yet</p><p class="text-xs text-zinc-400 mt-1">Tap <b>Add convert</b> to record someone's details for follow-up.</p></div>`
+        : list.length ? `<div class="p-3 space-y-2">${list.map(convertCard).join('')}</div>` : `<div class="p-8 text-center text-sm text-zinc-400">No converts match.</div>`;
+
+      convertsLayer.clearLayers();
+      for (const c of all) {
+        if (c.latitude == null) continue;
+        L.marker([c.latitude, c.longitude], { icon: L.divIcon({ html: '<div class="cv-dot"></div>', className: '', iconSize: [14, 14] }), zIndexOffset: 500, title: c.full_name })
+          .bindPopup(() => `<div style="min-width:180px"><div style="font-weight:700;font-size:14px">${esc(c.full_name)}${c.age != null ? `, ${c.age}` : ''}</div>
+            <div style="color:#86776F;font-size:12px;margin:2px 0 8px">${esc(c.street_name || streetName(c.street_id) || 'Convert')}${c.phone ? ' · ' + esc(c.phone) : ''}</div>
+            ${c.location ? `<div style="font-size:12px;margin-bottom:8px">${esc(c.location)}</div>` : ''}
+            <button data-popup-cv="${esc(c.id)}" style="width:100%;padding:7px;background:#8B5CF6;color:#fff;border:0;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer">Open details</button></div>`, { className: 'lwi-popup' })
+          .addTo(convertsLayer);
+      }
+    }
+
+    map.on('popupopen', (e) => {
+      e.popup.getElement().querySelector('[data-popup-cv]')?.addEventListener('click', (ev) => { map.closePopup(); openConvertModal({ id: ev.currentTarget.dataset.popupCv }); });
+    });
+
+    $('cvSearch').addEventListener('input', renderConverts);
+    $('cvFilters').addEventListener('click', (e) => {
+      const chip = e.target.closest('[data-cvfilter]');
+      if (!chip) return;
+      state.cvFilter = chip.dataset.cvfilter;
+      document.querySelectorAll('[data-cvfilter]').forEach(c => c.classList.toggle('active', c === chip));
+      renderConverts();
+    });
+    const onCardClick = (e) => {
+      const f = e.target.closest('[data-cv-follow]');
+      if (f) { openConvertModal({ id: f.dataset.cvFollow, followUp: true }); return; }
+      const ed = e.target.closest('[data-cv-edit]');
+      if (ed) openConvertModal({ id: ed.dataset.cvEdit });
+    };
+    $('convertsList').addEventListener('click', onCardClick);
+    $('detailConvertsList').addEventListener('click', onCardClick);
+    document.querySelectorAll('[data-action="add-convert"]').forEach(b => b.onclick = () => openConvertModal({}));
+
+    // --- Convert form ---
+    let cvEditing = null, cvMap = null, cvMarker = null;
+
+    function setCvCoords(lat, lng, accuracy, source) {
+      if (lat == null) {
+        $('cvLat').value = ''; $('cvLng').value = ''; delete $('cvLat').dataset.acc;
+        $('cvGpsStatus').textContent = 'No GPS yet. Fine for now; capture it when you visit them back.';
+        $('cvGpsStatus').className = 'text-[11px] text-zinc-500';
+        $('cvClearGps').classList.add('hidden');
+        if (cvMarker) { cvMarker.remove(); cvMarker = null; }
+        return;
+      }
+      $('cvLat').value = Number(lat).toFixed(6); $('cvLng').value = Number(lng).toFixed(6);
+      if (accuracy != null) $('cvLat').dataset.acc = Math.round(accuracy); else delete $('cvLat').dataset.acc;
+      const inside = inDivision([lat, lng]);
+      $('cvGpsStatus').innerHTML = `✓ Location set${source ? ` from ${source}` : ''}${accuracy != null ? ` · accurate to ±${Math.round(accuracy)} m` : ''}${inside ? '' : ' · <span class="text-amber-400">outside Kaneshie Division</span>'}`;
+      $('cvGpsStatus').className = 'text-[11px] text-emerald-400';
+      $('cvClearGps').classList.remove('hidden');
+      if (cvMap) {
+        if (!cvMarker) {
+          cvMarker = L.marker([lat, lng], { draggable: true, icon: L.divIcon({ html: '<div class="cv-dot" style="width:20px;height:20px"></div>', className: '', iconSize: [20, 20] }) }).addTo(cvMap);
+          cvMarker.on('dragend', () => { const p = cvMarker.getLatLng(); setCvCoords(p.lat, p.lng, null, 'map'); });
+        } else cvMarker.setLatLng([lat, lng]);
+      }
+    }
+
+    function openConvertModal({ id, streetId, followUp } = {}) {
+      const c = id ? state.converts.find(x => String(x.id) === String(id)) : null;
+      if (id && !c) return;
+      cvEditing = c;
+      $('convertForm').reset();
+      $('cvMapWrap').classList.add('hidden');
+      $('cvModalTitle').textContent = c ? (followUp ? 'Visited back' : 'Edit convert') : 'Add convert';
+      $('cvModalSub').textContent = c ? (followUp ? `Mark ${c.full_name} as followed up${c.latitude == null ? ' and capture their GPS location' : ''}` : 'Update their details') : 'Details for follow-up';
+      const sid = c ? c.street_id : streetId;
+      $('cvStreet').innerHTML = `<option value="">— Not linked to a street —</option>` +
+        [...state.streets].sort((a, b) => a.name.localeCompare(b.name)).map(s => `<option value="${esc(s.id)}" ${String(s.id) === String(sid) ? 'selected' : ''}>${esc(s.name)} · ${esc(s.district)}</option>`).join('');
+      $('cvName').value = c?.full_name || '';
+      $('cvAge').value = c?.age ?? '';
+      $('cvPhone').value = c?.phone || '';
+      $('cvLocation').value = c?.location || '';
+      $('cvNotes').value = c?.notes || '';
+      $('cvDate').value = c?.decision_date ? String(c.decision_date).slice(0, 10) : todayISO();
+      $('cvDate').max = todayISO();
+      $('cvFollowed').value = c?.followed_up_at ? String(c.followed_up_at).slice(0, 10) : (followUp ? todayISO() : '');
+      $('cvFollowed').max = todayISO();
+      $('cvDelete').classList.toggle('hidden', !c);
+      $('cvSaveAnother').classList.toggle('hidden', !!c);
+      setCvCoords(c?.latitude ?? null, c?.longitude, c?.accuracy_m, null);
+      if (c?.latitude != null) $('cvGpsStatus').innerHTML = `✓ Location saved${c.accuracy_m ? ` · ±${c.accuracy_m} m` : ''}`;
+      toggleSidebar(false);
+      openModal('convertModal');
+      $('cvGpsBtn').classList.toggle('ring-2', !!(followUp && c?.latitude == null));
+      $('cvGpsBtn').classList.toggle('ring-emerald-500', !!(followUp && c?.latitude == null));
+      if (!c) setTimeout(() => $('cvName').focus(), 100);
+    }
+
+    $('cvGpsBtn').onclick = () => {
+      if (!navigator.geolocation) { toast('GPS is not available on this device', 'error'); return; }
+      const btn = $('cvGpsBtn');
+      setBusy(btn, true, 'Getting GPS…');
+      navigator.geolocation.getCurrentPosition((pos) => {
+        setBusy(btn, false);
+        btn.classList.remove('ring-2', 'ring-emerald-500');
+        setCvCoords(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy, 'GPS');
+        if (cvMap) cvMap.setView([pos.coords.latitude, pos.coords.longitude], 18);
+        if (pos.coords.accuracy > 50) toast(`GPS is rough (±${Math.round(pos.coords.accuracy)} m). Step outside and try again, or drag the pin on the map.`, 'info');
+      }, (err) => {
+        setBusy(btn, false);
+        toast(err.code === 1 ? 'Location permission denied. Allow it in your browser settings.' : 'Could not get GPS. Try again or pick on the map.', 'error');
+      }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
+    };
+
+    $('cvPickBtn').onclick = () => {
+      $('cvMapWrap').classList.remove('hidden');
+      requestAnimationFrame(() => {
+        if (!cvMap) {
+          cvMap = L.map('cvMap');
+          makeBase(baseKey).addTo(cvMap);
+          drawDivision(cvMap, { mask: false });
+          cvMap.on('click', (e) => setCvCoords(e.latlng.lat, e.latlng.lng, null, 'map'));
+        }
+        cvMap.invalidateSize();
+        const lat = parseFloat($('cvLat').value), lng = parseFloat($('cvLng').value);
+        const street = state.streets.find(s => String(s.id) === $('cvStreet').value);
+        const center = Number.isFinite(lat) && Number.isFinite(lng) ? [lat, lng] : (street && streetPoint(street)) || map.getCenter();
+        cvMap.setView(center, 17);
+        if (Number.isFinite(lat) && Number.isFinite(lng)) setCvCoords(lat, lng, $('cvLat').dataset.acc ?? null, null);
+      });
+    };
+    $('cvClearGps').onclick = () => setCvCoords(null);
+
+    async function saveConvert(addAnother) {
+      const form = $('convertForm');
+      if (!form.reportValidity()) return;
+      const lat = $('cvLat').value.trim(), lng = $('cvLng').value.trim();
+      if ((lat === '') !== (lng === '')) { toast('Enter both latitude and longitude, or leave both empty', 'error'); return; }
+      const body = {
+        full_name: $('cvName').value.trim(),
+        age: $('cvAge').value,
+        phone: $('cvPhone').value.trim(),
+        street_id: $('cvStreet').value || null,
+        location: $('cvLocation').value.trim(),
+        latitude: lat === '' ? null : Number(lat),
+        longitude: lng === '' ? null : Number(lng),
+        accuracy_m: $('cvLat').dataset.acc ?? null,
+        decision_date: $('cvDate').value,
+        followed_up_at: $('cvFollowed').value || null,
+        notes: $('cvNotes').value.trim()
+      };
+      const btn = addAnother ? $('cvSaveAnother') : $('cvSave');
+      setBusy(btn, true, 'Saving…');
+      try {
+        const saved = cvEditing
+          ? await api(`/converts/${encodeURIComponent(cvEditing.id)}`, { method: 'PUT', body: JSON.stringify(body) })
+          : await api('/converts', { method: 'POST', body: JSON.stringify(body) });
+        saved.street_name = streetName(saved.street_id);
+        const i = state.converts.findIndex(c => String(c.id) === String(saved.id));
+        if (i >= 0) state.converts[i] = saved; else state.converts.unshift(saved);
+        renderConverts();
+        if (state.selectedId) showDetail(state.selectedId);
+        toast(cvEditing ? 'Convert updated' : `${saved.full_name} saved 🙏`);
+        if (addAnother) {
+          const keepStreet = $('cvStreet').value, keepDate = $('cvDate').value;
+          openConvertModal({ streetId: keepStreet });
+          $('cvDate').value = keepDate;
+        } else closeModal('convertModal');
+      } catch (err) {
+        if (!err.handled) toast(err.message, 'error');
+      } finally { setBusy(btn, false); }
+    }
+    $('convertForm').addEventListener('submit', (e) => { e.preventDefault(); saveConvert(false); });
+    $('cvSaveAnother').onclick = () => saveConvert(true);
+    $('cvDelete').onclick = () => {
+      const c = cvEditing;
+      confirmAction(`Delete ${c.full_name}?`, 'Their details will be permanently removed.', async () => {
+        await api(`/converts/${encodeURIComponent(c.id)}`, { method: 'DELETE' });
+        state.converts = state.converts.filter(x => x.id !== c.id);
+        closeModal('convertModal');
+        renderConverts();
+        if (state.selectedId) showDetail(state.selectedId);
+        toast('Convert deleted');
+      });
+    };
+
+    // --- CSV export (opens in Excel / Google Sheets) ---
+    $('exportCsvBtn').onclick = () => {
+      const rows = filteredConverts();
+      if (!rows.length) { toast('Nothing to export', 'error'); return; }
+      const cols = [['Full name', c => c.full_name], ['Age', c => c.age ?? ''], ['Phone', c => c.phone], ['Street', c => c.street_name || streetName(c.street_id)],
+        ['Location', c => c.location], ['Latitude', c => c.latitude ?? ''], ['Longitude', c => c.longitude ?? ''], ['Decision date', c => String(c.decision_date || '').slice(0, 10)],
+        ['Followed up on', c => String(c.followed_up_at || '').slice(0, 10)], ['Notes', c => c.notes], ['Collected by', c => [c.collector_name, c.collector_phone].filter(Boolean).join(' ')]];
+      const cell = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+      const csv = '﻿' + [cols.map(c => cell(c[0])).join(','), ...rows.map(r => cols.map(c => cell(c[1](r))).join(','))].join('\r\n');
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+      a.download = `lwi-converts-${todayISO()}.csv`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    };
 
     // ---------- Import all streets in the division (admin) ----------
     const OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
