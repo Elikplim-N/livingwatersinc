@@ -2,8 +2,6 @@ import { VercelRequest, VercelResponse } from '@vercel/node';
 import pg from 'pg';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import crypto from 'node:crypto';
-import nodemailer from 'nodemailer';
 
 const { Pool } = pg;
 
@@ -36,68 +34,13 @@ function requireAuth(req: VercelRequest): AuthUser {
   if (!JWT_SECRET) throw new HttpError(500, 'Server misconfigured: JWT_SECRET is not set');
   const token = req.headers.authorization?.replace(/^Bearer\s+/i, '');
   if (!token) throw new HttpError(401, 'Please sign in');
-  let auth: AuthUser & { otp?: boolean };
   try {
-    auth = jwt.verify(token, JWT_SECRET) as AuthUser & { otp?: boolean };
+    const auth = jwt.verify(token, JWT_SECRET) as AuthUser;
+    if (auth.role === 'admin') return auth;
   } catch {
     throw new HttpError(401, 'Your session has expired. Please sign in again.');
   }
-  // Only admins who completed the email code step may use the app
-  if (auth.role !== 'admin' || !auth.otp) throw new HttpError(401, 'Please sign in again.');
-  return auth;
-}
-
-const IS_PROD = process.env.NODE_ENV === 'production' || !!process.env.VERCEL;
-const OTP_TTL_MIN = 10;
-const OTP_MAX_ATTEMPTS = 5;
-const SESSION_TTL = '12h';
-
-const hashCode = (code: string) => crypto.createHmac('sha256', JWT_SECRET).update(code).digest('hex');
-
-function maskEmail(email: string) {
-  const [user, domain] = email.split('@');
-  return `${user.slice(0, 2)}${'•'.repeat(Math.max(1, user.length - 2))}@${domain}`;
-}
-
-let otpTableReady = false;
-async function ensureOtpTable() {
-  if (otpTableReady) return;
-  await pool.query(`CREATE TABLE IF NOT EXISTS login_otps (
-    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id text NOT NULL,
-    code_hash text NOT NULL,
-    attempts integer NOT NULL DEFAULT 0,
-    expires_at timestamptz NOT NULL,
-    created_at timestamptz NOT NULL DEFAULT now()
-  )`);
-  otpTableReady = true;
-}
-
-async function sendOtpEmail(to: string, name: string, code: string) {
-  const { SMTP_USER, SMTP_PASS } = process.env;
-  if (!SMTP_USER || !SMTP_PASS) {
-    if (IS_PROD) throw new HttpError(500, 'Email is not set up on the server (SMTP_USER / SMTP_PASS).');
-    console.log(`[dev] Login code for ${to}: ${code}`);
-    return;
-  }
-  const transport = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: Number(process.env.SMTP_PORT || 465),
-    secure: Number(process.env.SMTP_PORT || 465) === 465,
-    auth: { user: SMTP_USER, pass: SMTP_PASS }
-  });
-  await transport.sendMail({
-    from: process.env.MAIL_FROM || `LWI Street Tracker <${SMTP_USER}>`,
-    to,
-    subject: `${code} is your LWI Street Tracker login code`,
-    text: `Hi ${name},\n\nYour login code is ${code}\n\nIt expires in ${OTP_TTL_MIN} minutes. If you did not try to sign in, change your password.\n`,
-    html: `<div style="font-family:Arial,sans-serif;max-width:420px;margin:auto;padding:24px">
-      <h2 style="margin:0 0 8px">LWI Street Tracker</h2>
-      <p>Hi ${name.replace(/[<>&]/g, '')}, use this code to sign in:</p>
-      <p style="font-size:32px;font-weight:700;letter-spacing:8px;background:#f4f4f5;padding:16px;text-align:center;border-radius:12px">${code}</p>
-      <p style="color:#71717a;font-size:13px">It expires in ${OTP_TTL_MIN} minutes. If you did not try to sign in, change your password.</p>
-    </div>`
-  });
+  throw new HttpError(401, 'Only admins can use this app.');
 }
 
 function toCount(value: unknown): number {
@@ -161,62 +104,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
       if (user.role !== 'admin') throw new HttpError(403, 'Only admins can use this app.');
 
-      await ensureOtpTable();
-      const recent = await pool.query(
-        `SELECT 1 FROM login_otps WHERE user_id = $1 AND created_at > now() - interval '30 seconds'`,
-        [String(user.id)]
-      );
-      if (recent.rows.length) throw new HttpError(429, 'A code was just sent. Wait 30 seconds before asking for another.');
-
-      const code = String(crypto.randomInt(0, 1_000_000)).padStart(6, '0');
-      await pool.query('DELETE FROM login_otps WHERE user_id = $1 OR expires_at < now()', [String(user.id)]);
-      const otp = await pool.query(
-        `INSERT INTO login_otps (user_id, code_hash, expires_at)
-         VALUES ($1, $2, now() + interval '${OTP_TTL_MIN} minutes') RETURNING id`,
-        [String(user.id), hashCode(code)]
-      );
-      try {
-        await sendOtpEmail(user.email, user.full_name || 'there', code);
-      } catch (err) {
-        await pool.query('DELETE FROM login_otps WHERE id = $1', [otp.rows[0].id]);
-        if (err instanceof HttpError) throw err;
-        console.error('Email send failed:', err);
-        throw new HttpError(502, 'Could not send the login code email. Please try again.');
-      }
-      return res.json({ otp_required: true, challenge: otp.rows[0].id, email_hint: maskEmail(user.email) });
-    }
-
-    if (resource === 'auth' && id === 'verify' && method === 'POST') {
-      if (!JWT_SECRET) throw new HttpError(500, 'Server misconfigured: JWT_SECRET is not set');
-      const challenge = String(req.body?.challenge || '');
-      const code = String(req.body?.code || '').replace(/\D/g, '');
-      if (!/^[0-9a-f-]{36}$/i.test(challenge) || code.length !== 6) throw new HttpError(400, 'Enter the 6-digit code from your email');
-
-      await ensureOtpTable();
-      const found = await pool.query(
-        `UPDATE login_otps SET attempts = attempts + 1
-         WHERE id = $1 AND expires_at > now() AND attempts < $2
-         RETURNING user_id, code_hash`,
-        [challenge, OTP_MAX_ATTEMPTS]
-      );
-      const row = found.rows[0];
-      if (!row) throw new HttpError(401, 'This code has expired or had too many wrong tries. Sign in again to get a new one.');
-      const ok = crypto.timingSafeEqual(Buffer.from(row.code_hash), Buffer.from(hashCode(code)));
-      if (!ok) throw new HttpError(400, 'That code is not correct. Check the email and try again.');
-
-      await pool.query('DELETE FROM login_otps WHERE id = $1', [challenge]);
-      const result = await pool.query(
-        `SELECT p.id, ac.email, p.full_name, p.role
-         FROM profiles p JOIN auth_credentials ac ON ac.user_id = p.id WHERE p.id = $1`,
-        [row.user_id]
-      );
-      const user = result.rows[0];
-      if (!user || user.role !== 'admin') throw new HttpError(403, 'Only admins can use this app.');
-
-      const token = jwt.sign({ userId: user.id, email: user.email, role: user.role, otp: true }, JWT_SECRET, {
-        expiresIn: SESSION_TTL
+      const token = jwt.sign({ userId: user.id, email: user.email, role: user.role }, JWT_SECRET, {
+        expiresIn: '30d'
       });
-      return res.json({ token, user });
+      return res.json({
+        token,
+        user: { id: user.id, email: user.email, full_name: user.full_name, role: user.role }
+      });
     }
 
     if (resource === 'auth' && id === 'me' && method === 'GET') {

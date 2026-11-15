@@ -84,7 +84,7 @@
         <h1 class="text-2xl font-bold tracking-tight">LWI Street Tracker</h1>
         <p class="text-sm text-zinc-400 mt-1">Living Waters Incorporated · Admin sign in</p>
       </div>
-      <div id="loginStep1" class="bg-zinc-900/80 backdrop-blur border border-zinc-800 rounded-2xl p-6 space-y-4 shadow-2xl">
+      <div class="bg-zinc-900/80 backdrop-blur border border-zinc-800 rounded-2xl p-6 space-y-4 shadow-2xl">
         <div>
           <label class="label" for="loginEmail">Email</label>
           <input id="loginEmail" type="email" autocomplete="username" required class="field" placeholder="you@example.com" />
@@ -97,29 +97,7 @@
           </div>
         </div>
         <p id="loginError" class="hidden text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"></p>
-        <button id="loginBtn" type="submit" class="btn btn-primary w-full">Continue</button>
-      </div>
-    </form>
-    <form id="otpForm" class="hidden relative w-full max-w-sm">
-      <div class="flex flex-col items-center text-center mb-8">
-        <div class="w-14 h-14 rounded-2xl bg-blue-600 grid place-items-center shadow-lg shadow-blue-600/30 mb-4">
-          <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7l9 6 9-6M5 5h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z"/></svg>
-        </div>
-        <h1 class="text-2xl font-bold tracking-tight">Check your email</h1>
-        <p class="text-sm text-zinc-400 mt-1">We sent a 6-digit code to <b id="otpEmail" class="text-white"></b></p>
-      </div>
-      <div class="bg-zinc-900/80 backdrop-blur border border-zinc-800 rounded-2xl p-6 space-y-4 shadow-2xl">
-        <div>
-          <label class="label" for="otpCode">Login code</label>
-          <input id="otpCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" required class="field text-center text-2xl font-bold" style="letter-spacing:.5em" placeholder="••••••" />
-        </div>
-        <p id="otpError" class="hidden text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"></p>
-        <button id="otpBtn" type="submit" class="btn btn-primary w-full">Verify &amp; sign in</button>
-        <div class="flex items-center justify-between text-xs">
-          <button type="button" id="otpBack" class="text-zinc-400 hover:text-white">← Use a different account</button>
-          <button type="button" id="otpResend" class="text-blue-400 hover:text-blue-300 disabled:text-zinc-500">Resend code</button>
-        </div>
-        <p class="text-[11px] text-zinc-500 text-center">The code expires in 10 minutes. Check your spam folder if you don't see it.</p>
+        <button id="loginBtn" type="submit" class="btn btn-primary w-full">Sign in</button>
       </div>
     </form>
   </div>
@@ -465,7 +443,7 @@
         throw new Error('Cannot reach the server. Check your internet connection.');
       }
       const data = await response.json().catch(() => ({}));
-      if (response.status === 401 && !path.startsWith('/auth/')) {
+      if (response.status === 401 && path !== '/auth/login') {
         logout(data.error || 'Please sign in again.');
         throw Object.assign(new Error(data.error || 'Session expired'), { handled: true });
       }
@@ -476,7 +454,6 @@
     // ---------- Auth ----------
     function showLogin(message) {
       $('loginScreen').classList.remove('hidden');
-      showStep(1);
       $('loginError').classList.toggle('hidden', !message);
       $('loginError').textContent = message || '';
       setTimeout(() => ($('loginEmail').value ? $('loginPassword') : $('loginEmail')).focus(), 50);
@@ -494,79 +471,26 @@
       $('togglePw').textContent = pw.type === 'password' ? 'Show' : 'Hide';
     };
 
-    let otpChallenge = null, resendTimer = null;
-    const showErr = (id, msg) => { $(id).textContent = msg || ''; $(id).classList.toggle('hidden', !msg); };
-
-    async function requestCode() {
-      const data = await api('/auth/login', { method: 'POST', body: JSON.stringify({ email: $('loginEmail').value.trim(), password: $('loginPassword').value }) });
-      otpChallenge = data.challenge;
-      $('otpEmail').textContent = data.email_hint;
-      startResendCooldown();
-    }
-
-    function startResendCooldown(seconds = 30) {
-      const b = $('otpResend');
-      clearInterval(resendTimer);
-      b.disabled = true;
-      const tick = () => { b.textContent = seconds > 0 ? `Resend in ${seconds}s` : 'Resend code'; if (seconds-- <= 0) { b.disabled = false; clearInterval(resendTimer); } };
-      tick(); resendTimer = setInterval(tick, 1000);
-    }
-
-    function showStep(step) {
-      $('loginForm').classList.toggle('hidden', step !== 1);
-      $('otpForm').classList.toggle('hidden', step !== 2);
-      showErr('loginError'); showErr('otpError');
-      setTimeout(() => (step === 2 ? $('otpCode') : $('loginEmail').value ? $('loginPassword') : $('loginEmail')).focus(), 50);
-    }
-
     $('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = $('loginBtn');
-      setBusy(btn, true, 'Sending code…');
-      showErr('loginError');
+      setBusy(btn, true, 'Signing in…');
+      $('loginError').classList.add('hidden');
       try {
-        await requestCode();
-        $('otpCode').value = '';
-        showStep(2);
-      } catch (err) {
-        showErr('loginError', err.message);
-      } finally {
-        setBusy(btn, false);
-      }
-    });
-
-    $('otpForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const btn = $('otpBtn');
-      setBusy(btn, true, 'Verifying…');
-      showErr('otpError');
-      try {
-        const data = await api('/auth/verify', { method: 'POST', body: JSON.stringify({ challenge: otpChallenge, code: $('otpCode').value }) });
+        const data = await api('/auth/login', { method: 'POST', body: JSON.stringify({ email: $('loginEmail').value.trim(), password: $('loginPassword').value }) });
         state.token = data.token; state.user = data.user;
         store.set('auth_token', data.token); store.set('auth_user', JSON.stringify(data.user));
         store.set('lwi_last_email', data.user.email);
-        $('loginPassword').value = ''; $('otpCode').value = ''; otpChallenge = null;
+        $('loginPassword').value = '';
         $('loginScreen').classList.add('hidden');
-        showStep(1);
         onSignedIn();
       } catch (err) {
-        showErr('otpError', err.message);
-        $('otpCode').select();
+        $('loginError').textContent = err.message;
+        $('loginError').classList.remove('hidden');
       } finally {
         setBusy(btn, false);
       }
     });
-
-    $('otpCode').addEventListener('input', (e) => {
-      e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6);
-      if (e.target.value.length === 6 && !$('otpBtn').disabled) $('otpForm').requestSubmit();
-    });
-    $('otpBack').onclick = () => { otpChallenge = null; $('loginPassword').value = ''; showStep(1); };
-    $('otpResend').onclick = async () => {
-      showErr('otpError');
-      try { await requestCode(); toast('A new code has been sent'); }
-      catch (err) { showErr('otpError', err.message); }
-    };
 
     $('logoutBtn').onclick = () => logout();
 
