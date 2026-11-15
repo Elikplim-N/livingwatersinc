@@ -40,6 +40,14 @@ scripts/db-setup.mjs  Creates tables and user accounts
 4. Deploy. The frontend and API are served from the same domain — no URLs to configure.
 5. Sign in as admin and tap **Load all streets in Kaneshie Division** once.
 
+## First-time setup (no computer needed)
+
+Open the deployed app. If the database has no admin yet, it shows **"Create the admin"**: the app creates all tables, clears any old data and makes that the single admin login.
+
+Already have an admin? Sign in, open **⚙ Admin settings** to change your name/email/password, or use **Reset all data** to delete every street, visit and other account (only you remain).
+
+Locked out? Set a `SETUP_KEY` environment variable in Vercel and POST `{ email, full_name, password, setup_key }` to `/api/setup` to wipe everything and create a new admin.
+
 ## Start fresh (one admin, no data)
 
 Deletes every street, visit and account, creates any missing tables, and leaves a single admin login:

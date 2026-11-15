@@ -48,6 +48,67 @@ function toCount(value: unknown): number {
   return Number.isFinite(n) && n > 0 ? Math.min(n, 100000) : 0;
 }
 
+const SCHEMA_SQL = `
+-- LWI Street Tracker schema. Safe to run more than once.
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+CREATE TABLE IF NOT EXISTS profiles (
+  id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  full_name  text NOT NULL,
+  role       text NOT NULL DEFAULT 'member',  -- 'admin' | 'member'
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS auth_credentials (
+  user_id       uuid PRIMARY KEY REFERENCES profiles(id) ON DELETE CASCADE,
+  email         text NOT NULL UNIQUE,
+  password_hash text NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS streets (
+  id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  osm_ids    bigint[] NOT NULL DEFAULT '{}',
+  name       text NOT NULL,
+  district   text NOT NULL,
+  geometry   jsonb NOT NULL,
+  length_m   numeric NOT NULL DEFAULT 0,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS visits (
+  id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  street_id    uuid NOT NULL REFERENCES streets(id) ON DELETE CASCADE,
+  visit_date   date NOT NULL,
+  team_members text[] NOT NULL DEFAULT '{}',
+  attendance   integer NOT NULL DEFAULT 0,
+  decisions    integer NOT NULL DEFAULT 0,
+  follow_ups   integer NOT NULL DEFAULT 0,
+  notes        text NOT NULL DEFAULT '',
+  photo_urls   text[] NOT NULL DEFAULT '{}',
+  created_by   uuid REFERENCES profiles(id) ON DELETE SET NULL,
+  created_at   timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS visits_street_id_idx ON visits(street_id);
+`;
+
+let schemaReady = false;
+async function ensureSchema() {
+  if (schemaReady) return;
+  await pool.query(SCHEMA_SQL);
+  schemaReady = true;
+}
+
+async function adminCount(): Promise<number> {
+  const { rows } = await pool.query(
+    `SELECT count(*)::int AS n FROM profiles p JOIN auth_credentials ac ON ac.user_id = p.id WHERE p.role = 'admin'`
+  );
+  return rows[0].n;
+}
+
+const signToken = (u: { id: string; email: string; role: string }) =>
+  jwt.sign({ userId: u.id, email: u.email, role: u.role }, JWT_SECRET, { expiresIn: '30d' });
+
 const STREET_SELECT = `
   SELECT
     s.id, s.name, s.district, s.geometry, s.length_m,
@@ -84,6 +145,84 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.json({ status: 'ok', timestamp: new Date().toISOString() });
     }
 
+    // ---- First-time setup: create tables + the single admin account ----
+    if (resource === 'setup' && method === 'GET') {
+      await ensureSchema();
+      return res.json({ needs_setup: (await adminCount()) === 0 });
+    }
+
+    if (resource === 'setup' && method === 'POST') {
+      if (!JWT_SECRET) throw new HttpError(500, 'Server misconfigured: JWT_SECRET is not set');
+      await ensureSchema();
+      const { email, full_name, password, setup_key } = req.body || {};
+      const keyOk = !!process.env.SETUP_KEY && setup_key === process.env.SETUP_KEY;
+      if ((await adminCount()) > 0 && !keyOk) throw new HttpError(403, 'Setup is already done. Sign in instead.');
+      if (!email?.trim() || !full_name?.trim()) throw new HttpError(400, 'Name and email are required');
+      if (String(password || '').length < 8) throw new HttpError(400, 'Password must be at least 8 characters');
+
+      const client = await pool.connect();
+      try {
+        await client.query('BEGIN');
+        // Start clean: remove all old data and accounts, leaving only this admin
+        await client.query('TRUNCATE visits, streets, auth_credentials, profiles RESTART IDENTITY CASCADE');
+        const p = await client.query(`INSERT INTO profiles (full_name, role) VALUES ($1, 'admin') RETURNING id`, [full_name.trim()]);
+        await client.query('INSERT INTO auth_credentials (user_id, email, password_hash) VALUES ($1, $2, $3)', [
+          p.rows[0].id, email.trim(), await bcrypt.hash(String(password), 10)
+        ]);
+        await client.query('COMMIT');
+        const user = { id: p.rows[0].id, email: email.trim(), full_name: full_name.trim(), role: 'admin' };
+        return res.status(201).json({ token: signToken(user), user });
+      } catch (err) {
+        await client.query('ROLLBACK');
+        throw err;
+      } finally {
+        client.release();
+      }
+    }
+
+    // ---- Admin account & data control ----
+    if (resource === 'account' && method === 'PUT') {
+      const auth = requireAuth(req);
+      const { current_password, email, full_name, new_password } = req.body || {};
+      const cur = await pool.query('SELECT password_hash FROM auth_credentials WHERE user_id = $1', [auth.userId]);
+      if (!cur.rows[0] || !(await bcrypt.compare(String(current_password || ''), cur.rows[0].password_hash))) {
+        throw new HttpError(400, 'Current password is incorrect');
+      }
+      if (new_password && String(new_password).length < 8) throw new HttpError(400, 'New password must be at least 8 characters');
+      if (email?.trim()) await pool.query('UPDATE auth_credentials SET email = $1 WHERE user_id = $2', [email.trim(), auth.userId]);
+      if (full_name?.trim()) await pool.query('UPDATE profiles SET full_name = $1 WHERE id = $2', [full_name.trim(), auth.userId]);
+      if (new_password) await pool.query('UPDATE auth_credentials SET password_hash = $1 WHERE user_id = $2', [await bcrypt.hash(String(new_password), 10), auth.userId]);
+      const u = await pool.query(
+        `SELECT p.id, ac.email, p.full_name, p.role FROM profiles p JOIN auth_credentials ac ON ac.user_id = p.id WHERE p.id = $1`,
+        [auth.userId]
+      );
+      return res.json({ token: signToken(u.rows[0]), user: u.rows[0] });
+    }
+
+    if (resource === 'admin' && id === 'reset' && method === 'POST') {
+      const auth = requireAuth(req);
+      const cur = await pool.query('SELECT password_hash FROM auth_credentials WHERE user_id = $1', [auth.userId]);
+      if (!cur.rows[0] || !(await bcrypt.compare(String(req.body?.password || ''), cur.rows[0].password_hash))) {
+        throw new HttpError(400, 'Password is incorrect');
+      }
+      const client = await pool.connect();
+      try {
+        await client.query('BEGIN');
+        const v = await client.query('DELETE FROM visits');
+        const s = await client.query('DELETE FROM streets');
+        await client.query('DELETE FROM auth_credentials WHERE user_id <> $1', [auth.userId]);
+        const a = await client.query('DELETE FROM profiles WHERE id <> $1', [auth.userId]);
+        await client.query(`UPDATE profiles SET role = 'admin' WHERE id = $1`, [auth.userId]);
+        await client.query('COMMIT');
+        return res.json({ visits: v.rowCount, streets: s.rowCount, accounts: a.rowCount });
+      } catch (err) {
+        await client.query('ROLLBACK');
+        throw err;
+      } finally {
+        client.release();
+      }
+    }
+
     // ---- Auth ----
     if (resource === 'auth' && id === 'login' && method === 'POST') {
       if (!JWT_SECRET) throw new HttpError(500, 'Server misconfigured: JWT_SECRET is not set');
@@ -104,9 +243,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
       if (user.role !== 'admin') throw new HttpError(403, 'Only admins can use this app.');
 
-      const token = jwt.sign({ userId: user.id, email: user.email, role: user.role }, JWT_SECRET, {
-        expiresIn: '30d'
-      });
+      const token = signToken(user);
       return res.json({
         token,
         user: { id: user.id, email: user.email, full_name: user.full_name, role: user.role }

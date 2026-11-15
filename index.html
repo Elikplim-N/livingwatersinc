@@ -100,6 +100,24 @@
         <button id="loginBtn" type="submit" class="btn btn-primary w-full">Sign in</button>
       </div>
     </form>
+
+    <form id="setupForm" class="hidden relative w-full max-w-sm">
+      <div class="flex flex-col items-center text-center mb-6">
+        <div class="w-14 h-14 rounded-2xl bg-blue-600 grid place-items-center shadow-lg shadow-blue-600/30 mb-4">
+          <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3l7 4v5c0 4.5-3 8-7 9-4-1-7-4.5-7-9V7l7-4z"/><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4"/></svg>
+        </div>
+        <h1 class="text-2xl font-bold tracking-tight">Welcome! Create the admin</h1>
+        <p class="text-sm text-zinc-400 mt-1">First-time setup. This will be the only login, with full control.</p>
+      </div>
+      <div class="bg-zinc-900/80 backdrop-blur border border-zinc-800 rounded-2xl p-6 space-y-4 shadow-2xl">
+        <div><label class="label" for="setupName">Your name</label><input id="setupName" required class="field" placeholder="e.g. Pastor Kofi" /></div>
+        <div><label class="label" for="setupEmail">Email</label><input id="setupEmail" type="email" autocomplete="username" required class="field" placeholder="you@example.com" /></div>
+        <div><label class="label" for="setupPassword">Password <span class="text-zinc-500 font-normal">(8+ characters)</span></label><input id="setupPassword" type="password" autocomplete="new-password" minlength="8" required class="field" /></div>
+        <div><label class="label" for="setupPassword2">Confirm password</label><input id="setupPassword2" type="password" autocomplete="new-password" minlength="8" required class="field" /></div>
+        <p id="setupError" class="hidden text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"></p>
+        <button id="setupBtn" type="submit" class="btn btn-primary w-full">Create admin &amp; start</button>
+      </div>
+    </form>
   </div>
 
   <!-- ============ APP ============ -->
@@ -120,6 +138,9 @@
           <h1 class="text-sm font-bold leading-tight">LWI Street Tracker</h1>
           <p id="userName" class="text-xs text-zinc-400 truncate">&nbsp;</p>
         </div>
+        <button id="settingsBtn" title="Admin settings" class="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.3 4.3c.4-1.7 3-1.7 3.4 0a1.7 1.7 0 002.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 001 2.5c1.8.4 1.8 3 0 3.4a1.7 1.7 0 00-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 00-2.6 1c-.4 1.8-3 1.8-3.4 0a1.7 1.7 0 00-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 00-1.1-2.6c-1.7-.4-1.7-3 0-3.4a1.7 1.7 0 001.1-2.5c-.9-1.6.8-3.3 2.4-2.4a1.7 1.7 0 002.5-1.1z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
         <button id="logoutBtn" title="Sign out" class="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"/></svg>
         </button>
@@ -346,6 +367,35 @@
     </div>
   </div>
 
+  <!-- ============ ADMIN SETTINGS ============ -->
+  <div id="settingsModal" class="modal fixed inset-0 z-[2000] bg-black/70 backdrop-blur-sm items-end sm:items-center justify-center sm:p-4">
+    <div class="panel bg-zinc-900 border border-zinc-800 w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl max-h-[95vh] flex flex-col shadow-2xl">
+      <div class="px-5 pt-5 pb-3 flex items-start justify-between">
+        <div><h2 class="text-lg font-bold">Admin settings</h2><p class="text-sm text-zinc-400 mt-0.5">Your login and the app's data</p></div>
+        <button data-close class="p-2 -m-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M6 18L18 6M6 6l12 12"/></svg></button>
+      </div>
+      <div class="overflow-y-auto px-5 pb-5 space-y-6">
+        <form id="accountForm" class="space-y-3">
+          <h3 class="text-xs font-semibold uppercase tracking-wider text-zinc-400">Your login</h3>
+          <div class="grid sm:grid-cols-2 gap-3">
+            <div><label class="label" for="accName">Name</label><input id="accName" required class="field" /></div>
+            <div><label class="label" for="accEmail">Email</label><input id="accEmail" type="email" required class="field" /></div>
+          </div>
+          <div><label class="label" for="accNewPw">New password <span class="text-zinc-500 font-normal">(leave blank to keep)</span></label><input id="accNewPw" type="password" autocomplete="new-password" minlength="8" class="field" /></div>
+          <div><label class="label" for="accCurPw">Current password <span class="text-zinc-500 font-normal">(required to save)</span></label><input id="accCurPw" type="password" autocomplete="current-password" required class="field" /></div>
+          <button id="accSave" type="submit" class="btn btn-primary w-full">Save changes</button>
+        </form>
+        <form id="resetForm" class="space-y-3 border border-red-500/30 bg-red-500/5 rounded-xl p-4">
+          <h3 class="text-xs font-semibold uppercase tracking-wider text-red-400">Danger zone</h3>
+          <p class="text-sm text-zinc-300">Delete <b>all streets and visits</b>, and remove every other account. Only your login stays. This cannot be undone.</p>
+          <div><label class="label" for="resetPw">Your password</label><input id="resetPw" type="password" autocomplete="current-password" required class="field" /></div>
+          <div><label class="label" for="resetWord">Type <b class="text-white">DELETE</b> to confirm</label><input id="resetWord" required class="field" autocomplete="off" /></div>
+          <button id="resetBtn" type="submit" class="btn w-full bg-red-600 hover:bg-red-700 text-white">Reset all data</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <!-- ============ CONFIRM ============ -->
   <div id="confirmModal" class="modal fixed inset-0 z-[2500] bg-black/70 backdrop-blur-sm items-center justify-center p-4">
     <div class="panel bg-zinc-900 border border-zinc-800 w-full max-w-sm rounded-2xl p-5 shadow-2xl">
@@ -493,6 +543,67 @@
     });
 
     $('logoutBtn').onclick = () => logout();
+
+    function signedIn(data) {
+      state.token = data.token; state.user = data.user;
+      store.set('auth_token', data.token); store.set('auth_user', JSON.stringify(data.user));
+      store.set('lwi_last_email', data.user.email);
+    }
+
+    // First-time setup
+    $('setupForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const err = $('setupError');
+      err.classList.add('hidden');
+      if ($('setupPassword').value !== $('setupPassword2').value) { err.textContent = 'Passwords do not match'; err.classList.remove('hidden'); return; }
+      const btn = $('setupBtn');
+      setBusy(btn, true, 'Setting up…');
+      try {
+        const data = await api('/setup', { method: 'POST', body: JSON.stringify({ full_name: $('setupName').value.trim(), email: $('setupEmail').value.trim(), password: $('setupPassword').value }) });
+        signedIn(data);
+        $('loginScreen').classList.add('hidden');
+        toast('Admin account created');
+        onSignedIn();
+      } catch (ex) {
+        err.textContent = ex.message; err.classList.remove('hidden');
+      } finally { setBusy(btn, false); }
+    });
+
+    // Admin settings
+    $('settingsBtn').onclick = () => {
+      $('accountForm').reset(); $('resetForm').reset();
+      $('accName').value = state.user?.full_name || '';
+      $('accEmail').value = state.user?.email || '';
+      toggleSidebar(false);
+      openModal('settingsModal');
+    };
+    $('accountForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = $('accSave');
+      setBusy(btn, true, 'Saving…');
+      try {
+        const data = await api('/account', { method: 'PUT', body: JSON.stringify({ full_name: $('accName').value.trim(), email: $('accEmail').value.trim(), new_password: $('accNewPw').value || undefined, current_password: $('accCurPw').value }) });
+        signedIn(data);
+        $('userName').textContent = `${data.user.full_name} · Admin`;
+        closeModal('settingsModal');
+        toast('Login details updated');
+      } catch (ex) { if (!ex.handled) toast(ex.message, 'error'); }
+      finally { setBusy(btn, false); }
+    });
+    $('resetForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if ($('resetWord').value.trim() !== 'DELETE') { toast('Type DELETE to confirm', 'error'); return; }
+      const btn = $('resetBtn');
+      setBusy(btn, true, 'Deleting…');
+      try {
+        const r = await api('/admin/reset', { method: 'POST', body: JSON.stringify({ password: $('resetPw').value }) });
+        closeModal('settingsModal');
+        toast(`Deleted ${r.streets} streets, ${r.visits} visits, ${r.accounts} other accounts`);
+        state.selectedId = null; hideDetail();
+        await loadStreets({ quiet: true });
+      } catch (ex) { if (!ex.handled) toast(ex.message, 'error'); }
+      finally { setBusy(btn, false); }
+    });
 
     function onSignedIn() {
       const u = state.user;
@@ -1065,7 +1176,17 @@
     // ---------- Boot ----------
     $('loginEmail').value = store.get('lwi_last_email') || '';
     if (state.token) onSignedIn();
-    else { $('mapLoading').classList.add('hidden'); showLogin(); }
+    else {
+      $('mapLoading').classList.add('hidden');
+      showLogin();
+      api('/setup').then(s => {
+        if (s.needs_setup && !state.token) {
+          $('loginForm').classList.add('hidden');
+          $('setupForm').classList.remove('hidden');
+          setTimeout(() => $('setupName').focus(), 50);
+        }
+      }).catch(() => {});
+    }
   })();
   </script>
 </body>
