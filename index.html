@@ -1799,14 +1799,14 @@
         centerMarker?.remove();
         const name = esc(state.settings.center.name);
         centerMarker = htmlMarker(`
-          <div style="position:relative;width:44px;height:44px;cursor:pointer">
-            <div style="width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#FF9A76,#F2547D);border:3px solid #fff;box-shadow:0 6px 16px rgba(242,84,125,.45);display:grid;place-items:center">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v5M9.5 4.5h5M5 22V12l7-5 7 5v10M9 22v-5h6v5"/></svg>
+          <div style="position:relative;width:64px;height:64px;cursor:pointer">
+            <div style="width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,#A855F7,#6D28D9);border:4px solid #fff;box-shadow:0 8px 22px rgba(109,40,217,.5);display:grid;place-items:center">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v5M9.5 4.5h5M5 22V12l7-5 7 5v10M9 22v-5h6v5"/></svg>
             </div>
-            <div style="position:absolute;top:48px;left:50%;transform:translateX(-50%);white-space:nowrap;font:800 12px -apple-system,BlinkMacSystemFont,sans-serif;color:#2A1E1B;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 6px #fff">${name}</div>
+            <div style="position:absolute;top:70px;left:50%;transform:translateX(-50%);white-space:nowrap;font:800 15px -apple-system,BlinkMacSystemFont,sans-serif;color:#5B21B6;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 6px #fff,0 0 8px #fff">${name}</div>
           </div>`, { anchor: 'center' })
           .setLngLat(ll2(centerLL()))
-          .setPopup(new mapboxgl.Popup({ className: 'lwi-popup', offset: 26 }).setHTML(`<div style="min-width:160px"><div style="font-weight:800;font-size:15px;display:flex;align-items:center;gap:6px;color:#E2456E">${icon('church', 16)}<span style="color:#2A1E1B">${name}</span></div><div style="color:#86776F;font-size:12px;margin-top:2px">Centre of outreach</div></div>`))
+          .setPopup(new mapboxgl.Popup({ className: 'lwi-popup', offset: 36 }).setHTML(`<div style="min-width:160px"><div style="font-weight:800;font-size:15px;display:flex;align-items:center;gap:6px;color:#6D28D9">${icon('church', 16)}<span style="color:#2A1E1B">${name}</span></div><div style="color:#86776F;font-size:12px;margin-top:2px">Centre of outreach</div></div>`))
           .addTo(m);
       });
     }
