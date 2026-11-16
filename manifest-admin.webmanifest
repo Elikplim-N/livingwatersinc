@@ -1,0 +1,32 @@
+{
+  "display": "standalone",
+  "background_color": "#FFF6F2",
+  "theme_color": "#FFF6F2",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/img/logo-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/img/logo-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/img/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "id": "/",
+  "name": "LW Inc. Street Campaign",
+  "short_name": "LW Campaign",
+  "start_url": "/",
+  "scope": "/",
+  "description": "Plan and track street outreach"
+}
