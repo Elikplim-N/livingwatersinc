@@ -582,6 +582,28 @@
     </div>
   </div>
 
+  <!-- ============ VIEW CHOOSER (Street View / Google Earth) ============ -->
+  <div id="viewChoice" class="modal fixed inset-0 z-[2400] bg-black/60 backdrop-blur-sm items-end sm:items-center justify-center sm:p-4">
+    <div class="panel bg-zinc-900 w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl p-5 shadow-2xl" style="padding-bottom:max(1.25rem, env(safe-area-inset-bottom))">
+      <div class="w-10 h-1 rounded-full bg-zinc-700 mx-auto mb-4 sm:hidden"></div>
+      <h2 class="text-lg font-bold">See this street</h2>
+      <p id="vcName" class="text-sm text-zinc-400 mt-0.5 truncate"></p>
+      <div class="mt-4 space-y-2">
+        <button id="vcStreetView" class="w-full flex items-center gap-3 p-3.5 rounded-2xl bg-zinc-800 hover:bg-zinc-700 text-left">
+          <span class="w-11 h-11 rounded-xl brand-grad on-accent grid place-items-center shrink-0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></span>
+          <span class="flex-1"><span class="block font-semibold">Google Street View</span><span class="block text-xs text-zinc-400">Walk the street at ground level</span></span>
+          <span class="text-zinc-500"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>
+        </button>
+        <button id="vcEarth" class="w-full flex items-center gap-3 p-3.5 rounded-2xl bg-zinc-800 hover:bg-zinc-700 text-left">
+          <span class="w-11 h-11 rounded-xl bg-[#1A73E8] on-accent grid place-items-center shrink-0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"/></svg></span>
+          <span class="flex-1"><span class="block font-semibold">Google Earth</span><span class="block text-xs text-zinc-400">3D satellite view · opens the Earth app if installed</span></span>
+          <span class="text-zinc-500"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>
+        </button>
+      </div>
+      <button data-close class="btn btn-ghost w-full mt-3">Cancel</button>
+    </div>
+  </div>
+
   <!-- ============ STREET VIEW ============ -->
   <div id="svModal" class="modal fixed inset-0 z-[2400] bg-black/80 backdrop-blur-sm items-end sm:items-center justify-center sm:p-4">
     <div class="panel bg-zinc-900 w-full sm:max-w-3xl rounded-t-2xl sm:rounded-2xl overflow-hidden shadow-2xl flex flex-col" style="height:min(85vh,640px)">
@@ -1424,7 +1446,22 @@
     });
 
     // ---------- Google Street View ----------
+    // Street View button: let people choose Google Street View or Google Earth
+    let viewTarget = null;
     function openStreetView(lat, lng, name) {
+      viewTarget = { lat, lng, name };
+      $('vcName').textContent = name || `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+      openModal('viewChoice');
+    }
+    $('vcStreetView').onclick = () => { closeModal('viewChoice'); const t = viewTarget; if (t) openGoogleStreetView(t.lat, t.lng, t.name); };
+    $('vcEarth').onclick = () => {
+      closeModal('viewChoice');
+      const t = viewTarget;
+      // lat,lng, 40 m altitude, 350 m camera distance, 55° tilt: a 3D look along the street
+      if (t) window.open(`https://earth.google.com/web/@${t.lat},${t.lng},40a,350d,35y,0h,55t,0r`, '_blank', 'noopener');
+    };
+
+    function openGoogleStreetView(lat, lng, name) {
       const key = state.config?.google_maps_key;
       const link = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
       if (!key) { window.open(link, '_blank', 'noopener'); return; }

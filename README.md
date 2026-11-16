@@ -35,7 +35,7 @@ Until a token is set, the map shows a "Connect Mapbox" card; everything else in 
 
 - **Up next:** on any street tap **Plan next**. Planned streets show an amber flag with a soft pulse on the map and appear in the **Up next** list at the top of Streets. Logging a visit takes the street off the list automatically.
 - **Focus:** selecting a street fades everything else so only that street stands out. Tap the map background or **All streets** to leave focus.
-- **Street View:** every street has a **Street View** button. With a Google key (below) it opens inside the app; without one it opens Google Maps Street View at that spot.
+- **Street View / Google Earth:** every street has a **Street View** button that lets you choose **Google Street View** (inside the app with a Google key, otherwise in Google Maps) or **Google Earth** (3D satellite view; opens the Earth app if installed).
 
 **Optional Google Street View inside the app:**
 1. Go to https://console.cloud.google.com, create a project and enable **Maps Embed API** (free, no per-use cost).
