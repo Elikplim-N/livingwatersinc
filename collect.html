@@ -8,7 +8,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="LW Inc. Collect" />
   <title>LW Inc. Street Campaign · Collect</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%23FF9A76'/><stop offset='1' stop-color='%23F2547D'/></linearGradient></defs><rect width='32' height='32' rx='8' fill='url(%23g)'/><path d='M16 24s-7-4.3-7-9.5A4 4 0 0116 12a4 4 0 017 2.5C23 19.7 16 24 16 24z' fill='white'/></svg>" />
+  <link rel="icon" type="image/png" href="/img/favicon-64.png" />
+  <link rel="apple-touch-icon" href="/img/apple-touch-icon.png" />
   <style>
     :root {
       --bg: #FFF6F2; --card: #FFFFFF; --ink: #2A1E1B; --muted: #8E7F7A; --faint: #B9ACA7; --line: #F1E4DF;
@@ -96,7 +97,7 @@
     .spin.dark { border-color: rgba(242,84,125,.25); border-top-color: var(--accent); }
     @keyframes s { to { transform: rotate(360deg); } }
     .hero { text-align: center; padding: 48px 8px 8px; }
-    .hero .logo { width: 72px; height: 72px; margin: 0 auto 18px; border-radius: 22px; background: var(--grad); display: grid; place-items: center; box-shadow: 0 14px 30px rgba(242,84,125,.3); }
+    .hero .logo { display: block; width: 104px; height: 104px; margin: 0 auto 18px; border-radius: 50%; box-shadow: 0 14px 30px rgba(7,104,206,.28); }
     .hero h1 { font-size: 30px; font-weight: 800; letter-spacing: -.02em; margin: 0; }
     .hero p { color: var(--muted); font-size: 16px; margin: 8px 0 0; line-height: 1.45; }
     .offline { background: var(--amber-soft); color: var(--amber); font-size: 13px; font-weight: 600; text-align: center; padding: 8px 12px; border-radius: 12px; margin-top: 12px; }
@@ -107,7 +108,7 @@
   <!-- ===== JOIN (once) ===== -->
   <section id="joinView" class="wrap hidden">
     <div class="hero">
-      <div class="logo"><svg width="36" height="36" viewBox="0 0 24 24" fill="#fff"><path d="M12 21s-8-4.9-8-11a4.6 4.6 0 018-3.1A4.6 4.6 0 0120 10c0 6.1-8 11-8 11z"/></svg></div>
+      <img class="logo" src="/img/logo-192.png" alt="Living Waters Incorporated" width="96" height="96" />
       <h1>Welcome</h1>
       <p>LW Inc. Street Campaign.<br>Enter your name and phone number once to start collecting.</p>
     </div>
