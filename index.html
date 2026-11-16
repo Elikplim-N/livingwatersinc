@@ -221,11 +221,11 @@
 
         <!-- Up next (planned streets) -->
         <div id="upNextWrap" class="hidden px-4 pb-3">
-          <div class="rounded-2xl border border-amber-400/40 bg-[#FFF7E6] p-3">
+          <div class="rounded-2xl border border-[#E11D48]/30 bg-[#FFF1F2] p-3">
             <div class="flex items-center gap-2 mb-2">
-              <span class="relative flex w-2.5 h-2.5"><span class="absolute inline-flex h-full w-full rounded-full bg-[#F59E0B] opacity-60 animate-ping"></span><span class="relative inline-flex w-2.5 h-2.5 rounded-full bg-[#F59E0B]"></span></span>
-              <h3 class="text-xs font-bold uppercase tracking-wider text-[#B45309]">Up next</h3>
-              <span id="upNextCount" class="ml-auto text-xs font-semibold text-[#B45309]"></span>
+              <span class="relative flex w-2.5 h-2.5"><span class="absolute inline-flex h-full w-full rounded-full bg-[#E11D48] opacity-60 animate-ping"></span><span class="relative inline-flex w-2.5 h-2.5 rounded-full bg-[#E11D48]"></span></span>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-[#BE123C]">Up next</h3>
+              <span id="upNextCount" class="ml-auto text-xs font-semibold text-[#BE123C]"></span>
             </div>
             <div id="upNextList" class="space-y-1.5"></div>
           </div>
@@ -348,10 +348,10 @@
 
       <!-- Legend -->
       <div id="mapLegend" class="above-tabbar absolute left-3 z-[1000] bg-zinc-900/95 backdrop-blur border border-zinc-800 rounded-xl card-shadow px-3 py-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-zinc-300 max-w-[62vw] sm:max-w-none" style="bottom: max(1.5rem, calc(env(safe-area-inset-bottom) + 1rem));">
-        <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full" style="background:#0891B2"></i>Not visited</span>
-        <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full" style="background:#F59E0B"></i>Up next</span>
-        <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full" style="background:#F2547D"></i>Visited</span>
-        <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full" style="background:#1F9D63"></i>Last 30 days</span>
+        <span class="flex items-center gap-1.5"><svg width="16" height="16" viewBox="0 0 24 24" style="flex-shrink:0"><circle cx="12" cy="12" r="11" fill="#fff"/><circle cx="12" cy="12" r="9" fill="#0891B2"/><circle cx="12" cy="12" r="3" fill="#fff"/></svg>Not visited</span>
+        <span class="flex items-center gap-1.5"><svg width="16" height="16" viewBox="0 0 24 24" style="flex-shrink:0"><circle cx="12" cy="12" r="11" fill="#fff"/><circle cx="12" cy="12" r="9" fill="#E11D48"/><path d="M7 21V4M7 4h10l-2.5 4L17 12H7" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" transform="translate(5.8 5.8) scale(.52)"/></svg>Up next</span>
+        <span class="flex items-center gap-1.5"><svg width="16" height="16" viewBox="0 0 24 24" style="flex-shrink:0"><circle cx="12" cy="12" r="11" fill="#fff"/><circle cx="12" cy="12" r="9" fill="#F2547D"/><path d="M6 12.5l4 4 8-9" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" transform="translate(5.8 5.8) scale(.52)"/></svg>Visited</span>
+        <span class="flex items-center gap-1.5"><svg width="16" height="16" viewBox="0 0 24 24" style="flex-shrink:0"><circle cx="12" cy="12" r="11" fill="#fff"/><circle cx="12" cy="12" r="9" fill="#1F9D63"/><path d="M6 12.5l4 4 8-9" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" transform="translate(5.8 5.8) scale(.52)"/></svg>Last 30 days</span>
         <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full" style="background:#8B5CF6"></i>Convert</span>
       </div>
 
@@ -620,6 +620,7 @@
     const RECENT_DAYS = 30;
     const $ = (id) => document.getElementById(id);
     const ICONS = {"eye": '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>', "nav": '<path d="M3 11l19-9-9 19-2-8-8-2z"/>', "pin": '<path d="M12 21s-7-7.5-7-12a7 7 0 1114 0c0 4.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/>', "map": '<path d="M9 4L3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5 9 4z"/><path d="M9 4v13M15 6.5v13"/>', "star": '<path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9L12 3z"/>', "users": '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 010 7M18 14.8c1.8.7 3 2.5 3.5 5.2"/>', "phone": '<path d="M5 3h4l2 5-2.5 1.5a11 11 0 006 6L16 13l5 2v4a2 2 0 01-2 2A16 16 0 013 5a2 2 0 012-2z"/>', "check": '<path d="M5 13l4 4L19 7"/>', "heart": '<path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0112 7a4.3 4.3 0 017.5 2.8C19.5 15.4 12 20 12 20z"/>', "gps": '<circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/><path d="M12 1v3m0 16v3M1 12h3m16 0h3"/>', "chat": '<path d="M21 12a9 9 0 01-13.5 7.8L3 21l1.2-4.5A9 9 0 1121 12z"/>', "church": '<path d="M12 2v5M9.5 4.5h5M5 22V12l7-5 7 5v10M9 22v-5h6v5"/>'};
+    ICONS.flag = '<path d="M5 21V4M5 4h11l-2.5 4L16 12H5"/>';
     const icon = (n, size = 16, fill = false) => `<svg width="${size}" height="${size}" style="flex-shrink:0" viewBox="0 0 24 24" fill="${fill ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[n]}</svg>`;
     const store = {
       get(k) { try { return localStorage.getItem(k); } catch { return null; } },
@@ -847,7 +848,7 @@
       return 2 * R * Math.asin(Math.sqrt(h));
     }
     // Colours: not visited = teal, visited = pink, visited in last 30 days = green, up next = amber
-    const COLORS = { unvisited: '#0891B2', visited: '#F2547D', recent: '#1F9D63', planned: '#F59E0B' };
+    const COLORS = { unvisited: '#0891B2', visited: '#F2547D', recent: '#1F9D63', planned: '#E11D48' };
     const STATUS_COLOR = ['case', ['get', 'planned'], COLORS.planned,
       ['match', ['get', 'status'], 'recent', COLORS.recent, 'visited', COLORS.visited, COLORS.unvisited]];
 
@@ -862,7 +863,7 @@
       mapboxgl.accessToken = token;
       if (!STYLES[baseKey] && !(baseKey === 'mapbox' && state.settings?.mapbox_style)) baseKey = 'street';
       state.appliedStyle = styleUrl(baseKey);
-      map = new mapboxgl.Map({ container: 'map', style: state.appliedStyle, center: ll2(centerLL()), zoom: 14.5, attributionControl: true });
+      map = window.lwMap = new mapboxgl.Map({ container: 'map', style: state.appliedStyle, center: ll2(centerLL()), zoom: 14.5, attributionControl: true });
       map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-right');
       map.on('style.load', () => {
         addAppLayers();
@@ -894,6 +895,38 @@
     document.querySelectorAll('[data-basemap]').forEach(b => b.onclick = () => setBasemap(b.dataset.basemap));
 
     const WORLD = [[-180, -85], [180, -85], [180, 85], [-180, 85], [-180, -85]];
+    // Map marker images: coloured disc + white SVG glyph (flag = up next, check = visited)
+    const MARKERS = {
+      'mk-unvisited': { color: COLORS.unvisited, glyph: null, size: 30 },
+      'mk-visited': { color: COLORS.visited, glyph: 'M6 12.5l4 4 8-9', size: 38 },
+      'mk-recent': { color: COLORS.recent, glyph: 'M6 12.5l4 4 8-9', size: 38 },
+      'mk-planned': { color: COLORS.planned, glyph: 'M7 21V4M7 4h10l-2.5 4L17 12H7', size: 46 }
+    };
+    function markerImage({ color, glyph, size }) {
+      const px = 2, s = size * px, c = document.createElement('canvas');
+      c.width = c.height = s;
+      const g = c.getContext('2d');
+      g.shadowColor = 'rgba(42,30,27,.35)'; g.shadowBlur = 4 * px; g.shadowOffsetY = 1.5 * px;
+      g.beginPath(); g.arc(s / 2, s / 2, s / 2 - 3 * px, 0, Math.PI * 2); g.fillStyle = '#fff'; g.fill();
+      g.shadowColor = 'transparent';
+      g.beginPath(); g.arc(s / 2, s / 2, s / 2 - 5.5 * px, 0, Math.PI * 2); g.fillStyle = color; g.fill();
+      if (glyph) {
+        const k = (s * 0.52) / 24;
+        g.save(); g.translate(s / 2 - 12 * k, s / 2 - 12 * k); g.scale(k, k);
+        g.strokeStyle = '#fff'; g.lineWidth = 2.8; g.lineCap = 'round'; g.lineJoin = 'round';
+        g.stroke(new Path2D(glyph)); g.restore();
+      } else {
+        g.beginPath(); g.arc(s / 2, s / 2, s * 0.12, 0, Math.PI * 2); g.fillStyle = '#fff'; g.fill();
+      }
+      return { width: s, height: s, data: new Uint8Array(g.getImageData(0, 0, s, s).data.buffer) };
+    }
+    const markerImages = {};
+    function addMarkerImages(m) {
+      for (const [name, def] of Object.entries(MARKERS)) {
+        markerImages[name] ||= markerImage(def);
+        if (!m.hasImage(name)) m.addImage(name, markerImages[name], { pixelRatio: 2 });
+      }
+    }
     // Sources + layers are re-added after every style change (setStyle wipes them)
     function addAppLayers() {
       for (const id of ['division-mask', 'division', 'streets', 'street-pts', 'converts']) map.addSource(id, { type: 'geojson', data: EMPTY });
@@ -911,9 +944,15 @@
       map.addLayer({ id: 'street-selected', type: 'line', source: 'streets', filter: ['==', ['get', 'id'], ''], layout: { 'line-cap': 'round', 'line-join': 'round' },
         paint: { 'line-color': STATUS_COLOR, 'line-width': W(7, 16), 'line-opacity': 1 } });
       map.addLayer({ id: 'planned-pulse', type: 'circle', source: 'street-pts', filter: ['==', ['get', 'planned'], true],
-        paint: { 'circle-color': COLORS.planned, 'circle-radius': 14, 'circle-opacity': 0.25, 'circle-blur': 0.4 } });
-      map.addLayer({ id: 'street-pts', type: 'circle', source: 'street-pts',
-        paint: { 'circle-color': STATUS_COLOR, 'circle-radius': W(4, 8), 'circle-stroke-width': 2, 'circle-stroke-color': '#fff' } });
+        paint: { 'circle-color': COLORS.planned, 'circle-radius': 20, 'circle-opacity': 0.35, 'circle-stroke-width': 2, 'circle-stroke-color': COLORS.planned, 'circle-stroke-opacity': 0.5 } });
+      addMarkerImages(map);
+      map.addLayer({ id: 'street-pts', type: 'symbol', source: 'street-pts',
+        layout: {
+          'icon-image': ['case', ['get', 'planned'], 'mk-planned', ['match', ['get', 'status'], 'recent', 'mk-recent', 'visited', 'mk-visited', 'mk-unvisited']],
+          'icon-size': ['interpolate', ['linear'], ['zoom'], 11, 0.55, 15, 0.8, 18, 1],
+          'icon-allow-overlap': true, 'icon-ignore-placement': true,
+          'symbol-sort-key': ['case', ['get', 'planned'], 3, ['==', ['get', 'status'], 'unvisited'], 1, 2]
+        } });
       map.addLayer({ id: 'converts', type: 'circle', source: 'converts',
         paint: { 'circle-color': '#8B5CF6', 'circle-radius': W(4, 8), 'circle-stroke-width': 2, 'circle-stroke-color': '#fff' } });
     }
@@ -954,8 +993,7 @@
       const onlySel = ['==', ['get', 'id'], id || '__none__'];
       map.setFilter('streets', onlySel);
       map.setFilter('streets-casing', onlySel);
-      map.setPaintProperty('street-pts', 'circle-opacity', dim(1, 0.12));
-      map.setPaintProperty('street-pts', 'circle-stroke-opacity', dim(1, 0.12));
+      map.setPaintProperty('street-pts', 'icon-opacity', dim(1, 0.15));
       map.setPaintProperty('converts', 'circle-opacity', on ? ['case', ['==', ['get', 'street_id'], id], 1, 0.12] : 1);
       map.setPaintProperty('converts', 'circle-stroke-opacity', on ? ['case', ['==', ['get', 'street_id'], id], 1, 0.12] : 1);
       map.setFilter('street-selected', ['==', ['get', 'id'], id || '__none__']);
@@ -969,11 +1007,12 @@
         requestAnimationFrame(frame);
         if (!mapReady || t - last < 50 || !state.streets.some(s => s.planned_at)) return;
         last = t;
-        const k = (Math.sin(t / 420) + 1) / 2;   // 0..1, ~2.6 s cycle
+        const k = (t % 1600) / 1600;   // 0..1 ring expansion, repeats every 1.6 s
         const focused = !!(state.selectedId || state.popupStreetId);
         try {
-          map.setPaintProperty('planned-pulse', 'circle-radius', 10 + k * 14);
-          map.setPaintProperty('planned-pulse', 'circle-opacity', focused ? 0 : 0.45 * (1 - k) + 0.05);
+          map.setPaintProperty('planned-pulse', 'circle-radius', 16 + k * 34);
+          map.setPaintProperty('planned-pulse', 'circle-opacity', focused ? 0 : 0.5 * (1 - k));
+          map.setPaintProperty('planned-pulse', 'circle-stroke-opacity', focused ? 0 : 0.8 * (1 - k));
         } catch { /* style is reloading */ }
       };
       requestAnimationFrame(frame);
@@ -1096,7 +1135,7 @@
             <div style="color:#86776F;font-size:12px;margin-bottom:12px">Last visit: ${relDate(v[0].visit_date)}</div>
           ` : `<div style="color:#86776F;font-size:12px;margin-bottom:12px">Not visited yet</div>`}
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
-            <button data-popup-plan="${esc(street.id)}" style="padding:8px;background:${street.planned_at ? '#FFF1D6' : '#F6ECE8'};color:${street.planned_at ? '#B45309' : '#2A1E1B'};border:0;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer"><span style="display:inline-flex;align-items:center;gap:5px">${icon('star', 14, !!street.planned_at)}${street.planned_at ? 'Up next' : 'Plan next'}</span></button>
+            <button data-popup-plan="${esc(street.id)}" style="padding:8px;background:${street.planned_at ? '#FFE4E8' : '#F6ECE8'};color:${street.planned_at ? '#BE123C' : '#2A1E1B'};border:0;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer"><span style="display:inline-flex;align-items:center;gap:5px">${icon('flag', 14)}${street.planned_at ? 'Up next' : 'Plan next'}</span></button>
             ${(() => { const pt = streetPoint(street); return pt ? `<button data-popup-sv="${pt[0]},${pt[1]}" data-name="${esc(street.name)}" style="padding:8px;background:#F6ECE8;color:#2A1E1B;border:0;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:5px">${icon('eye', 14)}Street View</button>` : '<span></span>'; })()}
           </div>
           <div style="display:flex;gap:6px">
@@ -1234,7 +1273,7 @@
         const converts = sum(v, 'decisions');
         return `
           <div class="group flex items-center gap-3 px-4 py-3 hover:bg-zinc-800/50 cursor-pointer border-b border-zinc-800/60 ${String(state.selectedId) === String(s.id) ? 'bg-zinc-800/60' : ''}" data-street="${esc(s.id)}">
-            <span class="w-2.5 h-2.5 rounded-full shrink-0 ${s.planned_at ? 'bg-[#F59E0B] animate-pulse' : dot[st]}"></span>
+            <span class="w-2.5 h-2.5 rounded-full shrink-0 ${s.planned_at ? 'bg-[#E11D48] animate-pulse' : dot[st]}"></span>
             <div class="flex-1 min-w-0">
               <p class="text-sm font-medium truncate">${esc(s.name)}</p>
               <p class="text-xs text-zinc-400 truncate">${division.outer && !inDivision(streetPoint(s)) ? '<span class="text-amber-400">Outside division</span> · ' : ''}${esc(s.district)}${v.length ? ` · ${relDate(v[0].visit_date)}` : ' · Not visited'}${converts ? ` · <span class="text-emerald-400">${converts} convert${converts === 1 ? '' : 's'}</span>` : ''}</p>
@@ -1279,7 +1318,7 @@
         : `<p class="text-xs text-zinc-500 border border-dashed border-zinc-800 rounded-xl p-3 text-center">No convert details recorded for this street yet.</p>`;
       $('detailName').textContent = s.name;
       $('detailDistrict').textContent = s.district;
-      const badge = s.planned_at ? ['Up next', 'bg-[#FFF1D6] text-[#B45309]'] : { recent: ['Visited recently', 'bg-emerald-500/15 text-emerald-400'], visited: ['Visited', 'bg-blue-500/15 text-blue-600'], unvisited: ['Not visited', 'bg-[#0891B2]/10 text-[#0E7490]'] }[st];
+      const badge = s.planned_at ? ['Up next', 'bg-[#FFE4E8] text-[#BE123C]'] : { recent: ['Visited recently', 'bg-emerald-500/15 text-emerald-400'], visited: ['Visited', 'bg-blue-500/15 text-blue-600'], unvisited: ['Not visited', 'bg-[#0891B2]/10 text-[#0E7490]'] }[st];
       $('detailBadge').textContent = badge[0];
       $('detailBadge').className = `text-[11px] font-semibold px-2 py-1 rounded-full shrink-0 ${badge[1]}`;
       $('detailVisits').textContent = v.length;
@@ -1287,8 +1326,8 @@
       $('detailConverts').textContent = fmt(sum(v, 'decisions'));
       const pt = streetPoint(s);
       $('detailDirections').href = pt ? `https://www.google.com/maps/dir/?api=1&destination=${pt[0]},${pt[1]}` : '#';
-      $('detailPlanBtn').innerHTML = `${icon('star', 16, !!s.planned_at)} ${s.planned_at ? 'Up next' : 'Plan next'}`;
-      $('detailPlanBtn').className = `btn text-sm ${s.planned_at ? 'bg-[#FFF1D6] text-[#B45309]' : 'btn-ghost'}`;
+      $('detailPlanBtn').innerHTML = `${icon('flag', 16)} ${s.planned_at ? 'Up next' : 'Plan next'}`;
+      $('detailPlanBtn').className = `btn text-sm ${s.planned_at ? 'bg-[#FFE4E8] text-[#BE123C]' : 'btn-ghost'}`;
       $('detailSvBtn').onclick = () => pt && openStreetView(pt[0], pt[1], s.name);
       applyFocus();
       $('deleteStreetBtn').classList.toggle('hidden', state.user?.role !== 'admin');
@@ -1355,10 +1394,10 @@
       $('upNextCount').textContent = `${list.length} planned`;
       $('upNextList').innerHTML = list.slice(0, 6).map((s, i) => `
         <div class="flex items-center gap-2 bg-zinc-900 rounded-xl px-2.5 py-2 cursor-pointer hover:bg-zinc-800" data-street="${esc(s.id)}">
-          <span class="w-5 h-5 rounded-full bg-[#F59E0B] on-accent text-[11px] font-bold grid place-items-center shrink-0">${i + 1}</span>
+          <span class="w-5 h-5 rounded-full bg-[#E11D48] on-accent text-[11px] font-bold grid place-items-center shrink-0">${i + 1}</span>
           <span class="flex-1 min-w-0 text-sm font-semibold truncate">${esc(s.name)}</span>
-          <button data-log="${esc(s.id)}" class="text-xs font-semibold px-2 py-1 rounded-lg bg-[#F59E0B] on-accent">Log</button>
-        </div>`).join('') + (list.length > 6 ? `<button class="text-xs font-semibold text-[#B45309] w-full pt-1" data-show-planned>See all ${list.length}</button>` : '');
+          <button data-log="${esc(s.id)}" class="text-xs font-semibold px-2 py-1 rounded-lg bg-[#E11D48] on-accent">Log</button>
+        </div>`).join('') + (list.length > 6 ? `<button class="text-xs font-semibold text-[#BE123C] w-full pt-1" data-show-planned>See all ${list.length}</button>` : '');
     }
     $('upNextList').addEventListener('click', (e) => {
       if (e.target.closest('[data-show-planned]')) { document.querySelector('[data-filter="planned"]').click(); return; }
