@@ -73,3 +73,10 @@ ALTER TABLE converts ADD COLUMN IF NOT EXISTS collector_name  text;
 ALTER TABLE converts ADD COLUMN IF NOT EXISTS collector_phone text;
 ALTER TABLE converts ADD COLUMN IF NOT EXISTS client_id       text;  -- prevents duplicates when an offline entry is retried
 CREATE UNIQUE INDEX IF NOT EXISTS converts_client_id_idx ON converts(client_id);
+
+-- App settings (centre pin, zone sizes, Mapbox style) edited by the admin
+CREATE TABLE IF NOT EXISTS app_settings (
+  key        text PRIMARY KEY,
+  value      jsonb NOT NULL,
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
