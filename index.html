@@ -561,14 +561,13 @@
       <div class="overflow-y-auto px-5 pb-5 space-y-6">
         <div class="space-y-3">
           <h3 class="text-xs font-semibold uppercase tracking-wider text-zinc-400">Overview link (view only)</h3>
-          <p class="text-sm text-zinc-300">For leaders: one tap opens a <b>read-only overview</b>, no login. It shows totals only, never names or phone numbers.</p>
+          <p class="text-sm text-zinc-300">For leaders: one tap opens a <b>read-only overview</b>, no login. This link never changes, so share it once.</p>
           <div class="flex gap-2">
             <input id="overviewLink" readonly class="field text-sm" onclick="this.select()" placeholder="Creating link…" />
             <button type="button" id="shareOverviewBtn" class="btn btn-primary btn-sm shrink-0">Share</button>
           </div>
           <div class="flex gap-2">
             <a id="openOverviewBtn" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">Open overview</a>
-            <button type="button" id="newOverviewBtn" class="btn btn-ghost btn-sm">Make a new link</button>
           </div>
         </div>
         <div class="space-y-3">
@@ -927,7 +926,6 @@
         else { await navigator.clipboard.writeText(url); toast('Overview link copied'); }
       } catch {}
     };
-    $('newOverviewBtn').onclick = () => confirmAction('Make a new overview link?', 'Anyone using the old link will lose access until you send them the new one.', () => ensureOverviewKey(true), { okLabel: 'Make new link', danger: false });
 
     $('settingsBtn').onclick = () => {
       ensureOverviewKey();
