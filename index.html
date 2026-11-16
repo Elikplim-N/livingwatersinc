@@ -348,10 +348,10 @@
 
       <!-- Legend -->
       <div id="mapLegend" class="above-tabbar absolute left-3 z-[1000] bg-zinc-900/95 backdrop-blur border border-zinc-800 rounded-xl card-shadow px-3 py-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-zinc-300 max-w-[62vw] sm:max-w-none" style="bottom: max(1.5rem, calc(env(safe-area-inset-bottom) + 1rem));">
-        <span class="flex items-center gap-1.5"><i class="w-4 h-1.5 rounded-full" style="background:#0891B2"></i>Not visited</span>
-        <span class="flex items-center gap-1.5"><i class="w-4 h-1.5 rounded-full" style="background:#F59E0B"></i>Up next</span>
-        <span class="flex items-center gap-1.5"><i class="w-4 h-1.5 rounded-full" style="background:#F2547D"></i>Visited</span>
-        <span class="flex items-center gap-1.5"><i class="w-4 h-1.5 rounded-full" style="background:#1F9D63"></i>Last 30 days</span>
+        <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full" style="background:#0891B2"></i>Not visited</span>
+        <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full" style="background:#F59E0B"></i>Up next</span>
+        <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full" style="background:#F2547D"></i>Visited</span>
+        <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full" style="background:#1F9D63"></i>Last 30 days</span>
         <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full" style="background:#8B5CF6"></i>Convert</span>
       </div>
 
@@ -906,8 +906,6 @@
       const W = (a, b) => ['interpolate', ['linear'], ['zoom'], 12, a, 18, b];
       map.addLayer({ id: 'streets-casing', type: 'line', source: 'streets', layout: { 'line-cap': 'round', 'line-join': 'round' },
         paint: { 'line-color': '#ffffff', 'line-width': W(4, 13), 'line-opacity': 0.9 } });
-      map.addLayer({ id: 'planned-glow', type: 'line', source: 'streets', filter: ['==', ['get', 'planned'], true], layout: { 'line-cap': 'round', 'line-join': 'round' },
-        paint: { 'line-color': COLORS.planned, 'line-width': W(10, 26), 'line-blur': 6, 'line-opacity': 0.4 } });
       map.addLayer({ id: 'streets', type: 'line', source: 'streets', layout: { 'line-cap': 'round', 'line-join': 'round' },
         paint: { 'line-color': STATUS_COLOR, 'line-width': W(2.5, 9), 'line-opacity': 0.95 } });
       map.addLayer({ id: 'street-selected', type: 'line', source: 'streets', filter: ['==', ['get', 'id'], ''], layout: { 'line-cap': 'round', 'line-join': 'round' },
@@ -952,9 +950,10 @@
       const dim = (full, faded) => on ? ['case', isSel, full, faded] : full;
       map.setPaintProperty('focus-dim', 'fill-color', baseKey === 'satellite' ? '#000000' : '#ffffff');
       map.setPaintProperty('focus-dim', 'fill-opacity', on ? (baseKey === 'satellite' ? 0.5 : 0.6) : 0);
-      map.setPaintProperty('streets', 'line-opacity', dim(0.95, 0.12));
-      map.setPaintProperty('streets-casing', 'line-opacity', dim(0.9, 0));
-      map.setPaintProperty('planned-glow', 'line-opacity', on ? 0 : 0.4);
+      // Whole-street lines are drawn only for the selected street; otherwise the map shows dots
+      const onlySel = ['==', ['get', 'id'], id || '__none__'];
+      map.setFilter('streets', onlySel);
+      map.setFilter('streets-casing', onlySel);
       map.setPaintProperty('street-pts', 'circle-opacity', dim(1, 0.12));
       map.setPaintProperty('street-pts', 'circle-stroke-opacity', dim(1, 0.12));
       map.setPaintProperty('converts', 'circle-opacity', on ? ['case', ['==', ['get', 'street_id'], id], 1, 0.12] : 1);
@@ -975,7 +974,6 @@
         try {
           map.setPaintProperty('planned-pulse', 'circle-radius', 10 + k * 14);
           map.setPaintProperty('planned-pulse', 'circle-opacity', focused ? 0 : 0.45 * (1 - k) + 0.05);
-          if (!focused) map.setPaintProperty('planned-glow', 'line-opacity', 0.15 + 0.45 * (1 - k));
         } catch { /* style is reloading */ }
       };
       requestAnimationFrame(frame);
@@ -1001,7 +999,7 @@
       const findStreet = (id) => state.streets.find(s => String(s.id) === String(id));
       const LAYERS = ['converts', 'street-pts', 'streets'];
       map.on('click', (e) => {
-        const hits = map.queryRenderedFeatures([[e.point.x - 6, e.point.y - 6], [e.point.x + 6, e.point.y + 6]], { layers: LAYERS.filter(l => map.getLayer(l)) });
+        const hits = map.queryRenderedFeatures([[e.point.x - 10, e.point.y - 10], [e.point.x + 10, e.point.y + 10]], { layers: LAYERS.filter(l => map.getLayer(l)) });
         const f = hits[0];
         if (!f) { if (state.selectedId) hideDetail(); return; }
         if (f.layer.id === 'converts') {
