@@ -86,7 +86,7 @@
       #sidebar { width: 100vw; max-width: none; padding-bottom: calc(env(safe-area-inset-bottom) + 56px); border-right: 0; }
       .modal { z-index: 2600 !important; }
       .mapboxgl-ctrl-bottom-left, .mapboxgl-ctrl-bottom-right { bottom: calc(env(safe-area-inset-bottom) + 56px); }
-      #mapLegend { bottom: calc(env(safe-area-inset-bottom) + 92px) !important; }
+      #mapLegend { bottom: calc(env(safe-area-inset-bottom) + 96px) !important; }
       [data-close-sidebar] { display: none; }
     }
   </style>
@@ -362,11 +362,10 @@
       </div>
 
       <!-- Legend -->
-      <div id="mapLegend" class="above-tabbar absolute left-3 z-[1000] bg-zinc-900/95 backdrop-blur border border-zinc-800 rounded-xl card-shadow px-3 py-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-zinc-300 max-w-[62vw] sm:max-w-none" style="bottom: max(1.5rem, calc(env(safe-area-inset-bottom) + 1rem));">
-        <span class="flex items-center gap-1.5"><svg width="16" height="16" viewBox="0 0 24 24" style="flex-shrink:0"><circle cx="12" cy="12" r="11" fill="#fff"/><circle cx="12" cy="12" r="9" fill="#E11D48"/><path d="M7 21V4M7 4h10l-2.5 4L17 12H7" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" transform="translate(5.8 5.8) scale(.52)"/></svg>Not visited</span>
-        <span class="flex items-center gap-1.5"><svg width="16" height="16" viewBox="0 0 24 24" style="flex-shrink:0"><circle cx="12" cy="12" r="11" fill="#fff"/><circle cx="12" cy="12" r="9" fill="#0768CE"/><path d="M7 21V4M7 4h10l-2.5 4L17 12H7" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" transform="translate(5.8 5.8) scale(.52)"/></svg>Up next</span>
-        <span class="flex items-center gap-1.5"><svg width="16" height="16" viewBox="0 0 24 24" style="flex-shrink:0"><circle cx="12" cy="12" r="11" fill="#fff"/><circle cx="12" cy="12" r="9" fill="#1F9D63"/><path d="M7 21V4M7 4h10l-2.5 4L17 12H7" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" transform="translate(5.8 5.8) scale(.52)"/></svg>Visited</span>
-        <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full" style="background:#8B5CF6"></i>Convert</span>
+      <div id="mapLegend" class="above-tabbar absolute left-3 z-[1000] bg-zinc-900/95 backdrop-blur border border-zinc-800 rounded-2xl card-shadow px-4 py-2.5 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[14px] font-semibold text-zinc-200 max-w-[70vw] sm:max-w-none" style="bottom: max(2.5rem, calc(env(safe-area-inset-bottom) + 2rem));">
+        <span class="flex items-center gap-2"><svg width="22" height="22" viewBox="0 0 24 24" style="flex-shrink:0"><circle cx="12" cy="12" r="11" fill="#fff"/><circle cx="12" cy="12" r="9" fill="#E11D48"/><path d="M7 21V4M7 4h10l-2.5 4L17 12H7" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" transform="translate(5.8 5.8) scale(.52)"/></svg>Not visited</span>
+        <span class="flex items-center gap-2"><svg width="22" height="22" viewBox="0 0 24 24" style="flex-shrink:0"><circle cx="12" cy="12" r="11" fill="#fff"/><circle cx="12" cy="12" r="9" fill="#0768CE"/><path d="M7 21V4M7 4h10l-2.5 4L17 12H7" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" transform="translate(5.8 5.8) scale(.52)"/></svg>Up next</span>
+        <span class="flex items-center gap-2"><svg width="22" height="22" viewBox="0 0 24 24" style="flex-shrink:0"><circle cx="12" cy="12" r="11" fill="#fff"/><circle cx="12" cy="12" r="9" fill="#1F9D63"/><path d="M7 21V4M7 4h10l-2.5 4L17 12H7" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" transform="translate(5.8 5.8) scale(.52)"/></svg>Visited</span>
       </div>
 
       <!-- Mapbox token needed -->
@@ -560,6 +559,18 @@
         <button data-close class="p-2 -m-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M6 18L18 6M6 6l12 12"/></svg></button>
       </div>
       <div class="overflow-y-auto px-5 pb-5 space-y-6">
+        <div class="space-y-3">
+          <h3 class="text-xs font-semibold uppercase tracking-wider text-zinc-400">Overview link (view only)</h3>
+          <p class="text-sm text-zinc-300">For leaders: one tap opens a <b>read-only overview</b>, no login. It shows totals only, never names or phone numbers.</p>
+          <div class="flex gap-2">
+            <input id="overviewLink" readonly class="field text-sm" onclick="this.select()" placeholder="Creating link…" />
+            <button type="button" id="shareOverviewBtn" class="btn btn-primary btn-sm shrink-0">Share</button>
+          </div>
+          <div class="flex gap-2">
+            <a id="openOverviewBtn" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">Open overview</a>
+            <button type="button" id="newOverviewBtn" class="btn btn-ghost btn-sm">Make a new link</button>
+          </div>
+        </div>
         <div class="space-y-3">
           <h3 class="text-xs font-semibold uppercase tracking-wider text-zinc-400">Field collectors</h3>
           <p class="text-sm text-zinc-300">Share this link with your team. They enter their <b>name and phone once</b> (no password) and can start recording converts right away.</p>
@@ -894,7 +905,32 @@
       } catch {}
     };
 
+    // Overview link (view-only page for leaders)
+    const overviewUrl = () => state.settings.overview_key ? `${location.origin}/overview?k=${encodeURIComponent(state.settings.overview_key)}` : '';
+    function showOverviewLink() {
+      $('overviewLink').value = overviewUrl();
+      $('openOverviewBtn').href = overviewUrl() || '#';
+    }
+    async function ensureOverviewKey(rotate = false) {
+      if (state.settings.overview_key && !rotate) { showOverviewLink(); return; }
+      try {
+        state.settings = { ...state.settings, ...(await api('/settings', { method: 'PUT', body: JSON.stringify({ overview_key: 'new' }) })) };
+        showOverviewLink();
+        if (rotate) toast('New overview link made. The old link no longer works.');
+      } catch (err) { if (!err.handled) toast(err.message, 'error'); }
+    }
+    $('shareOverviewBtn').onclick = async () => {
+      const url = overviewUrl();
+      if (!url) return;
+      try {
+        if (navigator.share) await navigator.share({ title: 'LW Inc. Street Campaign · Overview', text: 'Street campaign overview (view only):', url });
+        else { await navigator.clipboard.writeText(url); toast('Overview link copied'); }
+      } catch {}
+    };
+    $('newOverviewBtn').onclick = () => confirmAction('Make a new overview link?', 'Anyone using the old link will lose access until you send them the new one.', () => ensureOverviewKey(true), { okLabel: 'Make new link', danger: false });
+
     $('settingsBtn').onclick = () => {
+      ensureOverviewKey();
       fillZoneForm();
       $('collectLink').value = `${location.origin}/collect`;
       loadCollectors();

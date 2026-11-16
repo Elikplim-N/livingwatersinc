@@ -2,6 +2,7 @@ import { VercelRequest, VercelResponse } from '@vercel/node';
 import pg from 'pg';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import crypto from 'node:crypto';
 
 const { Pool } = pg;
 
@@ -495,6 +496,66 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
+
+    // ---- Public read-only overview (needs the secret link key; totals only, no personal details) ----
+    if (resource === 'overview' && method === 'GET') {
+      await ensureSchema();
+      const key = String(req.query?.k || '');
+      const saved = await pool.query(`SELECT value FROM app_settings WHERE key = 'overview_key'`);
+      const want = saved.rows[0]?.value ? String(saved.rows[0].value) : '';
+      const ok = !!want && key.length === want.length && crypto.timingSafeEqual(Buffer.from(key), Buffer.from(want));
+      if (!ok) throw new HttpError(401, 'This overview link is not valid. Ask the admin for a new link.');
+
+      const streetsRes = await pool.query(`${STREET_SELECT} GROUP BY s.id ORDER BY s.name`);
+      const convRes = await pool.query(`SELECT count(*)::int AS n, count(*) FILTER (WHERE came_sunday)::int AS sun, count(*) FILTER (WHERE came_saturday)::int AS sat,
+                                               count(*) FILTER (WHERE followed_up_at IS NOT NULL)::int AS followed FROM converts`);
+      const centerRes = await pool.query(`SELECT value FROM app_settings WHERE key = 'center'`);
+
+      const point = (s: any): [number, number] | null => {
+        if (s.stage_lat != null && s.stage_lng != null) return [Number(s.stage_lat), Number(s.stage_lng)];
+        const line = s.geometry?.coordinates?.[0];
+        if (!line?.length) return null;
+        const [lng, lat] = line[Math.floor(line.length / 2)];
+        return Number.isFinite(lat) && Number.isFinite(lng) ? [lat, lng] : null;
+      };
+      let visited = 0, people = 0, converts = 0, outreaches = 0, sun = 0, sunOf = 0, sat = 0, satOf = 0;
+      const districts: Record<string, { streets: number; visited: number; converts: number }> = {};
+      const recent: any[] = [];
+      const streets = streetsRes.rows.map((s: any) => {
+        const v = Array.isArray(s.visits) ? s.visits : [];
+        const sumConv = v.reduce((a: number, x: any) => a + (Number(x.decisions) || 0), 0);
+        if (v.length) visited++;
+        people += v.reduce((a: number, x: any) => a + (Number(x.attendance) || 0), 0);
+        converts += sumConv;
+        outreaches += v.length;
+        const d = (districts[s.district] ||= { streets: 0, visited: 0, converts: 0 });
+        d.streets++; if (v.length) d.visited++; d.converts += sumConv;
+        for (const x of v) {
+          const n = Number(x.decisions) || 0;
+          if (n && x.sunday_count != null) { sun += x.sunday_count; sunOf += n; }
+          if (n && x.saturday_count != null) { sat += x.saturday_count; satOf += n; }
+          recent.push({ street: s.name, district: s.district, date: String(x.visit_date).slice(0, 10), reached: Number(x.attendance) || 0,
+                        converts: n, sunday: x.sunday_count, saturday: x.saturday_count });
+        }
+        return { id: String(s.id), name: s.name, district: s.district, point: point(s), visited: v.length > 0,
+                 planned: !!s.planned_at, planned_at: s.planned_at, last_visit: v[0] ? String(v[0].visit_date).slice(0, 10) : null,
+                 visits: v.length, converts: sumConv, rep: s.rep_name || null,
+                 line: (s.geometry?.coordinates || []).filter((l: any) => Array.isArray(l) && l.length > 1) };
+      });
+      recent.sort((a, b) => b.date.localeCompare(a.date));
+      res.setHeader('Cache-Control', 'no-store');
+      return res.json({
+        generated_at: new Date().toISOString(),
+        center: centerRes.rows[0]?.value || null,
+        totals: { streets: streets.length, visited, people, converts, outreaches, converts_recorded: convRes.rows[0].n, followed_up: convRes.rows[0].followed },
+        retention: { sunday: sun, sunday_of: sunOf, saturday: sat, saturday_of: satOf },
+        districts: Object.entries(districts).map(([name, d]) => ({ name, ...d })).sort((a, b) => b.streets - a.streets),
+        up_next: streets.filter(s => s.planned).sort((a, b) => String(a.planned_at).localeCompare(String(b.planned_at))).map(s => ({ name: s.name, district: s.district, rep: s.rep })),
+        recent: recent.slice(0, 12),
+        streets: streets.map(({ line, ...s }) => ({ ...s, line: s.planned || s.visited ? line : [] }))
+      });
+    }
+
     // ---- App settings (admin) ----
     if (resource === 'settings') {
       requireAuth(req);
@@ -517,6 +578,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           if (!Number.isFinite(v) || v < 100 || v > 20000) throw new HttpError(400, 'Zone sizes must be between 100 m and 20 km');
           out[k] = v;
         }
+        if (b.overview_key === 'new') out.overview_key = crypto.randomBytes(18).toString('base64url');
         if (b.mapbox_style !== undefined) {
           const st = String(b.mapbox_style || '').trim();
           if (st && !/^mapbox:\/\/styles\/[\w.-]+\/[\w-]+$/.test(st)) throw new HttpError(400, 'Style URL should look like mapbox://styles/yourname/styleid');
