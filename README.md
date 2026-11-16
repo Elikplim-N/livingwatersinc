@@ -1,4 +1,4 @@
-# LWI Street Tracker
+# LW Inc. Street Campaign
 
 A map-based outreach tracker for Living Waters Incorporated. Teams pin the streets they cover, log each visit (people reached, converts, follow-ups, team and notes), and see coverage at a glance.
 
@@ -30,6 +30,17 @@ The map runs on **Mapbox GL JS** (vector, GPU-rendered). Streets come from **Ove
 3. Optional: design a style in **Mapbox Studio** → **Share**, copy the **Style URL** (`mapbox://styles/you/xxxx`) and paste it in **Admin → Map style** (or set `MAPBOX_STYLE` in Vercel). It becomes the default and appears as **Mapbox** in the style switcher next to Street / Satellite / Dark.
 
 Until a token is set, the map shows a "Connect Mapbox" card; everything else in the app still works.
+
+## Planning, focus and Street View
+
+- **Up next:** on any street tap **Plan next**. Planned streets glow amber with a soft pulse on the map and appear in the **Up next** list at the top of Streets. Logging a visit takes the street off the list automatically.
+- **Focus:** selecting a street fades everything else so only that street stands out. Tap the map background or **All streets** to leave focus.
+- **Street View:** every street has a **Street View** button. With a Google key (below) it opens inside the app; without one it opens Google Maps Street View at that spot.
+
+**Optional Google Street View inside the app:**
+1. Go to https://console.cloud.google.com, create a project and enable **Maps Embed API** (free, no per-use cost).
+2. **APIs & Services → Credentials → Create credentials → API key.** Restrict it to *Maps Embed API* and to your site's URL (HTTP referrers).
+3. In Vercel add `GOOGLE_MAPS_KEY` = that key, then redeploy.
 
 ## Field collectors (no password)
 

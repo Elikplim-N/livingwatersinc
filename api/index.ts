@@ -133,6 +133,9 @@ CREATE TABLE IF NOT EXISTS app_settings (
   value      jsonb NOT NULL,
   updated_at timestamptz NOT NULL DEFAULT now()
 );
+
+-- "Up next": streets planned for the next outreach (null = not planned)
+ALTER TABLE streets ADD COLUMN IF NOT EXISTS planned_at timestamptz;
 `;
 
 let schemaReady = false;
@@ -154,7 +157,7 @@ const signToken = (u: { id: string; email: string; role: string }) =>
 
 const STREET_SELECT = `
   SELECT
-    s.id, s.name, s.district, s.geometry, s.length_m,
+    s.id, s.name, s.district, s.geometry, s.length_m, s.planned_at,
     COALESCE(
       json_agg(
         json_build_object(
@@ -311,6 +314,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // ---- Streets ----
     if (resource === 'streets') {
       const auth = requireAuth(req);
+      await ensureSchema();
+
+      // Plan / unplan a street as "Up next"
+      if (method === 'PUT' && id && req.url?.includes('/plan')) {
+        const planned = !!req.body?.planned;
+        const result = await pool.query(
+          'UPDATE streets SET planned_at = CASE WHEN $2 THEN now() ELSE NULL END WHERE id::text = $1 RETURNING id, planned_at',
+          [String(id), planned]
+        );
+        if (!result.rows[0]) throw new HttpError(404, 'Street not found');
+        return res.json(result.rows[0]);
+      }
 
       if (method === 'GET' && !id) {
         const result = await pool.query(`${STREET_SELECT} GROUP BY s.id ORDER BY s.name`);
@@ -435,7 +450,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       res.setHeader('Cache-Control', 'no-store');
       return res.json({
         mapbox_token: process.env.MAPBOX_TOKEN || '',
-        mapbox_style: process.env.MAPBOX_STYLE || saved.mapbox_style || ''
+        mapbox_style: process.env.MAPBOX_STYLE || saved.mapbox_style || '',
+        google_maps_key: process.env.GOOGLE_MAPS_KEY || ''
       });
     }
 
@@ -589,6 +605,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             auth.userId
           ]
         );
+        await pool.query('UPDATE streets SET planned_at = NULL WHERE id = $1', [street_id]).catch(() => {});
         return res.status(201).json(result.rows[0]);
       }
 
