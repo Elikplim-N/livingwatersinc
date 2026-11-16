@@ -5,7 +5,7 @@ A map-based outreach tracker for Living Waters Incorporated. Teams pin the stree
 ## Features
 
 - **Admin-only sign in** (email + password), stays signed in for 30 days
-- **Mapbox GL JS map** with flag markers: red = not visited, green = visited, amber (soft pulse) = up next. Filters and search show only matching streets on the map
+- **Mapbox GL JS map** with flag markers: red = not visited, green = visited, blue (big soft pulse) = up next; visited flags pulse gently. Filters and search show only matching streets on the map
 - **Kaneshie Division boundary** (Darkuman + Kaneshie districts) drawn on the map; everything outside is dimmed
 - **Dashboard stats** for the division: streets, % reached, people reached, converts, with a coverage bar. *Reached* = streets inside the division with at least one visit ÷ all streets inside the division
 - **Load all streets in the division** (admin): one click pulls every named street inside the boundary from OpenStreetMap, so the % is out of the real total
@@ -33,7 +33,7 @@ Until a token is set, the map shows a "Connect Mapbox" card; everything else in 
 
 ## Planning, focus and Street View
 
-- **Up next:** on any street tap **Plan next**. Planned streets show an amber flag with a soft pulse on the map and appear in the **Up next** list at the top of Streets. Logging a visit takes the street off the list automatically.
+- **Up next:** on any street tap **Plan next**. Planned streets show a blue flag with a big soft pulse on the map and appear in the **Up next** list at the top of Streets. Logging a visit takes the street off the list automatically.
 - **Focus:** selecting a street fades everything else so only that street stands out. Tap the map background or **All streets** to leave focus.
 - **Street View / Google Earth:** every street has a **Street View** button that lets you choose **Google Street View** (inside the app with a Google key, otherwise in Google Maps) or **Google Earth** (3D satellite view; opens the Earth app if installed).
 
