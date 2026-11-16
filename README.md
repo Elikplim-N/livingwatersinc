@@ -5,7 +5,7 @@ A map-based outreach tracker for Living Waters Incorporated. Teams pin the stree
 ## Features
 
 - **Admin-only sign in** (email + password), stays signed in for 30 days
-- **Live map** (dark theme) with clustered pins: green = visited in the last 30 days, blue = visited earlier, grey = not visited yet
+- **Mapbox GL JS map** with clustered points: green = visited in the last 30 days, blue = visited earlier, grey = not visited yet
 - **Kaneshie Division boundary** (Darkuman + Kaneshie districts) drawn on the map; everything outside is dimmed
 - **Dashboard stats** for the division: streets, % reached, people reached, converts, with a coverage bar. *Reached* = streets inside the division with at least one visit ÷ all streets inside the division
 - **Load all streets in the division** (admin): one click pulls every named street inside the boundary from OpenStreetMap, so the % is out of the real total
@@ -20,11 +20,16 @@ A map-based outreach tracker for Living Waters Incorporated. Teams pin the stree
 
 The map opens centred on a **Qodesh** pin (5.5880, -0.2301). To make it exact, stand at Qodesh and use **Admin → Map centre → use my GPS**. The street list can be sorted by **Nearest Qodesh**.
 
-## Mapbox Studio style (optional)
+## Map: Mapbox GL JS + Overpass GeoJSON
 
-1. Create a free account at mapbox.com, design a style in **Mapbox Studio**, then **Share**.
-2. Copy the **Style URL** (`mapbox://styles/you/xxxx`) and your **Default public token** (`pk.…`).
-3. Paste both in **Admin → Map style**. A **Mapbox** option appears in the map style switcher and becomes the default.
+The map runs on **Mapbox GL JS** (vector, GPU-rendered). Streets come from **Overpass** (OpenStreetMap), are converted to **GeoJSON**, stored in the database, and drawn as GeoJSON line + point layers coloured by visit status. Converts, the division border and the Qodesh pin are layers or markers on top.
+
+**Setup (free tier: about 50,000 map loads a month):**
+1. Create an account at mapbox.com and copy your **Default public token** (`pk.…`). In the token settings, restrict it to your site's URL.
+2. Either set `MAPBOX_TOKEN` in Vercel → Settings → Environment Variables, **or** sign in as admin and paste it in **Admin → Map style**.
+3. Optional: design a style in **Mapbox Studio** → **Share**, copy the **Style URL** (`mapbox://styles/you/xxxx`) and paste it in Admin (or set `MAPBOX_STYLE`). It becomes the default and appears as **Mapbox** in the style switcher next to Street / Satellite / Dark.
+
+Until a token is set, the map shows a "Connect Mapbox" card; everything else in the app still works.
 
 ## Field collectors (no password)
 
@@ -40,7 +45,7 @@ The admin sees every convert with who collected it, can follow up (call, WhatsAp
 ## Project layout
 
 ```
-index.html          Admin app (vanilla JS + Leaflet)
+index.html          Admin app (vanilla JS + Mapbox GL JS)
 collect.html        Field collector app (/collect), no dependencies
 app.css             Prebuilt Tailwind CSS (regenerate with `npm run build:css`)
 api/index.ts        Vercel serverless API (/api/*)

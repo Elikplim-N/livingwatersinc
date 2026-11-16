@@ -425,6 +425,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.json(result.rows);
     }
 
+    // ---- Public map config (Mapbox public token is safe to expose; restrict it by URL in your Mapbox account) ----
+    if (resource === 'config' && method === 'GET') {
+      let saved: Record<string, unknown> = {};
+      try {
+        const { rows } = await pool.query(`SELECT key, value FROM app_settings WHERE key IN ('mapbox_token', 'mapbox_style')`);
+        saved = Object.fromEntries(rows.map(r => [r.key, r.value]));
+      } catch { /* table not created yet */ }
+      res.setHeader('Cache-Control', 'no-store');
+      return res.json({
+        mapbox_token: process.env.MAPBOX_TOKEN || saved.mapbox_token || '',
+        mapbox_style: process.env.MAPBOX_STYLE || saved.mapbox_style || ''
+      });
+    }
+
     // ---- App settings (admin) ----
     if (resource === 'settings') {
       requireAuth(req);

@@ -9,25 +9,20 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23F2547D'/><path d='M16 6c-4 0-7 3-7 7 0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7z' fill='white'/><circle cx='16' cy='13' r='3' fill='%23F2547D'/></svg>" />
 
   <link rel="stylesheet" href="/app.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" />
 
   <style>
     /* Warm light iOS-style theme (pink / peach). Ink #2A1E1B, muted #86776F, line #F1E4DF, accent #F2547D */
     html, body { height: 100%; }
     body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent; letter-spacing: -.005em; }
     #map { position: absolute; inset: 0; z-index: 0; background: #F3ECE8; }
-    .leaflet-container { font-family: inherit; background: #F3ECE8; }
-    .leaflet-control-zoom { border: none !important; box-shadow: 0 6px 20px rgba(42,30,27,.12) !important; border-radius: 12px !important; overflow: hidden; }
-    .leaflet-control-zoom a { background: rgba(255,255,255,.95) !important; color: #2A1E1B !important; border-color: #F1E4DF !important; width: 36px !important; height: 36px !important; line-height: 36px !important; }
-    .leaflet-control-zoom a:hover { background: #FFF6F2 !important; }
-    .leaflet-control-attribution { background: rgba(255,255,255,.75) !important; color: #86776F !important; border-radius: 8px 0 0 0; }
-    .leaflet-control-attribution a { color: #86776F !important; }
-
-    .lwi-popup .leaflet-popup-content-wrapper { background: #fff; color: #2A1E1B; border-radius: 16px; box-shadow: 0 16px 40px rgba(42,30,27,.18); }
-    .lwi-popup .leaflet-popup-tip { background: #fff; }
-    .lwi-popup .leaflet-popup-content { margin: 14px 16px; }
-    .lwi-popup a.leaflet-popup-close-button { color: #A39591; }
+    .mapboxgl-map { font-family: inherit; }
+    .mapboxgl-ctrl-group { border-radius: 12px !important; overflow: hidden; box-shadow: 0 6px 20px rgba(42,30,27,.12) !important; }
+    .mapboxgl-ctrl-group button { width: 36px !important; height: 36px !important; }
+    .mapboxgl-ctrl-attrib { background: rgba(255,255,255,.75) !important; }
+    .lwi-popup .mapboxgl-popup-content { background: #fff; color: #2A1E1B; border-radius: 16px; padding: 14px 16px; box-shadow: 0 16px 40px rgba(42,30,27,.18); font-family: inherit; }
+    .lwi-popup .mapboxgl-popup-close-button { font-size: 18px; color: #A39591; right: 6px; top: 4px; }
+    .lwi-popup.mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip { border-top-color: #fff; }
 
     .pin { width: 28px; height: 28px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); display: grid; place-items: center; box-shadow: 0 4px 12px rgba(42,30,27,.3); border: 2px solid #fff; transition: transform .15s; }
     .pin::after { content: ''; width: 9px; height: 9px; border-radius: 50%; background: #fff; }
@@ -35,7 +30,6 @@
     .pin.recent { background: #1F9D63; }
     .pin.unvisited { background: #A39591; }
     .pin.new { background: #FF9A76; }
-    .leaflet-marker-icon:hover .pin { transform: rotate(-45deg) scale(1.15); }
 
     .marker-cluster { background: rgba(242,84,125,.22); border-radius: 50%; }
     .marker-cluster div { width: 32px; height: 32px; margin: 4px; border-radius: 50%; background: linear-gradient(135deg,#FF9A76,#F2547D); color: #fff; font: 700 12px/32px -apple-system, BlinkMacSystemFont, sans-serif; text-align: center; border: 2px solid #fff; }
@@ -90,7 +84,8 @@
       .above-tabbar { bottom: calc(env(safe-area-inset-bottom) + 70px) !important; }
       #sidebar { width: 100vw; max-width: none; padding-bottom: calc(env(safe-area-inset-bottom) + 56px); border-right: 0; }
       .modal { z-index: 2600 !important; }
-      .leaflet-bottom { bottom: calc(env(safe-area-inset-bottom) + 56px); }
+      .mapboxgl-ctrl-bottom-left, .mapboxgl-ctrl-bottom-right { bottom: calc(env(safe-area-inset-bottom) + 56px); }
+      #mapLegend { bottom: calc(env(safe-area-inset-bottom) + 92px) !important; }
       [data-close-sidebar] { display: none; }
     }
   </style>
@@ -335,12 +330,23 @@
       </div>
 
       <!-- Legend -->
-      <div class="above-tabbar absolute left-3 z-[1000] bg-zinc-900/95 backdrop-blur border border-zinc-800 rounded-xl card-shadow px-3 py-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-zinc-300 max-w-[62vw] sm:max-w-none" style="bottom: max(1.5rem, calc(env(safe-area-inset-bottom) + 1rem));">
+      <div id="mapLegend" class="above-tabbar absolute left-3 z-[1000] bg-zinc-900/95 backdrop-blur border border-zinc-800 rounded-xl card-shadow px-3 py-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-zinc-300 max-w-[62vw] sm:max-w-none" style="bottom: max(1.5rem, calc(env(safe-area-inset-bottom) + 1rem));">
         <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full bg-emerald-600"></i>Last 30 days</span>
         <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full bg-blue-600"></i>Visited</span>
         <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full bg-zinc-500"></i>Not yet</span>
         <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full bg-violet-500 ring-2 ring-zinc-900"></i>Convert</span>
         <span class="hidden sm:flex items-center gap-1.5"><i class="w-4 h-0.5 bg-amber-400"></i>Division</span>
+      </div>
+
+      <!-- Mapbox token needed -->
+      <div id="mapTokenNote" class="hidden absolute inset-0 z-[1050] grid place-items-center p-6">
+        <div class="max-w-sm bg-zinc-900 card-shadow rounded-2xl p-6 text-center">
+          <div class="w-14 h-14 mx-auto rounded-2xl brand-grad on-accent grid place-items-center text-2xl mb-3">🗺️</div>
+          <h3 class="text-lg font-bold">Connect Mapbox</h3>
+          <p class="text-sm text-zinc-400 mt-1">The map runs on Mapbox GL JS, which needs your free Mapbox <b>public token</b> (starts with <code>pk.</code>).</p>
+          <button id="tokenSetupBtn" class="btn btn-primary w-full mt-4">Add Mapbox token</button>
+          <p class="text-[11px] text-zinc-500 mt-3">Or set <code>MAPBOX_TOKEN</code> in Vercel → Settings → Environment Variables.</p>
+        </div>
       </div>
 
       <!-- Loading overlay -->
@@ -574,22 +580,13 @@
   <!-- Toasts -->
   <div id="toasts" class="fixed z-[4000] left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-none w-[calc(100%-2rem)] max-w-sm" style="top: max(1rem, env(safe-area-inset-top));"></div>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+  <script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
 
   <script>
   (() => {
     const API_URL = '/api';
     const DEFAULT_CENTER = [5.574, -0.239]; // Kaneshie, Accra
     const RECENT_DAYS = 30;
-    const OSM_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
-    const BASEMAPS = {
-      street: { label: 'Street', url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', opts: { attribution: OSM_ATTR, maxZoom: 19, subdomains: 'abc' } },
-      dark: { label: 'Dark', url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', opts: { attribution: OSM_ATTR + ' &copy; <a href="https://carto.com/">CARTO</a>', maxZoom: 20, subdomains: 'abcd' } },
-      satellite: { label: 'Satellite', url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', opts: { attribution: 'Imagery &copy; Esri', maxZoom: 19 } }
-    };
-    const makeBase = (key) => L.tileLayer(BASEMAPS[key].url, BASEMAPS[key].opts);
-
     const $ = (id) => document.getElementById(id);
     const store = {
       get(k) { try { return localStorage.getItem(k); } catch { return null; } },
@@ -804,19 +801,156 @@
       loadSettings();
     }
 
-    // ---------- Map ----------
-    const map = L.map('map', { zoomControl: false }).setView(DEFAULT_CENTER, 14);
-    L.control.zoom({ position: 'topright' }).addTo(map);
-    let baseKey = BASEMAPS[store.get('lwi_basemap')] ? store.get('lwi_basemap') : 'street';
-    let baseLayer = makeBase(baseKey).addTo(map);
-    function setBasemap(key) {
-      baseKey = key; store.set('lwi_basemap', key);
-      map.removeLayer(baseLayer); baseLayer = makeBase(key).addTo(map); baseLayer.bringToBack();
-      document.querySelectorAll('[data-basemap]').forEach(b => b.classList.toggle('active', b.dataset.basemap === key));
+    // ---------- Map (Mapbox GL JS) ----------
+    const STYLES = {
+      street: 'mapbox://styles/mapbox/streets-v12',
+      satellite: 'mapbox://styles/mapbox/satellite-streets-v12',
+      dark: 'mapbox://styles/mapbox/dark-v11'
+    };
+    const EMPTY = { type: 'FeatureCollection', features: [] };
+    const ll2 = ([lat, lng]) => [lng, lat];                       // [lat,lng] -> Mapbox [lng,lat]
+    function haversine(a, b) {                                     // metres between [lat,lng] points
+      const R = 6371000, r = (x) => x * Math.PI / 180;
+      const h = Math.sin(r(b[0] - a[0]) / 2) ** 2 + Math.cos(r(a[0])) * Math.cos(r(b[0])) * Math.sin(r(b[1] - a[1]) / 2) ** 2;
+      return 2 * R * Math.asin(Math.sqrt(h));
     }
-    const cluster = L.markerClusterGroup({ showCoverageOnHover: false, maxClusterRadius: 45, spiderfyOnMaxZoom: true });
-    map.addLayer(cluster);
-    const linesLayer = L.layerGroup().addTo(map);
+    const STATUS_COLOR = ['match', ['get', 'status'], 'recent', '#1F9D63', 'visited', '#F2547D', '#A39591'];
+
+    let map = null, mapReady = false, popup = null, youMarker = null, centerMarker = null;
+    let baseKey = store.get('lwi_basemap') || 'street';
+    const mapQueue = [];
+    const whenMap = (fn) => { if (mapReady) fn(map); else mapQueue.push(fn); };
+    const styleUrl = (key) => (key === 'mapbox' && state.settings?.mapbox_style) ? state.settings.mapbox_style : (STYLES[key] || STYLES.street);
+
+    function initMap(token) {
+      if (map || !token || !window.mapboxgl) return;
+      mapboxgl.accessToken = token;
+      if (!STYLES[baseKey] && !(baseKey === 'mapbox' && state.settings?.mapbox_style)) baseKey = 'street';
+      state.appliedStyle = styleUrl(baseKey);
+      map = new mapboxgl.Map({ container: 'map', style: state.appliedStyle, center: ll2(centerLL()), zoom: 14.5, attributionControl: true });
+      map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-right');
+      map.on('style.load', () => {
+        addAppLayers();
+        mapReady = true;
+        refreshMapData();
+        while (mapQueue.length) mapQueue.shift()(map);
+      });
+      map.on('error', (e) => console.warn('Map:', e?.error?.message || e));
+      bindMapEvents();
+      $('mapTokenNote').classList.add('hidden');
+      syncBasemapChips();
+    }
+
+    function setBasemap(key) {
+      if (key === 'mapbox' && !state.settings?.mapbox_style) return;
+      baseKey = key; store.set('lwi_basemap', key);
+      syncBasemapChips();
+      if (map && styleUrl(key) !== state.appliedStyle) { state.appliedStyle = styleUrl(key); mapReady = false; popup?.remove(); map.setStyle(state.appliedStyle); }
+    }
+    function syncBasemapChips() {
+      document.querySelectorAll('[data-basemap]').forEach(b => b.classList.toggle('active', b.dataset.basemap === baseKey));
+    }
+    document.querySelectorAll('[data-basemap]').forEach(b => b.onclick = () => setBasemap(b.dataset.basemap));
+
+    // Sources + layers are re-added after every style change (setStyle wipes them)
+    function addAppLayers() {
+      for (const id of ['division-mask', 'division', 'streets', 'converts']) map.addSource(id, { type: 'geojson', data: EMPTY });
+      map.addSource('street-pts', { type: 'geojson', data: EMPTY, cluster: true, clusterRadius: 45, clusterMaxZoom: 15 });
+      map.addLayer({ id: 'division-mask', type: 'fill', source: 'division-mask', paint: { 'fill-color': '#2A1E1B', 'fill-opacity': 0.14 } });
+      map.addLayer({ id: 'division-casing', type: 'line', source: 'division', paint: { 'line-color': '#000', 'line-opacity': 0.3, 'line-width': 7 } });
+      map.addLayer({ id: 'division-line', type: 'line', source: 'division', paint: { 'line-color': '#f59e0b', 'line-width': 4 } });
+      map.addLayer({
+        id: 'streets', type: 'line', source: 'streets', layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: {
+          'line-color': STATUS_COLOR,
+          'line-width': ['interpolate', ['linear'], ['zoom'], 13, ['case', ['==', ['get', 'status'], 'unvisited'], 1.5, 3], 18, ['case', ['==', ['get', 'status'], 'unvisited'], 5, 9]],
+          'line-opacity': ['case', ['==', ['get', 'status'], 'unvisited'], 0.55, 0.9]
+        }
+      });
+      map.addLayer({ id: 'clusters', type: 'circle', source: 'street-pts', filter: ['has', 'point_count'],
+        paint: { 'circle-color': '#F2547D', 'circle-opacity': 0.92, 'circle-radius': ['step', ['get', 'point_count'], 15, 20, 19, 100, 25], 'circle-stroke-width': 3, 'circle-stroke-color': '#fff' } });
+      map.addLayer({ id: 'cluster-count', type: 'symbol', source: 'street-pts', filter: ['has', 'point_count'],
+        layout: { 'text-field': ['get', 'point_count_abbreviated'], 'text-size': 12, 'text-font': ['DIN Pro Bold', 'Arial Unicode MS Bold'], 'text-allow-overlap': true },
+        paint: { 'text-color': '#fff' } });
+      map.addLayer({ id: 'street-pts', type: 'circle', source: 'street-pts', filter: ['!', ['has', 'point_count']],
+        paint: { 'circle-color': STATUS_COLOR, 'circle-radius': ['interpolate', ['linear'], ['zoom'], 12, 5, 17, 9], 'circle-stroke-width': 2.5, 'circle-stroke-color': '#fff' } });
+      map.addLayer({ id: 'converts', type: 'circle', source: 'converts',
+        paint: { 'circle-color': '#8B5CF6', 'circle-radius': ['interpolate', ['linear'], ['zoom'], 12, 5, 17, 8], 'circle-stroke-width': 2.5, 'circle-stroke-color': '#fff' } });
+    }
+
+    // Push the app's data into the GeoJSON sources
+    function refreshMapData() {
+      if (!mapReady) return;
+      const outer = division.outer;
+      map.getSource('division').setData(outer ? { type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [outer] } } : EMPTY);
+      map.getSource('division-mask').setData(outer ? { type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [[[-180, -85], [180, -85], [180, 85], [-180, 85], [-180, -85]], [...outer].reverse()] } } : EMPTY);
+      const lines = [], pts = [];
+      for (const s of state.streets) {
+        const p = streetPoint(s);
+        if (!p) continue;
+        const props = { id: String(s.id), status: streetStatus(s) };
+        pts.push({ type: 'Feature', properties: props, geometry: { type: 'Point', coordinates: ll2(p) } });
+        const ls = (s.geometry?.coordinates || []).filter(l => l.length > 1);
+        if (ls.length && s.length_m > 20) lines.push({ type: 'Feature', properties: props, geometry: { type: 'MultiLineString', coordinates: ls } });
+      }
+      map.getSource('streets').setData({ type: 'FeatureCollection', features: lines });
+      map.getSource('street-pts').setData({ type: 'FeatureCollection', features: pts });
+      map.getSource('converts').setData({ type: 'FeatureCollection', features: state.converts.filter(c => c.latitude != null)
+        .map(c => ({ type: 'Feature', properties: { id: String(c.id) }, geometry: { type: 'Point', coordinates: [c.longitude, c.latitude] } })) });
+    }
+    const renderMap = refreshMapData;
+
+    function showPopup(lngLat, html) {
+      if (!map) return;
+      popup?.remove();
+      popup = new mapboxgl.Popup({ className: 'lwi-popup', maxWidth: '300px', offset: 14, focusAfterOpen: false }).setLngLat(lngLat).setHTML(html).addTo(map);
+      const el = popup.getElement();
+      el.querySelector('[data-popup-log]')?.addEventListener('click', (ev) => { popup.remove(); openVisitModal(ev.currentTarget.dataset.popupLog); });
+      el.querySelector('[data-popup-open]')?.addEventListener('click', (ev) => { popup.remove(); showDetail(ev.currentTarget.dataset.popupOpen); toggleSidebar(true); });
+      el.querySelector('[data-popup-cv]')?.addEventListener('click', (ev) => { popup.remove(); openConvertModal({ id: ev.currentTarget.dataset.popupCv }); });
+    }
+
+    function bindMapEvents() {
+      const findStreet = (id) => state.streets.find(s => String(s.id) === String(id));
+      map.on('click', (e) => {
+        const hits = map.queryRenderedFeatures(e.point, { layers: ['converts', 'street-pts', 'clusters', 'streets'].filter(l => map.getLayer(l)) });
+        const f = hits[0];
+        if (!f) return;
+        if (f.layer.id === 'clusters') {
+          map.getSource('street-pts').getClusterExpansionZoom(f.properties.cluster_id, (err, z) => { if (!err) map.easeTo({ center: f.geometry.coordinates, zoom: z + 0.5 }); });
+        } else if (f.layer.id === 'converts') {
+          const c = state.converts.find(x => String(x.id) === f.properties.id);
+          if (c) showPopup(e.lngLat, convertPopupHtml(c));
+        } else {
+          const s = findStreet(f.properties.id);
+          if (s) showPopup(f.layer.id === 'street-pts' ? f.geometry.coordinates : e.lngLat, popupHtml(s));
+        }
+      });
+      map.on('mousemove', (e) => {
+        const n = map.queryRenderedFeatures(e.point, { layers: ['converts', 'street-pts', 'clusters', 'streets'].filter(l => map.getLayer(l)) }).length;
+        map.getCanvas().style.cursor = n ? 'pointer' : '';
+      });
+    }
+
+    // Small HTML marker helper (Qodesh pin, "you are here", draggable pickers)
+    function htmlMarker(html, opts = {}) {
+      const el = document.createElement('div');
+      el.innerHTML = html;
+      return new mapboxgl.Marker({ element: el.firstElementChild || el, ...opts });
+    }
+
+    // Lightweight picker map used inside the Add street / Convert forms
+    function makePickerMap(container, center, onPick) {
+      const m = new mapboxgl.Map({ container, style: styleUrl(baseKey), center: ll2(center), zoom: 16, attributionControl: false });
+      m.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-left');
+      m.on('style.load', () => {
+        if (!division.outer) return;
+        m.addSource('division', { type: 'geojson', data: { type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [division.outer] } } });
+        m.addLayer({ id: 'division-line', type: 'line', source: 'division', paint: { 'line-color': '#f59e0b', 'line-width': 3 } });
+      });
+      m.on('click', (e) => onPick(e.lngLat.lat, e.lngLat.lng));
+      return m;
+    }
 
     // ---------- Division boundary ----------
     // Traced from the Ghana Police Service "Jurisdictional Map of Kaneshie Division" (division.geojson).
@@ -831,24 +965,10 @@
     }
     const inDivision = (pt) => !division.outer || (!!pt && pointInRing(pt, division.outer));
     const districtAt = (pt) => division.districts.find(d => pointInRing(pt, d.ring))?.name || null;
-    const toLatLngs = (ring) => ring.map(([lng, lat]) => [lat, lng]);
-
-    function drawDivision(target, { mask = true } = {}) {
-      if (!division.outer) return;
-      const outer = toLatLngs(division.outer);
-      if (mask) {
-        const world = [[-90, -360], [-90, 360], [90, 360], [90, -360]];
-        L.polygon([world, outer], { stroke: false, fillColor: '#2A1E1B', fillOpacity: 0.14, interactive: false }).addTo(target);
-      }
-      for (const d of division.districts) {
-        if (mask) {
-          const c = L.polygon(toLatLngs(d.ring)).getBounds().getCenter();
-          L.marker(c, { interactive: false, icon: L.divIcon({ className: '', html: `<div style="transform:translate(-50%,-50%);font:700 11px Inter,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:${d.color};white-space:nowrap;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 6px #fff">${esc(d.name)}</div>` }) }).addTo(target);
-        }
-      }
-      L.polygon(outer, { color: '#000', weight: 7, opacity: 0.35, fill: false, interactive: false }).addTo(target);
-      L.polygon(outer, { color: '#f59e0b', weight: 4, opacity: 1, fill: false, interactive: false }).addTo(target);
-    }
+    const ringBounds = (ring) => {
+      const xs = ring.map(p => p[0]), ys = ring.map(p => p[1]);
+      return [[Math.min(...xs), Math.min(...ys)], [Math.max(...xs), Math.max(...ys)]];
+    };
 
     async function loadDivision() {
       try {
@@ -858,21 +978,24 @@
           if (f.properties.kind === 'division') division.outer = ring;
           else division.districts.push({ name: f.properties.name, color: f.properties.color, ring });
         }
-        division.bounds = L.latLngBounds(toLatLngs(division.outer));
-        drawDivision(map);
-        if (!state.settingsFitted) map.setView(centerLL(), 15);
-        state.fitted = true;
+        division.bounds = ringBounds(division.outer);
+        whenMap((m) => {
+          refreshMapData();
+          if (division.labelsAdded) return;
+          division.labelsAdded = true;
+          for (const d of division.districts) {
+            const [[x1, y1], [x2, y2]] = ringBounds(d.ring);
+            htmlMarker(`<div style="pointer-events:none;font:700 11px -apple-system,BlinkMacSystemFont,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:${d.color};white-space:nowrap;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 6px #fff">${esc(d.name)}</div>`)
+              .setLngLat([(x1 + x2) / 2, (y1 + y2) / 2]).addTo(m);
+          }
+        });
         if (state.streets.length) renderAll();
       } catch (err) {
         console.warn('Division boundary not loaded', err);
       }
     }
     loadDivision();
-    document.querySelectorAll('[data-basemap]').forEach(b => { b.classList.toggle('active', b.dataset.basemap === baseKey); b.onclick = () => setBasemap(b.dataset.basemap); });
-    $('fitDivisionBtn').onclick = () => division.bounds && map.flyToBounds(division.bounds, { padding: [20, 20], duration: 0.6 });
-    let youMarker = null;
-
-    const pinIcon = (status) => L.divIcon({ html: `<div class="pin ${status}"></div>`, className: '', iconSize: [28, 28], iconAnchor: [14, 28], popupAnchor: [0, -26] });
+    $('fitDivisionBtn').onclick = () => division.bounds && whenMap(m => m.fitBounds(division.bounds, { padding: 30, duration: 700 }));
 
     function popupHtml(street) {
       const v = street.visits || [];
@@ -895,42 +1018,13 @@
         </div>`;
     }
 
-    const lineColor = { recent: '#1F9D63', visited: '#F2547D', unvisited: '#A39591' };
-    function renderMap() {
-      cluster.clearLayers();
-      linesLayer.clearLayers();
-      state.markersById.clear();
-      const layers = [];
-      for (const street of state.streets) {
-        const pt = streetPoint(street);
-        if (!pt) continue;
-        const lines = (street.geometry?.coordinates || []).filter(l => l.length > 1).map(toLatLngs);
-        if (lines.length && street.length_m > 20) {
-          const st = streetStatus(street);
-          L.polyline(lines, { color: lineColor[st], weight: st === 'unvisited' ? 3 : 5, opacity: st === 'unvisited' ? 0.45 : 0.9 })
-            .bindPopup(() => popupHtml(street), { className: 'lwi-popup' })
-            .addTo(linesLayer);
-        }
-        const marker = L.marker(pt, { icon: pinIcon(streetStatus(street)), title: street.name });
-        marker.bindPopup(() => popupHtml(street), { className: 'lwi-popup', closeButton: true });
-        state.markersById.set(String(street.id), marker);
-        layers.push(marker);
-      }
-      cluster.addLayers(layers);
-    }
-
-    map.on('popupopen', (e) => {
-      const el = e.popup.getElement();
-      el.querySelector('[data-popup-log]')?.addEventListener('click', (ev) => { map.closePopup(); openVisitModal(ev.currentTarget.dataset.popupLog); });
-      el.querySelector('[data-popup-open]')?.addEventListener('click', (ev) => { map.closePopup(); showDetail(ev.currentTarget.dataset.popupOpen); toggleSidebar(true); });
-    });
-
     function focusStreet(id, openPopup = true) {
-      const marker = state.markersById.get(String(id));
-      if (!marker) return;
-      cluster.zoomToShowLayer(marker, () => {
-        map.setView(marker.getLatLng(), Math.max(map.getZoom(), 17), { animate: true });
-        if (openPopup) marker.openPopup();
+      const s = state.streets.find(x => String(x.id) === String(id));
+      const p = s && streetPoint(s);
+      if (!p) return;
+      whenMap((m) => {
+        m.flyTo({ center: ll2(p), zoom: Math.max(m.getZoom(), 17), duration: 800 });
+        if (openPopup) m.once('moveend', () => showPopup(ll2(p), popupHtml(s)));
       });
     }
 
@@ -942,15 +1036,18 @@
         btn.classList.remove('animate-pulse');
         const ll = [pos.coords.latitude, pos.coords.longitude];
         state.lastLocation = ll;
-        if (youMarker) youMarker.setLatLng(ll);
-        else youMarker = L.marker(ll, { icon: L.divIcon({ html: '<div class="you-dot"></div>', className: '', iconSize: [16, 16] }), zIndexOffset: 1000, interactive: false }).addTo(map);
+        whenMap((m) => {
+          if (!youMarker) youMarker = htmlMarker('<div class="you-dot"></div>').setLngLat(ll2(ll)).addTo(m);
+          else youMarker.setLngLat(ll2(ll));
+        });
         onFound(ll);
       }, (err) => {
         btn.classList.remove('animate-pulse');
         toast(err.code === 1 ? 'Location permission denied. Enable it in your browser settings.' : 'Could not get your location. Try again.', 'error');
       }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 });
     }
-    $('locateBtn').onclick = () => locate((ll) => map.setView(ll, 17));
+    $('locateBtn').onclick = () => locate((ll) => whenMap(m => m.flyTo({ center: ll2(ll), zoom: 17 })));
+
 
     // ---------- Data ----------
     async function loadStreets({ quiet = false } = {}) {
@@ -962,7 +1059,7 @@
         renderAll();
         if (!quiet && !state.fitted && !division.outer) {
           const pts = state.streets.map(streetPoint).filter(Boolean);
-          if (pts.length) map.fitBounds(pts, { padding: [40, 40], maxZoom: 16 });
+          if (pts.length) whenMap(m => m.fitBounds(ringBounds(pts.map(ll2)), { padding: 40, maxZoom: 16 }));
           state.fitted = true;
         }
       } catch (err) {
@@ -1020,7 +1117,7 @@
         converts: (a, b) => sum(b.visits || [], 'decisions') - sum(a.visits || [], 'decisions') || a.name.localeCompare(b.name),
         nearest: (a, b) => dist(a) - dist(b)
       };
-      const dist = (s) => { const p = streetPoint(s); return p ? map.distance(p, centerLL()) : 1e9; };
+      const dist = (s) => { const p = streetPoint(s); return p ? haversine(p, centerLL()) : 1e9; };
       return list.sort(sorters[state.sort] || sorters.name);
     }
 
@@ -1221,24 +1318,20 @@
       $('coordsText').textContent = 'No location selected yet';
       openModal('addModal');
       requestAnimationFrame(() => {
-        if (!addMap) {
-          addMap = L.map('addMap', { zoomControl: true });
-          makeBase(baseKey).addTo(addMap);
-          addMap.on('click', (e) => setAddPoint(e.latlng.lat, e.latlng.lng));
-          drawDivision(addMap, { mask: false });
-        }
         if (addMarker) { addMarker.remove(); addMarker = null; }
-        addMap.setView(map.getCenter(), Math.max(map.getZoom(), 15));
-        addMap.invalidateSize();
+        if (!window.mapboxgl || !mapboxgl.accessToken) { $('coordsText').textContent = 'Map not connected yet. Use "Use my location", or add a Mapbox token in Admin.'; return; }
+        const c = map ? map.getCenter() : { lat: centerLL()[0], lng: centerLL()[1] };
+        if (!addMap) addMap = makePickerMap('addMap', [c.lat, c.lng], (lat, lng) => setAddPoint(lat, lng));
+        else { addMap.resize(); addMap.jumpTo({ center: [c.lng, c.lat], zoom: Math.max(map ? map.getZoom() : 16, 15.5) }); }
       });
     }
 
     function setAddPoint(lat, lng, { geocode = true } = {}) {
       addCoords = { lat, lng };
-      if (!addMarker) {
-        addMarker = L.marker([lat, lng], { draggable: true, icon: pinIcon('new') }).addTo(addMap);
-        addMarker.on('dragend', () => { const p = addMarker.getLatLng(); setAddPoint(p.lat, p.lng); });
-      } else addMarker.setLatLng([lat, lng]);
+      if (addMap && !addMarker) {
+        addMarker = htmlMarker('<div class="pin new"></div>', { draggable: true, anchor: 'bottom' }).setLngLat([lng, lat]).addTo(addMap);
+        addMarker.on('dragend', () => { const p = addMarker.getLngLat(); setAddPoint(p.lat, p.lng); });
+      } else addMarker?.setLngLat([lng, lat]);
       const inside = inDivision([lat, lng]);
       $('coordsText').innerHTML = `📍 ${lat.toFixed(5)}, ${lng.toFixed(5)} · drag the pin to adjust${inside ? '' : ' · <span class="text-amber-400 font-medium">Outside Kaneshie Division</span>'}`;
       const d = districtAt([lat, lng]);
@@ -1268,7 +1361,7 @@
       }
     }
 
-    $('useLocationBtn').onclick = () => locate((ll) => { addMap.setView(ll, 18); setAddPoint(ll[0], ll[1]); });
+    $('useLocationBtn').onclick = () => locate((ll) => { addMap?.flyTo({ center: ll2(ll), zoom: 18 }); setAddPoint(ll[0], ll[1]); });
 
     $('addStreetForm').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -1352,41 +1445,36 @@
     // ---------- Centre pin (Qodesh) ----------
     const SETTINGS_DEFAULT = { center: { lat: 5.587981, lng: -0.230065, name: 'Qodesh' }, mapbox_token: '', mapbox_style: '' };
     state.settings = { ...SETTINGS_DEFAULT };
-    const centerLayer = L.layerGroup().addTo(map);
     const centerLL = () => [state.settings.center.lat, state.settings.center.lng];
     function drawCenter() {
-      centerLayer.clearLayers();
-      const c = centerLL();
-      L.marker(c, {
-        zIndexOffset: 3000,
-        icon: L.divIcon({ className: '', iconSize: [44, 44], iconAnchor: [22, 22], html: `
-          <div style="position:relative;width:44px;height:44px">
+      whenMap((m) => {
+        centerMarker?.remove();
+        const name = esc(state.settings.center.name);
+        centerMarker = htmlMarker(`
+          <div style="position:relative;width:44px;height:44px;cursor:pointer">
             <div style="width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#FF9A76,#F2547D);border:3px solid #fff;box-shadow:0 6px 16px rgba(242,84,125,.45);display:grid;place-items:center">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v5M9.5 4.5h5M5 22V12l7-5 7 5v10M9 22v-5h6v5"/></svg>
             </div>
-            <div style="position:absolute;top:48px;left:50%;transform:translateX(-50%);white-space:nowrap;font:800 12px -apple-system,BlinkMacSystemFont,sans-serif;color:#2A1E1B;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 6px #fff">${esc(state.settings.center.name)}</div>
-          </div>` })
-      }).bindPopup(() => `<div style="min-width:160px"><div style="font-weight:800;font-size:15px">⛪ ${esc(state.settings.center.name)}</div><div style="color:#86776F;font-size:12px;margin-top:2px">Centre of outreach</div></div>`, { className: 'lwi-popup' }).addTo(centerLayer);
+            <div style="position:absolute;top:48px;left:50%;transform:translateX(-50%);white-space:nowrap;font:800 12px -apple-system,BlinkMacSystemFont,sans-serif;color:#2A1E1B;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 6px #fff">${name}</div>
+          </div>`, { anchor: 'center' })
+          .setLngLat(ll2(centerLL()))
+          .setPopup(new mapboxgl.Popup({ className: 'lwi-popup', offset: 26 }).setHTML(`<div style="min-width:160px"><div style="font-weight:800;font-size:15px">⛪ ${name}</div><div style="color:#86776F;font-size:12px;margin-top:2px">Centre of outreach</div></div>`))
+          .addTo(m);
+      });
     }
 
     function applySettings({ fit = false } = {}) {
       const s = state.settings;
-      // Mapbox Studio style (raster tiles from the Static Tiles API)
-      const m = /^mapbox:\/\/styles\/([\w.-]+)\/([\w-]+)$/.exec(s.mapbox_style || '');
-      const mbBtn = document.querySelector('[data-basemap="mapbox"]');
-      if (s.mapbox_token && m) {
-        BASEMAPS.mapbox = { label: 'Mapbox', url: `https://api.mapbox.com/styles/v1/${m[1]}/${m[2]}/tiles/512/{z}/{x}/{y}@2x?access_token=${encodeURIComponent(s.mapbox_token)}`,
-          opts: { tileSize: 512, zoomOffset: -1, maxZoom: 22, attribution: '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> ' + OSM_ATTR } };
-        mbBtn.classList.remove('hidden');
-        const pref = store.get('lwi_basemap');
-        if (!pref || pref === 'mapbox') setBasemap('mapbox');
-      } else {
-        delete BASEMAPS.mapbox;
-        mbBtn.classList.add('hidden');
-        if (baseKey === 'mapbox') setBasemap('street');
-      }
+      const token = s.mapbox_token || state.config?.mapbox_token || '';
+      document.querySelector('[data-basemap="mapbox"]').classList.toggle('hidden', !s.mapbox_style);
+      if (s.mapbox_style && !store.get('lwi_basemap')) baseKey = 'mapbox';
+      if (!s.mapbox_style && baseKey === 'mapbox') baseKey = 'street';
+      syncBasemapChips();
+      if (!map && token) initMap(token);
+      else if (map) { const u = styleUrl(baseKey); if (u !== state.appliedStyle) { state.appliedStyle = u; mapReady = false; map.setStyle(u); } }
+      $('mapTokenNote').classList.toggle('hidden', !!token);
       drawCenter();
-      if (fit) { state.settingsFitted = true; map.setView(centerLL(), 15); }
+      if (fit) { state.settingsFitted = true; whenMap(m => m.jumpTo({ center: ll2(centerLL()), zoom: 14.5 })); }
       if (state.streets.length) renderAll();
     }
 
@@ -1394,8 +1482,6 @@
       try { state.settings = { ...SETTINGS_DEFAULT, ...(await api('/settings')) }; } catch (e) { if (e.handled) return; }
       applySettings({ fit: true });
     }
-    drawCenter();
-
     // Admin settings: centre, Mapbox
     function fillZoneForm() {
       const s = state.settings;
@@ -1403,7 +1489,7 @@
       $('mbToken').value = s.mapbox_token || ''; $('mbStyle').value = s.mapbox_style || '';
     }
     $('zUseGps').onclick = () => locate((ll) => { $('zLat').value = ll[0].toFixed(6); $('zLng').value = ll[1].toFixed(6); toast('Centre set to your location. Tap Save centre.', 'info'); });
-    $('zUseMap').onclick = () => { const c = map.getCenter(); $('zLat').value = c.lat.toFixed(6); $('zLng').value = c.lng.toFixed(6); toast('Centre set to the middle of the map. Tap Save centre.', 'info'); };
+    $('zUseMap').onclick = () => { if (!map) return; const c = map.getCenter(); $('zLat').value = c.lat.toFixed(6); $('zLng').value = c.lng.toFixed(6); toast('Centre set to the middle of the map. Tap Save centre.', 'info'); };
     async function saveSettings(body, btn, msg) {
       setBusy(btn, true, 'Saving…');
       try {
@@ -1420,11 +1506,14 @@
     });
     $('mapboxForm').addEventListener('submit', (e) => {
       e.preventDefault();
-      saveSettings({ mapbox_token: $('mbToken').value.trim(), mapbox_style: $('mbStyle').value.trim() }, $('mbSave'), $('mbToken').value.trim() ? 'Mapbox style is now on the map' : 'Mapbox style removed');
+      saveSettings({ mapbox_token: $('mbToken').value.trim(), mapbox_style: $('mbStyle').value.trim() }, $('mbSave'), $('mbToken').value.trim() ? 'Mapbox map connected' : 'Mapbox settings cleared');
     });
 
     // ---------- Converts ----------
-    const convertsLayer = L.layerGroup().addTo(map);
+    const convertPopupHtml = (c) => `<div style="min-width:180px"><div style="font-weight:700;font-size:14px">${esc(c.full_name)}${c.age != null ? `, ${c.age}` : ''}</div>
+            <div style="color:#86776F;font-size:12px;margin:2px 0 8px">${esc(c.street_name || streetName(c.street_id) || 'Convert')}${c.phone ? ' · ' + esc(c.phone) : ''}</div>
+            ${c.location ? `<div style="font-size:12px;margin-bottom:8px">${esc(c.location)}</div>` : ''}
+            <button data-popup-cv="${esc(c.id)}" style="width:100%;padding:7px;background:#8B5CF6;color:#fff;border:0;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer">Open details</button></div>`;
     const streetName = (id) => state.streets.find(s => String(s.id) === String(id))?.name || '';
     const waNumber = (phone) => {
       let d = String(phone || '').replace(/\D/g, '');
@@ -1488,21 +1577,8 @@
         ? `<div class="p-8 text-center"><div class="w-12 h-12 mx-auto rounded-full bg-emerald-500/15 grid place-items-center mb-3 text-xl">🙏</div><p class="text-sm font-semibold">No converts recorded yet</p><p class="text-xs text-zinc-400 mt-1">Tap <b>Add convert</b> to record someone's details for follow-up.</p></div>`
         : list.length ? `<div class="p-3 space-y-2">${list.map(convertCard).join('')}</div>` : `<div class="p-8 text-center text-sm text-zinc-400">No converts match.</div>`;
 
-      convertsLayer.clearLayers();
-      for (const c of all) {
-        if (c.latitude == null) continue;
-        L.marker([c.latitude, c.longitude], { icon: L.divIcon({ html: '<div class="cv-dot"></div>', className: '', iconSize: [14, 14] }), zIndexOffset: 500, title: c.full_name })
-          .bindPopup(() => `<div style="min-width:180px"><div style="font-weight:700;font-size:14px">${esc(c.full_name)}${c.age != null ? `, ${c.age}` : ''}</div>
-            <div style="color:#86776F;font-size:12px;margin:2px 0 8px">${esc(c.street_name || streetName(c.street_id) || 'Convert')}${c.phone ? ' · ' + esc(c.phone) : ''}</div>
-            ${c.location ? `<div style="font-size:12px;margin-bottom:8px">${esc(c.location)}</div>` : ''}
-            <button data-popup-cv="${esc(c.id)}" style="width:100%;padding:7px;background:#8B5CF6;color:#fff;border:0;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer">Open details</button></div>`, { className: 'lwi-popup' })
-          .addTo(convertsLayer);
-      }
+      refreshMapData();
     }
-
-    map.on('popupopen', (e) => {
-      e.popup.getElement().querySelector('[data-popup-cv]')?.addEventListener('click', (ev) => { map.closePopup(); openConvertModal({ id: ev.currentTarget.dataset.popupCv }); });
-    });
 
     $('cvSearch').addEventListener('input', renderConverts);
     $('cvFilters').addEventListener('click', (e) => {
@@ -1542,9 +1618,9 @@
       $('cvClearGps').classList.remove('hidden');
       if (cvMap) {
         if (!cvMarker) {
-          cvMarker = L.marker([lat, lng], { draggable: true, icon: L.divIcon({ html: '<div class="cv-dot" style="width:20px;height:20px"></div>', className: '', iconSize: [20, 20] }) }).addTo(cvMap);
-          cvMarker.on('dragend', () => { const p = cvMarker.getLatLng(); setCvCoords(p.lat, p.lng, null, 'map'); });
-        } else cvMarker.setLatLng([lat, lng]);
+          cvMarker = htmlMarker('<div class="cv-dot" style="width:22px;height:22px"></div>', { draggable: true }).setLngLat([lng, lat]).addTo(cvMap);
+          cvMarker.on('dragend', () => { const p = cvMarker.getLngLat(); setCvCoords(p.lat, p.lng, null, 'map'); });
+        } else cvMarker.setLngLat([lng, lat]);
       }
     }
 
@@ -1587,7 +1663,7 @@
         setBusy(btn, false);
         btn.classList.remove('ring-2', 'ring-emerald-500');
         setCvCoords(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy, 'GPS');
-        if (cvMap) cvMap.setView([pos.coords.latitude, pos.coords.longitude], 18);
+        if (cvMap) cvMap.flyTo({ center: [pos.coords.longitude, pos.coords.latitude], zoom: 18 });
         if (pos.coords.accuracy > 50) toast(`GPS is rough (±${Math.round(pos.coords.accuracy)} m). Step outside and try again, or drag the pin on the map.`, 'info');
       }, (err) => {
         setBusy(btn, false);
@@ -1598,17 +1674,14 @@
     $('cvPickBtn').onclick = () => {
       $('cvMapWrap').classList.remove('hidden');
       requestAnimationFrame(() => {
-        if (!cvMap) {
-          cvMap = L.map('cvMap');
-          makeBase(baseKey).addTo(cvMap);
-          drawDivision(cvMap, { mask: false });
-          cvMap.on('click', (e) => setCvCoords(e.latlng.lat, e.latlng.lng, null, 'map'));
-        }
-        cvMap.invalidateSize();
+        if (!window.mapboxgl || !mapboxgl.accessToken) { $('cvMapWrap').classList.add('hidden'); toast('Map not connected yet. Use GPS, or add a Mapbox token in Admin.', 'error'); return; }
         const lat = parseFloat($('cvLat').value), lng = parseFloat($('cvLng').value);
         const street = state.streets.find(s => String(s.id) === $('cvStreet').value);
-        const center = Number.isFinite(lat) && Number.isFinite(lng) ? [lat, lng] : (street && streetPoint(street)) || map.getCenter();
-        cvMap.setView(center, 17);
+        const mc = map ? map.getCenter() : null;
+        const center = Number.isFinite(lat) && Number.isFinite(lng) ? [lat, lng] : (street && streetPoint(street)) || (mc ? [mc.lat, mc.lng] : centerLL());
+        if (!cvMap) cvMap = makePickerMap('cvMap', center, (a, b) => setCvCoords(a, b, null, 'map'));
+        else { cvMap.resize(); cvMap.jumpTo({ center: ll2(center), zoom: 17 }); }
+        if (cvMarker && !cvMarker._map) cvMarker = null;
         if (Number.isFinite(lat) && Number.isFinite(lng)) setCvCoords(lat, lng, $('cvLat').dataset.acc ?? null, null);
       });
     };
@@ -1685,7 +1758,7 @@
 
     // ---------- Import all streets in the division (admin) ----------
     const OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
-    const metres = (line) => line.reduce((t, p, i) => i ? t + map.distance([line[i - 1][1], line[i - 1][0]], [p[1], p[0]]) : 0, 0);
+    const metres = (line) => line.reduce((t, p, i) => i ? t + haversine([line[i - 1][1], line[i - 1][0]], [p[1], p[0]]) : 0, 0);
 
     async function fetchDivisionStreets() {
       const poly = division.outer.map(([lng, lat]) => `${lat} ${lng}`).join(' ');
@@ -1730,6 +1803,22 @@
           await loadStreets({ quiet: true });
         }, { okLabel: 'Load streets', danger: false });
     };
+
+    $('tokenSetupBtn').onclick = () => {
+      if (!state.token) { toast('Sign in as admin first', 'error'); return; }
+      $('settingsBtn').click();
+      setTimeout(() => { $('mbToken').scrollIntoView({ block: 'center' }); $('mbToken').focus(); }, 250);
+    };
+
+    // Public map config (Mapbox token from Vercel env or admin settings)
+    fetch('/api/config').then(r => r.json()).then(cfg => {
+      state.config = cfg || {};
+      if (cfg?.mapbox_style && !state.settings.mapbox_style) state.settings.mapbox_style = cfg.mapbox_style;
+      document.querySelector('[data-basemap="mapbox"]').classList.toggle('hidden', !state.settings.mapbox_style);
+      if (state.settings.mapbox_style && !store.get('lwi_basemap')) baseKey = 'mapbox';
+      if (cfg?.mapbox_token) initMap(cfg.mapbox_token);
+      else $('mapTokenNote').classList.remove('hidden');
+    }).catch(() => $('mapTokenNote').classList.remove('hidden'));
 
     // ---------- Boot ----------
     $('loginEmail').value = store.get('lwi_last_email') || '';
