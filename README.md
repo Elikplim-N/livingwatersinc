@@ -60,6 +60,7 @@ index.html          Admin app (vanilla JS + Mapbox GL JS)
 collect.html        Field collector app (/collect), no dependencies
 app.css             Prebuilt Tailwind CSS (regenerate with `npm run build:css`)
 api/index.ts        Vercel serverless API (/api/*)
+img/                Logo (transparent PNGs), favicon, phone home-screen icon
 division.geojson    Kaneshie Division + Darkuman/Kaneshie district boundaries
 db/schema.sql       Database tables
 scripts/db-setup.mjs  Creates tables and user accounts
