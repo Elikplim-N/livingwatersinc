@@ -80,3 +80,6 @@ CREATE TABLE IF NOT EXISTS app_settings (
   value      jsonb NOT NULL,
   updated_at timestamptz NOT NULL DEFAULT now()
 );
+
+-- "Up next": streets planned for the next outreach (null = not planned)
+ALTER TABLE streets ADD COLUMN IF NOT EXISTS planned_at timestamptz;

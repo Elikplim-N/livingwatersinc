@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#FFF6F2" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <title>LWI Street Tracker</title>
+  <meta name="apple-mobile-web-app-title" content="LW Inc. Campaign" />
+  <title>LW Inc. Street Campaign</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23F2547D'/><path d='M16 6c-4 0-7 3-7 7 0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7z' fill='white'/><circle cx='16' cy='13' r='3' fill='%23F2547D'/></svg>" />
 
   <link rel="stylesheet" href="/app.css" />
@@ -100,7 +101,7 @@
         <div class="w-16 h-16 rounded-[22px] brand-grad on-accent grid place-items-center shadow-lg shadow-blue-600/30 mb-4">
           <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21s-7-7.5-7-12a7 7 0 1114 0c0 4.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>
         </div>
-        <h1 class="text-2xl font-bold tracking-tight">LWI Street Tracker</h1>
+        <h1 class="text-2xl font-bold tracking-tight">LW Inc. Street Campaign</h1>
         <p class="text-sm text-zinc-400 mt-1">Living Waters Incorporated · Admin sign in</p>
       </div>
       <div class="bg-zinc-900/80 backdrop-blur border border-zinc-800 rounded-2xl p-6 space-y-4 shadow-2xl">
@@ -154,7 +155,7 @@
           <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21s-7-7.5-7-12a7 7 0 1114 0c0 4.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>
         </div>
         <div class="flex-1 min-w-0">
-          <h1 class="text-sm font-bold leading-tight">LWI Street Tracker</h1>
+          <h1 class="text-sm font-bold leading-tight">LW Inc. Street Campaign</h1>
           <p id="userName" class="text-xs text-zinc-400 truncate">&nbsp;</p>
         </div>
         <button id="settingsBtn" title="Admin settings" class="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800">
@@ -218,6 +219,18 @@
           <p id="coverageText" class="text-[11px] text-zinc-500 mt-1.5">&nbsp;</p>
         </div>
 
+        <!-- Up next (planned streets) -->
+        <div id="upNextWrap" class="hidden px-4 pb-3">
+          <div class="rounded-2xl border border-amber-400/40 bg-[#FFF7E6] p-3">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="relative flex w-2.5 h-2.5"><span class="absolute inline-flex h-full w-full rounded-full bg-[#F59E0B] opacity-60 animate-ping"></span><span class="relative inline-flex w-2.5 h-2.5 rounded-full bg-[#F59E0B]"></span></span>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-[#B45309]">Up next</h3>
+              <span id="upNextCount" class="ml-auto text-xs font-semibold text-[#B45309]"></span>
+            </div>
+            <div id="upNextList" class="space-y-1.5"></div>
+          </div>
+        </div>
+
         <!-- Search & filters -->
         <div class="px-4 pb-3 space-y-2.5 border-b border-zinc-800">
           <div class="relative">
@@ -228,6 +241,7 @@
             <button class="chip active" data-filter="all">All <span data-count="all" class="opacity-60"></span></button>
             <button class="chip" data-filter="unvisited">Not visited <span data-count="unvisited" class="opacity-60"></span></button>
             <button class="chip" data-filter="visited">Visited <span data-count="visited" class="opacity-60"></span></button>
+            <button class="chip" data-filter="planned">Up next</button>
             <select id="sortSelect" class="ml-auto bg-transparent text-xs text-zinc-400 hover:text-white focus:outline-none cursor-pointer">
               <option value="name">A–Z</option>
               <option value="recent">Recent</option>
@@ -272,14 +286,12 @@
             <div class="bg-zinc-800/60 rounded-xl p-2.5 text-center"><p id="detailPeople" class="text-lg font-bold">0</p><p class="text-[10px] uppercase tracking-wider text-zinc-400">People</p></div>
             <div class="bg-zinc-800/60 rounded-xl p-2.5 text-center"><p id="detailConverts" class="text-lg font-bold text-emerald-400">0</p><p class="text-[10px] uppercase tracking-wider text-zinc-400">Converts</p></div>
           </div>
-          <div class="flex gap-2 mt-3">
-            <button id="detailLogBtn" class="btn btn-primary flex-1">Log visit</button>
-            <button id="detailZoomBtn" class="btn btn-ghost" title="Show on map">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21s-7-7.5-7-12a7 7 0 1114 0c0 4.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>
-            </button>
-            <a id="detailDirections" target="_blank" rel="noopener" class="btn btn-ghost" title="Directions">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.27 3.13a59.77 59.77 0 0118.22 8.87A59.77 59.77 0 013.27 20.88L6 12zm0 0h7.5"/></svg>
-            </a>
+          <button id="detailLogBtn" class="btn btn-primary w-full mt-3 py-3 text-base">Log visit</button>
+          <div class="grid grid-cols-2 gap-2 mt-2">
+            <button id="detailPlanBtn" class="btn btn-ghost text-sm"></button>
+            <button id="detailSvBtn" class="btn btn-ghost text-sm"><svg width="16" height="16" style="flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg> Street View</button>
+            <a id="detailDirections" target="_blank" rel="noopener" class="btn btn-ghost text-sm"><svg width="16" height="16" style="flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg> Directions</a>
+            <button id="detailZoomBtn" class="btn btn-ghost text-sm"><svg width="16" height="16" style="flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-7.5-7-12a7 7 0 1114 0c0 4.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg> Show on map</button>
           </div>
         </div>
         <div class="flex-1 overflow-y-auto scroll-thin p-4">
@@ -299,6 +311,12 @@
     <main class="relative flex-1 h-full">
       <div id="map"></div>
 
+      <!-- Brand pill (phones) -->
+      <div class="md:hidden absolute left-3 z-[1000] flex items-center gap-2 bg-zinc-900/95 backdrop-blur rounded-2xl card-shadow pl-1.5 pr-3 py-1.5" style="top: max(.75rem, env(safe-area-inset-top));">
+        <span class="w-7 h-7 rounded-xl brand-grad on-accent grid place-items-center"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21s-7-7.5-7-12a7 7 0 1114 0c0 4.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg></span>
+        <span class="text-[13px] font-bold leading-tight">LW Inc.<br><span class="font-medium text-zinc-400 text-[11px]">Street Campaign</span></span>
+      </div>
+
       <!-- Top bar (mobile) -->
       <div class="absolute top-3 left-3 right-3 z-[1000] flex items-center gap-2 pointer-events-none" style="top: max(.75rem, env(safe-area-inset-top));">
         <button id="sidebarToggle" class="hidden pointer-events-auto bg-zinc-900/95 backdrop-blur border border-zinc-700/60 shadow-lg rounded-xl px-3 py-2.5 flex items-center gap-2 text-sm font-semibold">
@@ -310,10 +328,9 @@
 
       <!-- Map style -->
       <div class="absolute right-3 z-[1000] flex bg-zinc-900/95 backdrop-blur border border-zinc-700/60 rounded-xl shadow-lg p-1 gap-0.5" style="top: max(5.5rem, calc(env(safe-area-inset-top) + 5rem));" id="basemapSwitch">
-        <button class="chip" data-basemap="street">Street</button>
+        <button class="chip" data-basemap="street">Map</button>
         <button class="chip" data-basemap="satellite">Satellite</button>
-        <button class="chip" data-basemap="dark">Dark</button>
-        <button class="chip hidden" data-basemap="mapbox">Mapbox</button>
+        <button class="chip hidden" data-basemap="mapbox">Custom</button>
       </div>
 
       <!-- Floating actions -->
@@ -331,17 +348,17 @@
 
       <!-- Legend -->
       <div id="mapLegend" class="above-tabbar absolute left-3 z-[1000] bg-zinc-900/95 backdrop-blur border border-zinc-800 rounded-xl card-shadow px-3 py-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-zinc-300 max-w-[62vw] sm:max-w-none" style="bottom: max(1.5rem, calc(env(safe-area-inset-bottom) + 1rem));">
-        <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full bg-emerald-600"></i>Last 30 days</span>
-        <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full bg-blue-600"></i>Visited</span>
-        <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full bg-zinc-500"></i>Not yet</span>
-        <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full bg-violet-500 ring-2 ring-zinc-900"></i>Convert</span>
-        <span class="hidden sm:flex items-center gap-1.5"><i class="w-4 h-0.5 bg-amber-400"></i>Division</span>
+        <span class="flex items-center gap-1.5"><i class="w-4 h-1.5 rounded-full" style="background:#0891B2"></i>Not visited</span>
+        <span class="flex items-center gap-1.5"><i class="w-4 h-1.5 rounded-full" style="background:#F59E0B"></i>Up next</span>
+        <span class="flex items-center gap-1.5"><i class="w-4 h-1.5 rounded-full" style="background:#F2547D"></i>Visited</span>
+        <span class="flex items-center gap-1.5"><i class="w-4 h-1.5 rounded-full" style="background:#1F9D63"></i>Last 30 days</span>
+        <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full" style="background:#8B5CF6"></i>Convert</span>
       </div>
 
       <!-- Mapbox token needed -->
       <div id="mapTokenNote" class="hidden absolute inset-0 z-[1050] grid place-items-center p-6">
         <div class="max-w-sm bg-zinc-900 card-shadow rounded-2xl p-6 text-center">
-          <div class="w-14 h-14 mx-auto rounded-2xl brand-grad on-accent grid place-items-center text-2xl mb-3">🗺️</div>
+          <div class="w-14 h-14 mx-auto rounded-2xl brand-grad on-accent grid place-items-center mb-3"><svg width="28" height="28" style="flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4L3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5 9 4z"/><path d="M9 4v13M15 6.5v13"/></svg></div>
           <h3 class="text-lg font-bold">Connect Mapbox</h3>
           <p class="text-sm text-zinc-400 mt-1">The map runs on Mapbox GL JS and needs your Mapbox <b>public token</b>.</p>
           <ol class="text-left text-sm text-zinc-300 mt-3 space-y-1 list-decimal pl-5">
@@ -535,7 +552,7 @@
             <div><label class="label" for="zLng">Longitude</label><input id="zLng" inputmode="decimal" class="field" required /></div>
           </div>
           <div class="flex flex-wrap gap-2">
-            <button type="button" id="zUseGps" class="btn btn-ghost btn-sm">📍 I'm at the centre, use my GPS</button>
+            <button type="button" id="zUseGps" class="btn btn-ghost btn-sm"><svg width="14" height="14" style="flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/><path d="M12 1v3m0 16v3M1 12h3m16 0h3"/></svg> I'm at the centre, use my GPS</button>
             <button type="button" id="zUseMap" class="btn btn-ghost btn-sm">Use middle of map</button>
           </div>
           <button id="zSave" type="submit" class="btn btn-primary w-full">Save centre</button>
@@ -567,6 +584,18 @@
     </div>
   </div>
 
+  <!-- ============ STREET VIEW ============ -->
+  <div id="svModal" class="modal fixed inset-0 z-[2400] bg-black/80 backdrop-blur-sm items-end sm:items-center justify-center sm:p-4">
+    <div class="panel bg-zinc-900 w-full sm:max-w-3xl rounded-t-2xl sm:rounded-2xl overflow-hidden shadow-2xl flex flex-col" style="height:min(85vh,640px)">
+      <div class="flex items-center gap-3 px-4 py-3">
+        <div class="flex-1 min-w-0"><h2 class="font-bold truncate" id="svTitle">Street View</h2><p class="text-xs text-zinc-400">Google Street View · drag to look around</p></div>
+        <a id="svOpen" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">Open in Google Maps</a>
+        <button data-close class="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M6 18L18 6M6 6l12 12"/></svg></button>
+      </div>
+      <iframe id="svFrame" class="flex-1 w-full border-0 bg-zinc-800" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+    </div>
+  </div>
+
   <!-- ============ CONFIRM ============ -->
   <div id="confirmModal" class="modal fixed inset-0 z-[2500] bg-black/70 backdrop-blur-sm items-center justify-center p-4">
     <div class="panel bg-zinc-900 border border-zinc-800 w-full max-w-sm rounded-2xl p-5 shadow-2xl">
@@ -590,6 +619,8 @@
     const DEFAULT_CENTER = [5.574, -0.239]; // Kaneshie, Accra
     const RECENT_DAYS = 30;
     const $ = (id) => document.getElementById(id);
+    const ICONS = {"eye": '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>', "nav": '<path d="M3 11l19-9-9 19-2-8-8-2z"/>', "pin": '<path d="M12 21s-7-7.5-7-12a7 7 0 1114 0c0 4.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/>', "map": '<path d="M9 4L3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5 9 4z"/><path d="M9 4v13M15 6.5v13"/>', "star": '<path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9L12 3z"/>', "users": '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 010 7M18 14.8c1.8.7 3 2.5 3.5 5.2"/>', "phone": '<path d="M5 3h4l2 5-2.5 1.5a11 11 0 006 6L16 13l5 2v4a2 2 0 01-2 2A16 16 0 013 5a2 2 0 012-2z"/>', "check": '<path d="M5 13l4 4L19 7"/>', "heart": '<path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0112 7a4.3 4.3 0 017.5 2.8C19.5 15.4 12 20 12 20z"/>', "gps": '<circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/><path d="M12 1v3m0 16v3M1 12h3m16 0h3"/>', "chat": '<path d="M21 12a9 9 0 01-13.5 7.8L3 21l1.2-4.5A9 9 0 1121 12z"/>', "church": '<path d="M12 2v5M9.5 4.5h5M5 22V12l7-5 7 5v10M9 22v-5h6v5"/>'};
+    const icon = (n, size = 16, fill = false) => `<svg width="${size}" height="${size}" style="flex-shrink:0" viewBox="0 0 24 24" fill="${fill ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[n]}</svg>`;
     const store = {
       get(k) { try { return localStorage.getItem(k); } catch { return null; } },
       set(k, v) { try { localStorage.setItem(k, v); } catch {} },
@@ -752,7 +783,7 @@
     $('shareLinkBtn').onclick = async () => {
       const url = $('collectLink').value;
       try {
-        if (navigator.share) await navigator.share({ title: 'LWI Collect', text: 'Record converts for Living Waters outreach:', url });
+        if (navigator.share) await navigator.share({ title: 'LW Inc. Street Campaign', text: 'Record converts for Living Waters outreach:', url });
         else { await navigator.clipboard.writeText(url); toast('Link copied'); }
       } catch {}
     };
@@ -806,8 +837,7 @@
     // ---------- Map (Mapbox GL JS) ----------
     const STYLES = {
       street: 'mapbox://styles/mapbox/streets-v12',
-      satellite: 'mapbox://styles/mapbox/satellite-streets-v12',
-      dark: 'mapbox://styles/mapbox/dark-v11'
+      satellite: 'mapbox://styles/mapbox/satellite-streets-v12'
     };
     const EMPTY = { type: 'FeatureCollection', features: [] };
     const ll2 = ([lat, lng]) => [lng, lat];                       // [lat,lng] -> Mapbox [lng,lat]
@@ -816,7 +846,10 @@
       const h = Math.sin(r(b[0] - a[0]) / 2) ** 2 + Math.cos(r(a[0])) * Math.cos(r(b[0])) * Math.sin(r(b[1] - a[1]) / 2) ** 2;
       return 2 * R * Math.asin(Math.sqrt(h));
     }
-    const STATUS_COLOR = ['match', ['get', 'status'], 'recent', '#1F9D63', 'visited', '#F2547D', '#7D6E69'];
+    // Colours: not visited = teal, visited = pink, visited in last 30 days = green, up next = amber
+    const COLORS = { unvisited: '#0891B2', visited: '#F2547D', recent: '#1F9D63', planned: '#F59E0B' };
+    const STATUS_COLOR = ['case', ['get', 'planned'], COLORS.planned,
+      ['match', ['get', 'status'], 'recent', COLORS.recent, 'visited', COLORS.visited, COLORS.unvisited]];
 
     let map = null, mapReady = false, popup = null, youMarker = null, centerMarker = null;
     let baseKey = store.get('lwi_basemap') || 'street';
@@ -835,10 +868,16 @@
         addAppLayers();
         mapReady = true;
         refreshMapData();
+        applyFocus();
         while (mapQueue.length) mapQueue.shift()(map);
       });
-      map.on('error', (e) => console.warn('Map:', e?.error?.message || e));
+      map.on('error', (e) => {
+        const msg = e?.error?.message || '';
+        console.warn('Map:', msg || e);
+        if (/style|401|403|Unauthorized|Forbidden/i.test(msg) && baseKey !== 'street') { toast('That map style could not load. Switched back to Map.', 'error'); setBasemap('street'); }
+      });
       bindMapEvents();
+      startPulse();
       $('mapTokenNote').classList.add('hidden');
       syncBasemapChips();
     }
@@ -854,30 +893,31 @@
     }
     document.querySelectorAll('[data-basemap]').forEach(b => b.onclick = () => setBasemap(b.dataset.basemap));
 
+    const WORLD = [[-180, -85], [180, -85], [180, 85], [-180, 85], [-180, -85]];
     // Sources + layers are re-added after every style change (setStyle wipes them)
     function addAppLayers() {
-      for (const id of ['division-mask', 'division', 'streets', 'converts']) map.addSource(id, { type: 'geojson', data: EMPTY });
-      map.addSource('street-pts', { type: 'geojson', data: EMPTY, cluster: true, clusterRadius: 45, clusterMaxZoom: 15 });
-      map.addLayer({ id: 'division-mask', type: 'fill', source: 'division-mask', paint: { 'fill-color': '#2A1E1B', 'fill-opacity': 0.14 } });
+      for (const id of ['division-mask', 'division', 'streets', 'street-pts', 'converts']) map.addSource(id, { type: 'geojson', data: EMPTY });
+      map.addSource('focus-dim', { type: 'geojson', data: { type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [WORLD] } } });
+      map.addLayer({ id: 'division-mask', type: 'fill', source: 'division-mask', paint: { 'fill-color': '#2A1E1B', 'fill-opacity': 0.12 } });
       map.addLayer({ id: 'division-casing', type: 'line', source: 'division', paint: { 'line-color': '#000', 'line-opacity': 0.3, 'line-width': 7 } });
       map.addLayer({ id: 'division-line', type: 'line', source: 'division', paint: { 'line-color': '#f59e0b', 'line-width': 4 } });
-      map.addLayer({
-        id: 'streets', type: 'line', source: 'streets', layout: { 'line-cap': 'round', 'line-join': 'round' },
-        paint: {
-          'line-color': STATUS_COLOR,
-          'line-width': ['interpolate', ['linear'], ['zoom'], 13, ['case', ['==', ['get', 'status'], 'unvisited'], 2.5, 3.5], 18, ['case', ['==', ['get', 'status'], 'unvisited'], 7, 10]],
-          'line-opacity': ['case', ['==', ['get', 'status'], 'unvisited'], 0.8, 0.95]
-        }
-      });
-      map.addLayer({ id: 'clusters', type: 'circle', source: 'street-pts', filter: ['has', 'point_count'],
-        paint: { 'circle-color': '#F2547D', 'circle-opacity': 0.92, 'circle-radius': ['step', ['get', 'point_count'], 15, 20, 19, 100, 25], 'circle-stroke-width': 3, 'circle-stroke-color': '#fff' } });
-      map.addLayer({ id: 'cluster-count', type: 'symbol', source: 'street-pts', filter: ['has', 'point_count'],
-        layout: { 'text-field': ['get', 'point_count_abbreviated'], 'text-size': 12, 'text-font': ['DIN Pro Bold', 'Arial Unicode MS Bold'], 'text-allow-overlap': true },
-        paint: { 'text-color': '#fff' } });
-      map.addLayer({ id: 'street-pts', type: 'circle', source: 'street-pts', filter: ['!', ['has', 'point_count']],
-        paint: { 'circle-color': STATUS_COLOR, 'circle-radius': ['interpolate', ['linear'], ['zoom'], 12, 5, 17, 9], 'circle-stroke-width': 2.5, 'circle-stroke-color': '#fff' } });
+      // Focus mode: veil over everything except the selected street
+      map.addLayer({ id: 'focus-dim', type: 'fill', source: 'focus-dim', paint: { 'fill-color': '#ffffff', 'fill-opacity': 0 } });
+      const W = (a, b) => ['interpolate', ['linear'], ['zoom'], 12, a, 18, b];
+      map.addLayer({ id: 'streets-casing', type: 'line', source: 'streets', layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: { 'line-color': '#ffffff', 'line-width': W(4, 13), 'line-opacity': 0.9 } });
+      map.addLayer({ id: 'planned-glow', type: 'line', source: 'streets', filter: ['==', ['get', 'planned'], true], layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: { 'line-color': COLORS.planned, 'line-width': W(10, 26), 'line-blur': 6, 'line-opacity': 0.4 } });
+      map.addLayer({ id: 'streets', type: 'line', source: 'streets', layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: { 'line-color': STATUS_COLOR, 'line-width': W(2.5, 9), 'line-opacity': 0.95 } });
+      map.addLayer({ id: 'street-selected', type: 'line', source: 'streets', filter: ['==', ['get', 'id'], ''], layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: { 'line-color': STATUS_COLOR, 'line-width': W(7, 16), 'line-opacity': 1 } });
+      map.addLayer({ id: 'planned-pulse', type: 'circle', source: 'street-pts', filter: ['==', ['get', 'planned'], true],
+        paint: { 'circle-color': COLORS.planned, 'circle-radius': 14, 'circle-opacity': 0.25, 'circle-blur': 0.4 } });
+      map.addLayer({ id: 'street-pts', type: 'circle', source: 'street-pts',
+        paint: { 'circle-color': STATUS_COLOR, 'circle-radius': W(4, 8), 'circle-stroke-width': 2, 'circle-stroke-color': '#fff' } });
       map.addLayer({ id: 'converts', type: 'circle', source: 'converts',
-        paint: { 'circle-color': '#8B5CF6', 'circle-radius': ['interpolate', ['linear'], ['zoom'], 12, 5, 17, 8], 'circle-stroke-width': 2.5, 'circle-stroke-color': '#fff' } });
+        paint: { 'circle-color': '#8B5CF6', 'circle-radius': W(4, 8), 'circle-stroke-width': 2, 'circle-stroke-color': '#fff' } });
     }
 
     // Push the app's data into the GeoJSON sources
@@ -885,12 +925,12 @@
       if (!mapReady) return;
       const outer = division.outer;
       map.getSource('division').setData(outer ? { type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [outer] } } : EMPTY);
-      map.getSource('division-mask').setData(outer ? { type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [[[-180, -85], [180, -85], [180, 85], [-180, 85], [-180, -85]], [...outer].reverse()] } } : EMPTY);
+      map.getSource('division-mask').setData(outer ? { type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [WORLD, [...outer].reverse()] } } : EMPTY);
       const lines = [], pts = [];
       for (const s of state.streets) {
         const p = streetPoint(s);
         if (!p) continue;
-        const props = { id: String(s.id), status: streetStatus(s) };
+        const props = { id: String(s.id), status: streetStatus(s), planned: !!s.planned_at };
         pts.push({ type: 'Feature', properties: props, geometry: { type: 'Point', coordinates: ll2(p) } });
         const ls = (s.geometry?.coordinates || []).filter(l => l.length > 1);
         if (ls.length && s.length_m > 20) lines.push({ type: 'Feature', properties: props, geometry: { type: 'MultiLineString', coordinates: ls } });
@@ -898,38 +938,82 @@
       map.getSource('streets').setData({ type: 'FeatureCollection', features: lines });
       map.getSource('street-pts').setData({ type: 'FeatureCollection', features: pts });
       map.getSource('converts').setData({ type: 'FeatureCollection', features: state.converts.filter(c => c.latitude != null)
-        .map(c => ({ type: 'Feature', properties: { id: String(c.id) }, geometry: { type: 'Point', coordinates: [c.longitude, c.latitude] } })) });
+        .map(c => ({ type: 'Feature', properties: { id: String(c.id), street_id: String(c.street_id || '') }, geometry: { type: 'Point', coordinates: [c.longitude, c.latitude] } })) });
+      applyFocus();
     }
     const renderMap = refreshMapData;
 
-    function showPopup(lngLat, html) {
+    // Focus mode: when a street is selected, grey everything else out
+    function applyFocus() {
+      if (!mapReady) return;
+      const id = String(state.selectedId || state.popupStreetId || '');
+      const on = !!id;
+      const isSel = ['==', ['get', 'id'], id];
+      const dim = (full, faded) => on ? ['case', isSel, full, faded] : full;
+      map.setPaintProperty('focus-dim', 'fill-color', baseKey === 'satellite' ? '#000000' : '#ffffff');
+      map.setPaintProperty('focus-dim', 'fill-opacity', on ? (baseKey === 'satellite' ? 0.5 : 0.6) : 0);
+      map.setPaintProperty('streets', 'line-opacity', dim(0.95, 0.12));
+      map.setPaintProperty('streets-casing', 'line-opacity', dim(0.9, 0));
+      map.setPaintProperty('planned-glow', 'line-opacity', on ? 0 : 0.4);
+      map.setPaintProperty('street-pts', 'circle-opacity', dim(1, 0.12));
+      map.setPaintProperty('street-pts', 'circle-stroke-opacity', dim(1, 0.12));
+      map.setPaintProperty('converts', 'circle-opacity', on ? ['case', ['==', ['get', 'street_id'], id], 1, 0.12] : 1);
+      map.setPaintProperty('converts', 'circle-stroke-opacity', on ? ['case', ['==', ['get', 'street_id'], id], 1, 0.12] : 1);
+      map.setFilter('street-selected', ['==', ['get', 'id'], id || '__none__']);
+      map.setPaintProperty('division-mask', 'fill-opacity', on ? 0 : 0.12);
+    }
+
+    // Soft amber "beep" for streets planned as Up next
+    function startPulse() {
+      let last = 0;
+      const frame = (t) => {
+        requestAnimationFrame(frame);
+        if (!mapReady || t - last < 50 || !state.streets.some(s => s.planned_at)) return;
+        last = t;
+        const k = (Math.sin(t / 420) + 1) / 2;   // 0..1, ~2.6 s cycle
+        const focused = !!(state.selectedId || state.popupStreetId);
+        try {
+          map.setPaintProperty('planned-pulse', 'circle-radius', 10 + k * 14);
+          map.setPaintProperty('planned-pulse', 'circle-opacity', focused ? 0 : 0.45 * (1 - k) + 0.05);
+          if (!focused) map.setPaintProperty('planned-glow', 'line-opacity', 0.15 + 0.45 * (1 - k));
+        } catch { /* style is reloading */ }
+      };
+      requestAnimationFrame(frame);
+    }
+
+    function showPopup(lngLat, html, streetId) {
       if (!map) return;
       popup?.remove();
+      state.popupStreetId = streetId || null;
+      applyFocus();
       popup = new mapboxgl.Popup({ className: 'lwi-popup', maxWidth: '300px', offset: 14, focusAfterOpen: false }).setLngLat(lngLat).setHTML(html).addTo(map);
-      const el = popup.getElement();
-      el.querySelector('[data-popup-log]')?.addEventListener('click', (ev) => { popup.remove(); openVisitModal(ev.currentTarget.dataset.popupLog); });
-      el.querySelector('[data-popup-open]')?.addEventListener('click', (ev) => { popup.remove(); showDetail(ev.currentTarget.dataset.popupOpen); toggleSidebar(true); });
-      el.querySelector('[data-popup-cv]')?.addEventListener('click', (ev) => { popup.remove(); openConvertModal({ id: ev.currentTarget.dataset.popupCv }); });
+      const p = popup;
+      p.on('close', () => { if (popup === p) { state.popupStreetId = null; applyFocus(); } });
+      const el = p.getElement();
+      el.querySelector('[data-popup-log]')?.addEventListener('click', (ev) => { p.remove(); openVisitModal(ev.currentTarget.dataset.popupLog); });
+      el.querySelector('[data-popup-open]')?.addEventListener('click', (ev) => { const id = ev.currentTarget.dataset.popupOpen; p.remove(); showDetail(id); toggleSidebar(true); });
+      el.querySelector('[data-popup-plan]')?.addEventListener('click', (ev) => { togglePlan(ev.currentTarget.dataset.popupPlan); p.remove(); });
+      el.querySelector('[data-popup-sv]')?.addEventListener('click', (ev) => { const [a, b] = ev.currentTarget.dataset.popupSv.split(','); openStreetView(+a, +b, ev.currentTarget.dataset.name); });
+      el.querySelector('[data-popup-cv]')?.addEventListener('click', (ev) => { p.remove(); openConvertModal({ id: ev.currentTarget.dataset.popupCv }); });
     }
 
     function bindMapEvents() {
       const findStreet = (id) => state.streets.find(s => String(s.id) === String(id));
+      const LAYERS = ['converts', 'street-pts', 'streets'];
       map.on('click', (e) => {
-        const hits = map.queryRenderedFeatures(e.point, { layers: ['converts', 'street-pts', 'clusters', 'streets'].filter(l => map.getLayer(l)) });
+        const hits = map.queryRenderedFeatures([[e.point.x - 6, e.point.y - 6], [e.point.x + 6, e.point.y + 6]], { layers: LAYERS.filter(l => map.getLayer(l)) });
         const f = hits[0];
-        if (!f) return;
-        if (f.layer.id === 'clusters') {
-          map.getSource('street-pts').getClusterExpansionZoom(f.properties.cluster_id, (err, z) => { if (!err) map.easeTo({ center: f.geometry.coordinates, zoom: z + 0.5 }); });
-        } else if (f.layer.id === 'converts') {
+        if (!f) { if (state.selectedId) hideDetail(); return; }
+        if (f.layer.id === 'converts') {
           const c = state.converts.find(x => String(x.id) === f.properties.id);
-          if (c) showPopup(e.lngLat, convertPopupHtml(c));
+          if (c) showPopup(e.lngLat, convertPopupHtml(c), c.street_id);
         } else {
           const s = findStreet(f.properties.id);
-          if (s) showPopup(f.layer.id === 'street-pts' ? f.geometry.coordinates : e.lngLat, popupHtml(s));
+          if (s) showPopup(f.layer.id === 'street-pts' ? f.geometry.coordinates : e.lngLat, popupHtml(s), s.id);
         }
       });
       map.on('mousemove', (e) => {
-        const n = map.queryRenderedFeatures(e.point, { layers: ['converts', 'street-pts', 'clusters', 'streets'].filter(l => map.getLayer(l)) }).length;
+        const n = map.queryRenderedFeatures(e.point, { layers: LAYERS.filter(l => map.getLayer(l)) }).length;
         map.getCanvas().style.cursor = n ? 'pointer' : '';
       });
     }
@@ -1013,6 +1097,10 @@
             </div>
             <div style="color:#86776F;font-size:12px;margin-bottom:12px">Last visit: ${relDate(v[0].visit_date)}</div>
           ` : `<div style="color:#86776F;font-size:12px;margin-bottom:12px">Not visited yet</div>`}
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
+            <button data-popup-plan="${esc(street.id)}" style="padding:8px;background:${street.planned_at ? '#FFF1D6' : '#F6ECE8'};color:${street.planned_at ? '#B45309' : '#2A1E1B'};border:0;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer"><span style="display:inline-flex;align-items:center;gap:5px">${icon('star', 14, !!street.planned_at)}${street.planned_at ? 'Up next' : 'Plan next'}</span></button>
+            ${(() => { const pt = streetPoint(street); return pt ? `<button data-popup-sv="${pt[0]},${pt[1]}" data-name="${esc(street.name)}" style="padding:8px;background:#F6ECE8;color:#2A1E1B;border:0;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:5px">${icon('eye', 14)}Street View</button>` : '<span></span>'; })()}
+          </div>
           <div style="display:flex;gap:6px">
             <button data-popup-log="${esc(street.id)}" style="flex:1;padding:8px;background:linear-gradient(135deg,#FF9A76,#F2547D);color:#fff;border:0;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer">Log visit</button>
             <button data-popup-open="${esc(street.id)}" style="padding:8px 12px;background:#F6ECE8;color:#2A1E1B;border:0;border-radius:10px;font-size:13px;cursor:pointer">Details</button>
@@ -1025,8 +1113,12 @@
       const p = s && streetPoint(s);
       if (!p) return;
       whenMap((m) => {
-        m.flyTo({ center: ll2(p), zoom: Math.max(m.getZoom(), 17), duration: 800 });
-        if (openPopup) m.once('moveend', () => showPopup(ll2(p), popupHtml(s)));
+        const coords = (s.geometry?.coordinates || []).flat().filter(c => Array.isArray(c) && c.length === 2);
+        const wide = document.documentElement.clientWidth >= 768;
+        const pad = wide ? { top: 90, bottom: 90, left: 80, right: 80 } : { top: 110, bottom: 200, left: 40, right: 40 };
+        if (coords.length > 1 && s.length_m > 20) m.fitBounds(ringBounds(coords), { padding: pad, maxZoom: 17.5, duration: 800 });
+        else m.flyTo({ center: ll2(p), zoom: Math.max(m.getZoom(), 17), duration: 800 });
+        if (openPopup) m.once('moveend', () => showPopup(ll2(p), popupHtml(s), s.id));
       });
     }
 
@@ -1077,6 +1169,7 @@
     }
 
     function renderAll() {
+      renderUpNext();
       renderConverts();
       renderStats();
       renderList();
@@ -1110,6 +1203,7 @@
       let list = state.streets.filter(s => {
         if (state.filter === 'visited' && !s.visits?.length) return false;
         if (state.filter === 'unvisited' && s.visits?.length) return false;
+        if (state.filter === 'planned' && !s.planned_at) return false;
         return !term || `${s.name} ${s.district}`.toLowerCase().includes(term);
       });
       const last = (s) => s.visits?.[0]?.visit_date || '';
@@ -1135,14 +1229,14 @@
         el.innerHTML = `<div class="p-8 text-center text-sm text-zinc-400">No streets match your search.</div>`;
         return;
       }
-      const dot = { recent: 'bg-emerald-500', visited: 'bg-blue-500', unvisited: 'bg-zinc-600' };
+      const dot = { recent: 'bg-[#1F9D63]', visited: 'bg-[#F2547D]', unvisited: 'bg-[#0891B2]' };
       el.innerHTML = list.map(s => {
         const v = s.visits || [];
         const st = streetStatus(s);
         const converts = sum(v, 'decisions');
         return `
           <div class="group flex items-center gap-3 px-4 py-3 hover:bg-zinc-800/50 cursor-pointer border-b border-zinc-800/60 ${String(state.selectedId) === String(s.id) ? 'bg-zinc-800/60' : ''}" data-street="${esc(s.id)}">
-            <span class="w-2.5 h-2.5 rounded-full shrink-0 ${dot[st]}"></span>
+            <span class="w-2.5 h-2.5 rounded-full shrink-0 ${s.planned_at ? 'bg-[#F59E0B] animate-pulse' : dot[st]}"></span>
             <div class="flex-1 min-w-0">
               <p class="text-sm font-medium truncate">${esc(s.name)}</p>
               <p class="text-xs text-zinc-400 truncate">${division.outer && !inDivision(streetPoint(s)) ? '<span class="text-amber-400">Outside division</span> · ' : ''}${esc(s.district)}${v.length ? ` · ${relDate(v[0].visit_date)}` : ' · Not visited'}${converts ? ` · <span class="text-emerald-400">${converts} convert${converts === 1 ? '' : 's'}</span>` : ''}</p>
@@ -1187,7 +1281,7 @@
         : `<p class="text-xs text-zinc-500 border border-dashed border-zinc-800 rounded-xl p-3 text-center">No convert details recorded for this street yet.</p>`;
       $('detailName').textContent = s.name;
       $('detailDistrict').textContent = s.district;
-      const badge = { recent: ['Recently visited', 'bg-emerald-500/15 text-emerald-400'], visited: ['Visited', 'bg-blue-500/15 text-blue-400'], unvisited: ['Not visited', 'bg-zinc-700 text-zinc-300'] }[st];
+      const badge = s.planned_at ? ['Up next', 'bg-[#FFF1D6] text-[#B45309]'] : { recent: ['Visited recently', 'bg-emerald-500/15 text-emerald-400'], visited: ['Visited', 'bg-blue-500/15 text-blue-600'], unvisited: ['Not visited', 'bg-[#0891B2]/10 text-[#0E7490]'] }[st];
       $('detailBadge').textContent = badge[0];
       $('detailBadge').className = `text-[11px] font-semibold px-2 py-1 rounded-full shrink-0 ${badge[1]}`;
       $('detailVisits').textContent = v.length;
@@ -1195,6 +1289,10 @@
       $('detailConverts').textContent = fmt(sum(v, 'decisions'));
       const pt = streetPoint(s);
       $('detailDirections').href = pt ? `https://www.google.com/maps/dir/?api=1&destination=${pt[0]},${pt[1]}` : '#';
+      $('detailPlanBtn').innerHTML = `${icon('star', 16, !!s.planned_at)} ${s.planned_at ? 'Up next' : 'Plan next'}`;
+      $('detailPlanBtn').className = `btn text-sm ${s.planned_at ? 'bg-[#FFF1D6] text-[#B45309]' : 'btn-ghost'}`;
+      $('detailSvBtn').onclick = () => pt && openStreetView(pt[0], pt[1], s.name);
+      applyFocus();
       $('deleteStreetBtn').classList.toggle('hidden', state.user?.role !== 'admin');
 
       $('visitHistory').innerHTML = v.length ? v.map(visit => `
@@ -1213,7 +1311,7 @@
             <span class="text-emerald-400"><b>${fmt(visit.decisions || 0)}</b> converts</span>
             ${visit.follow_ups ? `<span><b>${fmt(visit.follow_ups)}</b> <span class="text-zinc-400">follow-ups</span></span>` : ''}
           </div>
-          ${visit.team_members?.length ? `<p class="text-xs text-zinc-400 mt-2">👥 ${esc(visit.team_members.join(', '))}</p>` : ''}
+          ${visit.team_members?.length ? `<p class="text-xs text-zinc-400 mt-2 flex items-center gap-1.5">${icon('users', 13)} ${esc(visit.team_members.join(', '))}</p>` : ''}
           ${visit.notes ? `<p class="text-xs text-zinc-300 mt-2 whitespace-pre-wrap">${esc(visit.notes)}</p>` : ''}
         </div>`).join('')
         : `<div class="text-center py-8 text-sm text-zinc-400 border border-dashed border-zinc-800 rounded-xl">No visits logged yet.<br><span class="text-xs">Tap <b>Log visit</b> after your outreach.</span></div>`;
@@ -1222,6 +1320,8 @@
 
     function hideDetail() {
       state.selectedId = null;
+      popup?.remove();
+      applyFocus();
       $('detailView').classList.add('hidden');
       $('tabBar').classList.remove('hidden');
       setTab(state.tab);
@@ -1232,6 +1332,54 @@
     $('detailLogBtn').onclick = () => openVisitModal(state.selectedId);
     $('detailAddConvert').onclick = () => openConvertModal({ streetId: state.selectedId });
     $('detailZoomBtn').onclick = () => { focusStreet(state.selectedId); toggleSidebar(false); };
+    $('detailPlanBtn').onclick = () => togglePlan(state.selectedId);
+
+    // ---------- Up next (planning) ----------
+    async function togglePlan(id) {
+      const s = state.streets.find(x => String(x.id) === String(id));
+      if (!s) return;
+      const planned = !s.planned_at;
+      s.planned_at = planned ? new Date().toISOString() : null;   // instant feedback
+      renderAll();
+      try {
+        await api(`/streets/${encodeURIComponent(s.id)}/plan`, { method: 'PUT', body: JSON.stringify({ planned }) });
+        toast(planned ? `${s.name} is up next` : `${s.name} removed from Up next`);
+      } catch (err) {
+        s.planned_at = planned ? null : new Date().toISOString();
+        renderAll();
+        if (!err.handled) toast(err.message, 'error');
+      }
+    }
+
+    function renderUpNext() {
+      const list = state.streets.filter(s => s.planned_at).sort((a, b) => String(a.planned_at).localeCompare(String(b.planned_at)));
+      $('upNextWrap').classList.toggle('hidden', !list.length);
+      $('upNextCount').textContent = `${list.length} planned`;
+      $('upNextList').innerHTML = list.slice(0, 6).map((s, i) => `
+        <div class="flex items-center gap-2 bg-zinc-900 rounded-xl px-2.5 py-2 cursor-pointer hover:bg-zinc-800" data-street="${esc(s.id)}">
+          <span class="w-5 h-5 rounded-full bg-[#F59E0B] on-accent text-[11px] font-bold grid place-items-center shrink-0">${i + 1}</span>
+          <span class="flex-1 min-w-0 text-sm font-semibold truncate">${esc(s.name)}</span>
+          <button data-log="${esc(s.id)}" class="text-xs font-semibold px-2 py-1 rounded-lg bg-[#F59E0B] on-accent">Log</button>
+        </div>`).join('') + (list.length > 6 ? `<button class="text-xs font-semibold text-[#B45309] w-full pt-1" data-show-planned>See all ${list.length}</button>` : '');
+    }
+    $('upNextList').addEventListener('click', (e) => {
+      if (e.target.closest('[data-show-planned]')) { document.querySelector('[data-filter="planned"]').click(); return; }
+      const log = e.target.closest('[data-log]');
+      if (log) { e.stopPropagation(); openVisitModal(log.dataset.log); return; }
+      const row = e.target.closest('[data-street]');
+      if (row) { showDetail(row.dataset.street); focusStreet(row.dataset.street, false); }
+    });
+
+    // ---------- Google Street View ----------
+    function openStreetView(lat, lng, name) {
+      const key = state.config?.google_maps_key;
+      const link = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
+      if (!key) { window.open(link, '_blank', 'noopener'); return; }
+      $('svTitle').textContent = name || 'Street View';
+      $('svOpen').href = link;
+      $('svFrame').src = `https://www.google.com/maps/embed/v1/streetview?key=${encodeURIComponent(key)}&location=${lat},${lng}&fov=80`;
+      openModal('svModal');
+    }
 
     $('visitHistory').addEventListener('click', (e) => {
       const btn = e.target.closest('[data-delete-visit]');
@@ -1256,7 +1404,7 @@
 
     // ---------- Modals ----------
     function openModal(id) { $(id).classList.add('active'); }
-    function closeModal(id) { $(id).classList.remove('active'); syncTabbar(); }
+    function closeModal(id) { $(id).classList.remove('active'); if (id === 'svModal') $('svFrame').src = 'about:blank'; syncTabbar(); }
     document.querySelectorAll('.modal').forEach(m => {
       m.addEventListener('click', (e) => { if (e.target === m || e.target.closest('[data-close]')) closeModal(m.id); });
     });
@@ -1336,7 +1484,7 @@
         addMarker.on('dragend', () => { const p = addMarker.getLngLat(); setAddPoint(p.lat, p.lng); });
       } else addMarker?.setLngLat([lng, lat]);
       const inside = inDivision([lat, lng]);
-      $('coordsText').innerHTML = `📍 ${lat.toFixed(5)}, ${lng.toFixed(5)} · drag the pin to adjust${inside ? '' : ' · <span class="text-amber-400 font-medium">Outside Kaneshie Division</span>'}`;
+      $('coordsText').innerHTML = `<span class="inline-flex items-center gap-1 align-middle">${icon('pin', 13)}</span> ${lat.toFixed(5)}, ${lng.toFixed(5)} · drag the pin to adjust${inside ? '' : ' · <span class="text-amber-400 font-medium">Outside Kaneshie Division</span>'}`;
       const d = districtAt([lat, lng]);
       if (d) $('newStreetDistrict').value = d;
       if (geocode) reverseGeocode(lat, lng);
@@ -1431,7 +1579,7 @@
         });
         store.set('lwi_last_team', team.join(', '));
         closeModal('visitModal');
-        toast('Visit saved 🙏');
+        toast('Visit saved');
         await loadStreets({ quiet: true });
         const n = visitNum('visitConverts');
         if (n > 0) {
@@ -1461,7 +1609,7 @@
             <div style="position:absolute;top:48px;left:50%;transform:translateX(-50%);white-space:nowrap;font:800 12px -apple-system,BlinkMacSystemFont,sans-serif;color:#2A1E1B;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 6px #fff">${name}</div>
           </div>`, { anchor: 'center' })
           .setLngLat(ll2(centerLL()))
-          .setPopup(new mapboxgl.Popup({ className: 'lwi-popup', offset: 26 }).setHTML(`<div style="min-width:160px"><div style="font-weight:800;font-size:15px">⛪ ${name}</div><div style="color:#86776F;font-size:12px;margin-top:2px">Centre of outreach</div></div>`))
+          .setPopup(new mapboxgl.Popup({ className: 'lwi-popup', offset: 26 }).setHTML(`<div style="min-width:160px"><div style="font-weight:800;font-size:15px;display:flex;align-items:center;gap:6px;color:#E2456E">${icon('church', 16)}<span style="color:#2A1E1B">${name}</span></div><div style="color:#86776F;font-size:12px;margin-top:2px">Centre of outreach</div></div>`))
           .addTo(m);
       });
     }
@@ -1548,14 +1696,14 @@
             </div>
             <div class="flex flex-col items-end gap-1 shrink-0">
               ${c.followed_up_at ? `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400">Followed up</span>` : `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400">Follow up</span>`}
-              <span class="text-[10px] ${hasGps ? 'text-sky-400' : 'text-zinc-500'}">${hasGps ? '📍 GPS' : 'No GPS'}</span>
+              <span class="text-[10px] ${hasGps ? 'text-sky-400' : 'text-zinc-500'}">${hasGps ? `<span class="inline-flex items-center gap-0.5">${icon('pin', 11)}GPS</span>` : 'No GPS'}</span>
             </div>
           </div>
           <div class="flex flex-wrap gap-1.5 mt-2.5">
-            ${c.phone ? `<a href="tel:${esc(c.phone.replace(/[^\d+]/g, ''))}" class="btn btn-ghost btn-sm">📞 Call</a>` : ''}
-            ${wa ? `<a href="https://wa.me/${wa}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">WhatsApp</a>` : ''}
-            ${hasGps ? `<a href="https://www.google.com/maps/dir/?api=1&destination=${c.latitude},${c.longitude}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">Directions</a>` : ''}
-            <button data-cv-follow="${esc(c.id)}" class="btn btn-ghost btn-sm ml-auto">${c.followed_up_at ? 'Edit' : '✓ Visited back'}</button>
+            ${c.phone ? `<a href="tel:${esc(c.phone.replace(/[^\d+]/g, ''))}" class="btn btn-ghost btn-sm">${icon('phone', 14)} Call</a>` : ''}
+            ${wa ? `<a href="https://wa.me/${wa}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">${icon('chat', 14)} WhatsApp</a>` : ''}
+            ${hasGps ? `<a href="https://www.google.com/maps/dir/?api=1&destination=${c.latitude},${c.longitude}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">${icon('nav', 14)} Directions</a>` : ''}
+            <button data-cv-follow="${esc(c.id)}" class="btn btn-ghost btn-sm ml-auto">${c.followed_up_at ? 'Edit' : `${icon('check', 14)} Visited back`}</button>
           </div>
         </div>`;
     }
@@ -1577,7 +1725,7 @@
       $('cvGps').textContent = fmt(all.filter(c => c.latitude != null).length);
       const list = filteredConverts();
       $('convertsList').innerHTML = !all.length
-        ? `<div class="p-8 text-center"><div class="w-12 h-12 mx-auto rounded-full bg-emerald-500/15 grid place-items-center mb-3 text-xl">🙏</div><p class="text-sm font-semibold">No converts recorded yet</p><p class="text-xs text-zinc-400 mt-1">Tap <b>Add convert</b> to record someone's details for follow-up.</p></div>`
+        ? `<div class="p-8 text-center"><div class="w-12 h-12 mx-auto rounded-full bg-emerald-500/15 grid place-items-center mb-3 text-emerald-500">${icon('heart', 22)}</div><p class="text-sm font-semibold">No converts recorded yet</p><p class="text-xs text-zinc-400 mt-1">Tap <b>Add convert</b> to record someone's details for follow-up.</p></div>`
         : list.length ? `<div class="p-3 space-y-2">${list.map(convertCard).join('')}</div>` : `<div class="p-8 text-center text-sm text-zinc-400">No converts match.</div>`;
 
       refreshMapData();
@@ -1616,7 +1764,7 @@
       $('cvLat').value = Number(lat).toFixed(6); $('cvLng').value = Number(lng).toFixed(6);
       if (accuracy != null) $('cvLat').dataset.acc = Math.round(accuracy); else delete $('cvLat').dataset.acc;
       const inside = inDivision([lat, lng]);
-      $('cvGpsStatus').innerHTML = `✓ Location set${source ? ` from ${source}` : ''}${accuracy != null ? ` · accurate to ±${Math.round(accuracy)} m` : ''}${inside ? '' : ' · <span class="text-amber-400">outside Kaneshie Division</span>'}`;
+      $('cvGpsStatus').innerHTML = `<span class="inline-flex align-middle">${icon('check', 12)}</span> Location set${source ? ` from ${source}` : ''}${accuracy != null ? ` · accurate to ±${Math.round(accuracy)} m` : ''}${inside ? '' : ' · <span class="text-amber-400">outside Kaneshie Division</span>'}`;
       $('cvGpsStatus').className = 'text-[11px] text-emerald-400';
       $('cvClearGps').classList.remove('hidden');
       if (cvMap) {
@@ -1650,7 +1798,7 @@
       $('cvDelete').classList.toggle('hidden', !c);
       $('cvSaveAnother').classList.toggle('hidden', !!c);
       setCvCoords(c?.latitude ?? null, c?.longitude, c?.accuracy_m, null);
-      if (c?.latitude != null) $('cvGpsStatus').innerHTML = `✓ Location saved${c.accuracy_m ? ` · ±${c.accuracy_m} m` : ''}`;
+      if (c?.latitude != null) $('cvGpsStatus').innerHTML = `<span class="inline-flex align-middle">${icon('check', 12)}</span> Location saved${c.accuracy_m ? ` · ±${c.accuracy_m} m` : ''}`;
       toggleSidebar(false);
       openModal('convertModal');
       $('cvGpsBtn').classList.toggle('ring-2', !!(followUp && c?.latitude == null));
@@ -1719,7 +1867,7 @@
         if (i >= 0) state.converts[i] = saved; else state.converts.unshift(saved);
         renderConverts();
         if (state.selectedId) showDetail(state.selectedId);
-        toast(cvEditing ? 'Convert updated' : `${saved.full_name} saved 🙏`);
+        toast(cvEditing ? 'Convert updated' : `${saved.full_name} saved`);
         if (addAnother) {
           const keepStreet = $('cvStreet').value, keepDate = $('cvDate').value;
           openConvertModal({ streetId: keepStreet });
