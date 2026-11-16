@@ -16,14 +16,9 @@ A map-based outreach tracker for Living Waters Incorporated. Teams pin the stree
 - **Delete** visits (your own, or any as admin) and streets (admin only), with confirmation
 - Works on phones (bottom-sheet forms, safe-area aware) and desktop
 
-## Qodesh centre & outreach zones
+## Qodesh centre
 
-The map is centred on **Qodesh** (5.5880, -0.2301) with two rings:
-
-- **Zone 1 · Around Qodesh** (solid pink, default 800 m)
-- **Zone 2 · Extension to Darkuman** (dashed peach, default 2.2 km)
-
-Each zone shows its own coverage %, has a list filter, and streets carry a Z1/Z2 badge. Change the centre (e.g. "I'm at the centre, use my GPS") and the sizes in **Admin → Centre & outreach zones**. **Load all streets** pulls every named street in the division *and* Zone 2 from OpenStreetMap.
+The map opens centred on a **Qodesh** pin (5.5880, -0.2301). To make it exact, stand at Qodesh and use **Admin → Map centre → use my GPS**. The street list can be sorted by **Nearest Qodesh**.
 
 ## Mapbox Studio style (optional)
 

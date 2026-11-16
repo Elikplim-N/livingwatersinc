@@ -221,7 +221,6 @@
           </div>
           <div class="mt-3 h-1.5 bg-zinc-800 rounded-full overflow-hidden"><div id="coverageBar" class="h-full bg-gradient-to-r from-blue-600 to-emerald-500 rounded-full transition-all duration-500" style="width:0%"></div></div>
           <p id="coverageText" class="text-[11px] text-zinc-500 mt-1.5">&nbsp;</p>
-          <div id="zoneStats" class="grid grid-cols-2 gap-2 mt-2.5"></div>
         </div>
 
         <!-- Search & filters -->
@@ -234,8 +233,6 @@
             <button class="chip active" data-filter="all">All <span data-count="all" class="opacity-60"></span></button>
             <button class="chip" data-filter="unvisited">Not visited <span data-count="unvisited" class="opacity-60"></span></button>
             <button class="chip" data-filter="visited">Visited <span data-count="visited" class="opacity-60"></span></button>
-            <button class="chip" data-filter="z1">Zone 1</button>
-            <button class="chip" data-filter="z2">Zone 2</button>
             <select id="sortSelect" class="ml-auto bg-transparent text-xs text-zinc-400 hover:text-white focus:outline-none cursor-pointer">
               <option value="name">A–Z</option>
               <option value="recent">Recent</option>
@@ -252,7 +249,7 @@
         <div class="p-3 border-t border-zinc-800 space-y-2">
           <button id="importBtn" class="hidden btn btn-ghost w-full text-xs">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
-            Load all streets (division + zones)
+            Load all streets in Kaneshie Division
           </button>
           <button data-action="add-street" class="btn btn-primary w-full">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
@@ -343,8 +340,6 @@
         <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full bg-blue-600"></i>Visited</span>
         <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full bg-zinc-500"></i>Not yet</span>
         <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full bg-violet-500 ring-2 ring-zinc-900"></i>Convert</span>
-        <span class="flex items-center gap-1.5"><i class="w-3 h-3 rounded-full border-[2.5px] border-[#F2547D]"></i>Zone 1</span>
-        <span class="flex items-center gap-1.5"><i class="w-3 h-3 rounded-full border-[2.5px] border-dashed border-[#FF8A5B]"></i>Zone 2</span>
         <span class="hidden sm:flex items-center gap-1.5"><i class="w-4 h-0.5 bg-amber-400"></i>Division</span>
       </div>
 
@@ -523,8 +518,8 @@
           <div id="collectorsList" class="rounded-xl border border-zinc-800 divide-y divide-zinc-800 text-sm"></div>
         </div>
         <form id="zonesForm" class="space-y-3">
-          <h3 class="text-xs font-semibold uppercase tracking-wider text-zinc-400">Centre &amp; outreach zones</h3>
-          <p class="text-sm text-zinc-300"><b>Zone 1</b> is the area around the centre. <b>Zone 2</b> extends out towards Darkuman. Coverage is counted for each.</p>
+          <h3 class="text-xs font-semibold uppercase tracking-wider text-zinc-400">Map centre</h3>
+          <p class="text-sm text-zinc-300">The map opens on this pin. Stand at the centre and tap the GPS button to make it exact.</p>
           <div><label class="label" for="zName">Centre name</label><input id="zName" class="field" maxlength="60" /></div>
           <div class="grid grid-cols-2 gap-3">
             <div><label class="label" for="zLat">Latitude</label><input id="zLat" inputmode="decimal" class="field" required /></div>
@@ -534,11 +529,7 @@
             <button type="button" id="zUseGps" class="btn btn-ghost btn-sm">📍 I'm at the centre, use my GPS</button>
             <button type="button" id="zUseMap" class="btn btn-ghost btn-sm">Use middle of map</button>
           </div>
-          <div class="grid grid-cols-2 gap-3">
-            <div><label class="label" for="zR1">Zone 1 radius (m)</label><input id="zR1" type="number" min="100" max="20000" step="50" class="field" required /></div>
-            <div><label class="label" for="zR2">Zone 2 radius (m)</label><input id="zR2" type="number" min="100" max="20000" step="50" class="field" required /></div>
-          </div>
-          <button id="zSave" type="submit" class="btn btn-primary w-full">Save zones</button>
+          <button id="zSave" type="submit" class="btn btn-primary w-full">Save centre</button>
         </form>
         <form id="mapboxForm" class="space-y-3">
           <h3 class="text-xs font-semibold uppercase tracking-wider text-zinc-400">Map style (Mapbox Studio)</h3>
@@ -869,7 +860,7 @@
         }
         division.bounds = L.latLngBounds(toLatLngs(division.outer));
         drawDivision(map);
-        if (!state.settingsFitted) map.fitBounds(L.latLng(centerLL()).toBounds(state.settings.zone2_m * 2.1), { padding: [10, 10] });
+        if (!state.settingsFitted) map.setView(centerLL(), 15);
         state.fitted = true;
         if (state.streets.length) renderAll();
       } catch (err) {
@@ -986,7 +977,6 @@
     }
 
     function renderAll() {
-      renderZoneStats();
       renderConverts();
       renderStats();
       renderList();
@@ -1020,8 +1010,6 @@
       let list = state.streets.filter(s => {
         if (state.filter === 'visited' && !s.visits?.length) return false;
         if (state.filter === 'unvisited' && s.visits?.length) return false;
-        if (state.filter === 'z1' && zoneOf(s) !== 1) return false;
-        if (state.filter === 'z2' && zoneOf(s) !== 2) return false;
         return !term || `${s.name} ${s.district}`.toLowerCase().includes(term);
       });
       const last = (s) => s.visits?.[0]?.visit_date || '';
@@ -1055,7 +1043,6 @@
         return `
           <div class="group flex items-center gap-3 px-4 py-3 hover:bg-zinc-800/50 cursor-pointer border-b border-zinc-800/60 ${String(state.selectedId) === String(s.id) ? 'bg-zinc-800/60' : ''}" data-street="${esc(s.id)}">
             <span class="w-2.5 h-2.5 rounded-full shrink-0 ${dot[st]}"></span>
-            ${(() => { const z = zoneOf(s); return z ? `<span class="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-md text-[#fff]" style="background:${ZONE[z].color}">Z${z}</span>` : ''; })()}
             <div class="flex-1 min-w-0">
               <p class="text-sm font-medium truncate">${esc(s.name)}</p>
               <p class="text-xs text-zinc-400 truncate">${division.outer && !inDivision(streetPoint(s)) ? '<span class="text-amber-400">Outside division</span> · ' : ''}${esc(s.district)}${v.length ? ` · ${relDate(v[0].visit_date)}` : ' · Not visited'}${converts ? ` · <span class="text-emerald-400">${converts} convert${converts === 1 ? '' : 's'}</span>` : ''}</p>
@@ -1362,32 +1349,14 @@
       }
     });
 
-    // ---------- Centre (Qodesh) & outreach zones ----------
-    const SETTINGS_DEFAULT = { center: { lat: 5.587981, lng: -0.230065, name: 'Qodesh' }, zone1_m: 800, zone2_m: 2200, mapbox_token: '', mapbox_style: '' };
+    // ---------- Centre pin (Qodesh) ----------
+    const SETTINGS_DEFAULT = { center: { lat: 5.587981, lng: -0.230065, name: 'Qodesh' }, mapbox_token: '', mapbox_style: '' };
     state.settings = { ...SETTINGS_DEFAULT };
-    const zonesLayer = L.layerGroup().addTo(map);
+    const centerLayer = L.layerGroup().addTo(map);
     const centerLL = () => [state.settings.center.lat, state.settings.center.lng];
-    function zoneOf(street) {
-      const pt = streetPoint(street);
-      if (!pt) return 0;
-      const d = map.distance(pt, centerLL());
-      return d <= state.settings.zone1_m ? 1 : d <= state.settings.zone2_m ? 2 : 0;
-    }
-    const ZONE = {
-      1: { name: 'Zone 1', desc: () => `Around ${state.settings.center.name}`, color: '#F2547D' },
-      2: { name: 'Zone 2', desc: () => 'Extension to Darkuman', color: '#FF8A5B' }
-    };
-
-    function drawZones() {
-      zonesLayer.clearLayers();
-      const c = centerLL(), s = state.settings;
-      L.circle(c, { radius: s.zone2_m, color: ZONE[2].color, weight: 3, dashArray: '10 8', fillColor: ZONE[2].color, fillOpacity: 0.05, interactive: false }).addTo(zonesLayer);
-      L.circle(c, { radius: s.zone1_m, color: ZONE[1].color, weight: 3.5, fillColor: ZONE[1].color, fillOpacity: 0.10, interactive: false }).addTo(zonesLayer);
-      const label = (r, z) => {
-        const north = L.latLng(c[0] + r / 111320, c[1]);
-        L.marker(north, { interactive: false, icon: L.divIcon({ className: '', html: `<div style="width:max-content;transform:translate(-50%,-50%);white-space:nowrap;background:${ZONE[z].color};color:#fff;font:700 11px -apple-system,BlinkMacSystemFont,sans-serif;padding:3px 9px;border-radius:99px;box-shadow:0 2px 8px rgba(42,30,27,.25)">${ZONE[z].name} · ${esc(ZONE[z].desc())}</div>` }) }).addTo(zonesLayer);
-      };
-      label(s.zone2_m, 2); label(s.zone1_m, 1);
+    function drawCenter() {
+      centerLayer.clearLayers();
+      const c = centerLL();
       L.marker(c, {
         zIndexOffset: 3000,
         icon: L.divIcon({ className: '', iconSize: [44, 44], iconAnchor: [22, 22], html: `
@@ -1397,42 +1366,8 @@
             </div>
             <div style="position:absolute;top:48px;left:50%;transform:translateX(-50%);white-space:nowrap;font:800 12px -apple-system,BlinkMacSystemFont,sans-serif;color:#2A1E1B;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 6px #fff">${esc(state.settings.center.name)}</div>
           </div>` })
-      }).bindPopup(() => {
-        const z = zoneStats();
-        return `<div style="min-width:190px"><div style="font-weight:800;font-size:15px">⛪ ${esc(state.settings.center.name)}</div>
-          <div style="color:#86776F;font-size:12px;margin:2px 0 8px">Centre of outreach</div>
-          ${[1, 2].map(n => `<div style="font-size:12px;margin-top:4px"><b style="color:${ZONE[n].color}">${ZONE[n].name}</b> · ${z[n].visited}/${z[n].total} streets reached (${z[n].pct}%)</div>`).join('')}</div>`;
-      }, { className: 'lwi-popup' }).addTo(zonesLayer);
+      }).bindPopup(() => `<div style="min-width:160px"><div style="font-weight:800;font-size:15px">⛪ ${esc(state.settings.center.name)}</div><div style="color:#86776F;font-size:12px;margin-top:2px">Centre of outreach</div></div>`, { className: 'lwi-popup' }).addTo(centerLayer);
     }
-
-    function zoneStats() {
-      const out = { 1: { total: 0, visited: 0 }, 2: { total: 0, visited: 0 } };
-      for (const s of state.streets) {
-        const z = zoneOf(s);
-        if (!z) continue;
-        out[z].total++;
-        if (s.visits?.length) out[z].visited++;
-      }
-      for (const n of [1, 2]) out[n].pct = out[n].total ? Math.round(out[n].visited / out[n].total * 100) : 0;
-      return out;
-    }
-
-    function renderZoneStats() {
-      const z = zoneStats();
-      $('zoneStats').innerHTML = [1, 2].map(n => `
-        <button data-zone-card="${n}" class="text-left bg-zinc-800/60 rounded-xl p-2.5 hover:bg-zinc-800">
-          <div class="flex items-center gap-1.5"><i class="w-2 h-2 rounded-full" style="background:${ZONE[n].color}"></i><span class="text-[11px] font-semibold">${ZONE[n].name}</span><span class="ml-auto text-sm font-bold">${z[n].pct}%</span></div>
-          <p class="text-[10.5px] text-zinc-400 truncate mt-0.5">${esc(ZONE[n].desc())} · ${z[n].visited}/${z[n].total}</p>
-          <div class="mt-1.5 h-1 bg-zinc-700 rounded-full overflow-hidden"><div class="h-full rounded-full" style="width:${z[n].pct}%;background:${ZONE[n].color}"></div></div>
-        </button>`).join('');
-    }
-    $('zoneStats').addEventListener('click', (e) => {
-      const card = e.target.closest('[data-zone-card]');
-      if (!card) return;
-      const n = +card.dataset.zoneCard;
-      document.querySelector(`[data-filter="z${n}"]`)?.click();
-      map.flyToBounds(L.latLng(centerLL()).toBounds(state.settings[`zone${n}_m`] * 2), { padding: [20, 20], duration: 0.6 });
-    });
 
     function applySettings({ fit = false } = {}) {
       const s = state.settings;
@@ -1450,8 +1385,8 @@
         mbBtn.classList.add('hidden');
         if (baseKey === 'mapbox') setBasemap('street');
       }
-      drawZones();
-      if (fit) { state.settingsFitted = true; map.fitBounds(L.latLng(centerLL()).toBounds(s.zone2_m * 2.1), { padding: [10, 10] }); }
+      drawCenter();
+      if (fit) { state.settingsFitted = true; map.setView(centerLL(), 15); }
       if (state.streets.length) renderAll();
     }
 
@@ -1459,17 +1394,16 @@
       try { state.settings = { ...SETTINGS_DEFAULT, ...(await api('/settings')) }; } catch (e) { if (e.handled) return; }
       applySettings({ fit: true });
     }
-    drawZones();
+    drawCenter();
 
-    // Admin settings: centre, zones, Mapbox
+    // Admin settings: centre, Mapbox
     function fillZoneForm() {
       const s = state.settings;
       $('zName').value = s.center.name; $('zLat').value = s.center.lat; $('zLng').value = s.center.lng;
-      $('zR1').value = s.zone1_m; $('zR2').value = s.zone2_m;
       $('mbToken').value = s.mapbox_token || ''; $('mbStyle').value = s.mapbox_style || '';
     }
-    $('zUseGps').onclick = () => locate((ll) => { $('zLat').value = ll[0].toFixed(6); $('zLng').value = ll[1].toFixed(6); toast('Centre set to your location. Tap Save zones.', 'info'); });
-    $('zUseMap').onclick = () => { const c = map.getCenter(); $('zLat').value = c.lat.toFixed(6); $('zLng').value = c.lng.toFixed(6); toast('Centre set to the middle of the map. Tap Save zones.', 'info'); };
+    $('zUseGps').onclick = () => locate((ll) => { $('zLat').value = ll[0].toFixed(6); $('zLng').value = ll[1].toFixed(6); toast('Centre set to your location. Tap Save centre.', 'info'); });
+    $('zUseMap').onclick = () => { const c = map.getCenter(); $('zLat').value = c.lat.toFixed(6); $('zLng').value = c.lng.toFixed(6); toast('Centre set to the middle of the map. Tap Save centre.', 'info'); };
     async function saveSettings(body, btn, msg) {
       setBusy(btn, true, 'Saving…');
       try {
@@ -1482,9 +1416,7 @@
     }
     $('zonesForm').addEventListener('submit', (e) => {
       e.preventDefault();
-      const r1 = +$('zR1').value, r2 = +$('zR2').value;
-      if (r2 <= r1) { toast('Zone 2 must be bigger than Zone 1', 'error'); return; }
-      saveSettings({ center: { name: $('zName').value.trim() || 'Qodesh', lat: +$('zLat').value, lng: +$('zLng').value }, zone1_m: r1, zone2_m: r2 }, $('zSave'), 'Centre and zones saved');
+      saveSettings({ center: { name: $('zName').value.trim() || 'Qodesh', lat: +$('zLat').value, lng: +$('zLng').value } }, $('zSave'), 'Centre saved');
     });
     $('mapboxForm').addEventListener('submit', (e) => {
       e.preventDefault();
@@ -1758,8 +1690,7 @@
     async function fetchDivisionStreets() {
       const poly = division.outer.map(([lng, lat]) => `${lat} ${lng}`).join(' ');
       const hw = 'way["highway"~"^(trunk|primary|secondary|tertiary|unclassified|residential|living_street|pedestrian|service)$"]["name"]';
-      const c = state.settings.center;
-      const query = `[out:json][timeout:90];(${hw}(poly:"${poly}");${hw}(around:${state.settings.zone2_m},${c.lat},${c.lng}););out tags geom;`;
+      const query = `[out:json][timeout:90];${hw}(poly:"${poly}");out tags geom;`;
       let lastErr;
       for (const url of OVERPASS) {
         try {
@@ -1773,7 +1704,7 @@
 
     $('importBtn').onclick = () => {
       if (!division.outer) { toast('Division boundary not loaded yet', 'error'); return; }
-      confirmAction('Load all streets in the division and zones?',
+      confirmAction('Load all streets in Kaneshie Division?',
         'Every named street inside the division boundary will be added from OpenStreetMap. Streets you already have are skipped. This can take up to a minute.',
         async () => {
           const ways = await fetchDivisionStreets();
