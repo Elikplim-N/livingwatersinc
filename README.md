@@ -59,7 +59,7 @@ On a street's visit history tap **Record attendance**. Type how many came (or us
 
 ## Overview page for leaders (view only, no login)
 
-**Admin → Overview link → Share** gives a link like `https://<your-app>/overview?k=…`. Opening it shows a read-only summary: streets reached, outreaches, people reached, converts, retention for Qodesh City Church and Saturday Night Revival, the map with flags, Up next, a breakdown by area and recent outreaches. It refreshes every minute and shows **totals only, never names or phone numbers**. The link is permanent: it is created once and never changes.
+**Admin → Overview link → Share** gives a link like `https://<your-app>/overview?k=…`. Opening it shows a read-only summary: streets reached, outreaches, people reached, converts, retention for Qodesh City Church and Saturday Night Revival, the map with flags, Up next, a breakdown by area and recent outreaches. It refreshes every minute and shows **totals only, never names or phone numbers**. Filter chips (All / Not visited / Up next / Visited) control the map, and tapping a flag gives Street View / Google Earth, Directions and Show on map. The link is permanent: it is created once and never changes.
 
 ## Field collectors (no password)
 

@@ -552,7 +552,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         districts: Object.entries(districts).map(([name, d]) => ({ name, ...d })).sort((a, b) => b.streets - a.streets),
         up_next: streets.filter(s => s.planned).sort((a, b) => String(a.planned_at).localeCompare(String(b.planned_at))).map(s => ({ name: s.name, district: s.district, rep: s.rep })),
         recent: recent.slice(0, 12),
-        streets: streets.map(({ line, ...s }) => ({ ...s, line: s.planned || s.visited ? line : [] }))
+        streets
       });
     }
 
