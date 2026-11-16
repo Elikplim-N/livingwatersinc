@@ -814,7 +814,7 @@
       const h = Math.sin(r(b[0] - a[0]) / 2) ** 2 + Math.cos(r(a[0])) * Math.cos(r(b[0])) * Math.sin(r(b[1] - a[1]) / 2) ** 2;
       return 2 * R * Math.asin(Math.sqrt(h));
     }
-    const STATUS_COLOR = ['match', ['get', 'status'], 'recent', '#1F9D63', 'visited', '#F2547D', '#A39591'];
+    const STATUS_COLOR = ['match', ['get', 'status'], 'recent', '#1F9D63', 'visited', '#F2547D', '#7D6E69'];
 
     let map = null, mapReady = false, popup = null, youMarker = null, centerMarker = null;
     let baseKey = store.get('lwi_basemap') || 'street';
@@ -863,8 +863,8 @@
         id: 'streets', type: 'line', source: 'streets', layout: { 'line-cap': 'round', 'line-join': 'round' },
         paint: {
           'line-color': STATUS_COLOR,
-          'line-width': ['interpolate', ['linear'], ['zoom'], 13, ['case', ['==', ['get', 'status'], 'unvisited'], 1.5, 3], 18, ['case', ['==', ['get', 'status'], 'unvisited'], 5, 9]],
-          'line-opacity': ['case', ['==', ['get', 'status'], 'unvisited'], 0.55, 0.9]
+          'line-width': ['interpolate', ['linear'], ['zoom'], 13, ['case', ['==', ['get', 'status'], 'unvisited'], 2.5, 3.5], 18, ['case', ['==', ['get', 'status'], 'unvisited'], 7, 10]],
+          'line-opacity': ['case', ['==', ['get', 'status'], 'unvisited'], 0.8, 0.95]
         }
       });
       map.addLayer({ id: 'clusters', type: 'circle', source: 'street-pts', filter: ['has', 'point_count'],
@@ -1057,6 +1057,7 @@
         state.streets = streets;
         state.converts = converts;
         renderAll();
+        if (!streets.length) setTimeout(() => autoImportIfEmpty(), 300);
         if (!quiet && !state.fitted && !division.outer) {
           const pts = state.streets.map(streetPoint).filter(Boolean);
           if (pts.length) whenMap(m => m.fitBounds(ringBounds(pts.map(ll2)), { padding: 40, maxZoom: 16 }));
@@ -1775,11 +1776,7 @@
       throw new Error(lastErr?.message?.includes('busy') ? lastErr.message + '. Try again in a minute.' : 'Could not reach the OpenStreetMap server.');
     }
 
-    $('importBtn').onclick = () => {
-      if (!division.outer) { toast('Division boundary not loaded yet', 'error'); return; }
-      confirmAction('Load all streets in Kaneshie Division?',
-        'Every named street inside the division boundary will be added from OpenStreetMap. Streets you already have are skipped. This can take up to a minute.',
-        async () => {
+    async function importDivisionStreets() {
           const ways = await fetchDivisionStreets();
           const groups = new Map();
           for (const w of ways) {
@@ -1801,8 +1798,25 @@
           }
           toast(`Added ${added} streets${skipped ? ` · ${skipped} already existed` : ''}`);
           await loadStreets({ quiet: true });
-        }, { okLabel: 'Load streets', danger: false });
+    }
+    $('importBtn').onclick = () => {
+      if (!division.outer) { toast('Division boundary not loaded yet', 'error'); return; }
+      confirmAction('Load all streets in Kaneshie Division?',
+        'Every named street inside the division boundary will be added from OpenStreetMap. Streets you already have are skipped. This can take up to a minute.',
+        importDivisionStreets, { okLabel: 'Load streets', danger: false });
     };
+
+    // First time an admin opens an empty database: load the division's streets automatically
+    async function autoImportIfEmpty() {
+      if (state.user?.role !== 'admin' || state.streets.length || state.autoImported || !division.outer) return;
+      state.autoImported = true;
+      const btn = $('importBtn');
+      setBusy(btn, true, 'Loading streets from OpenStreetMap…');
+      toast('Loading all streets in Kaneshie Division… this takes about a minute', 'info');
+      try { await importDivisionStreets(); }
+      catch (err) { if (!err.handled) toast(`Could not load streets: ${err.message} Tap "Load all streets" to try again.`, 'error'); state.autoImported = false; }
+      finally { setBusy(btn, false); }
+    }
 
     $('tokenSetupBtn').onclick = () => {
       if (!state.token) { toast('Sign in as admin first', 'error'); return; }
