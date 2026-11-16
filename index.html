@@ -343,9 +343,12 @@
         <div class="max-w-sm bg-zinc-900 card-shadow rounded-2xl p-6 text-center">
           <div class="w-14 h-14 mx-auto rounded-2xl brand-grad on-accent grid place-items-center text-2xl mb-3">🗺️</div>
           <h3 class="text-lg font-bold">Connect Mapbox</h3>
-          <p class="text-sm text-zinc-400 mt-1">The map runs on Mapbox GL JS, which needs your free Mapbox <b>public token</b> (starts with <code>pk.</code>).</p>
-          <button id="tokenSetupBtn" class="btn btn-primary w-full mt-4">Add Mapbox token</button>
-          <p class="text-[11px] text-zinc-500 mt-3">Or set <code>MAPBOX_TOKEN</code> in Vercel → Settings → Environment Variables.</p>
+          <p class="text-sm text-zinc-400 mt-1">The map runs on Mapbox GL JS and needs your Mapbox <b>public token</b>.</p>
+          <ol class="text-left text-sm text-zinc-300 mt-3 space-y-1 list-decimal pl-5">
+            <li>Vercel → your project → <b>Settings → Environment Variables</b></li>
+            <li>Add <code class="font-semibold">MAPBOX_TOKEN</code> = your <code>pk.…</code> token</li>
+            <li>Redeploy (Deployments → ⋯ → Redeploy)</li>
+          </ol>
         </div>
       </div>
 
@@ -539,8 +542,7 @@
         </form>
         <form id="mapboxForm" class="space-y-3">
           <h3 class="text-xs font-semibold uppercase tracking-wider text-zinc-400">Map style (Mapbox Studio)</h3>
-          <p class="text-sm text-zinc-300">In Mapbox Studio open your style → <b>Share</b>, then copy the <b>Style URL</b> and your <b>Default public token</b>. Leave empty to use the free OpenStreetMap map.</p>
-          <div><label class="label" for="mbToken">Public token</label><input id="mbToken" class="field font-mono text-xs" placeholder="pk.eyJ1Ijoi…" autocomplete="off" spellcheck="false" /></div>
+          <p class="text-sm text-zinc-300">Optional. In Mapbox Studio open your style → <b>Share</b> and copy the <b>Style URL</b>. Leave empty to use Mapbox Streets. (The Mapbox token is set in Vercel as <code>MAPBOX_TOKEN</code>.)</p>
           <div><label class="label" for="mbStyle">Style URL</label><input id="mbStyle" class="field font-mono text-xs" placeholder="mapbox://styles/yourname/styleid" autocomplete="off" spellcheck="false" /></div>
           <button id="mbSave" type="submit" class="btn btn-primary w-full">Save map style</button>
         </form>
@@ -1444,7 +1446,7 @@
     });
 
     // ---------- Centre pin (Qodesh) ----------
-    const SETTINGS_DEFAULT = { center: { lat: 5.587981, lng: -0.230065, name: 'Qodesh' }, mapbox_token: '', mapbox_style: '' };
+    const SETTINGS_DEFAULT = { center: { lat: 5.587981, lng: -0.230065, name: 'Qodesh' }, mapbox_style: '' };
     state.settings = { ...SETTINGS_DEFAULT };
     const centerLL = () => [state.settings.center.lat, state.settings.center.lng];
     function drawCenter() {
@@ -1466,7 +1468,7 @@
 
     function applySettings({ fit = false } = {}) {
       const s = state.settings;
-      const token = s.mapbox_token || state.config?.mapbox_token || '';
+      const token = state.config?.mapbox_token || '';
       document.querySelector('[data-basemap="mapbox"]').classList.toggle('hidden', !s.mapbox_style);
       if (s.mapbox_style && !store.get('lwi_basemap')) baseKey = 'mapbox';
       if (!s.mapbox_style && baseKey === 'mapbox') baseKey = 'street';
@@ -1487,7 +1489,7 @@
     function fillZoneForm() {
       const s = state.settings;
       $('zName').value = s.center.name; $('zLat').value = s.center.lat; $('zLng').value = s.center.lng;
-      $('mbToken').value = s.mapbox_token || ''; $('mbStyle').value = s.mapbox_style || '';
+      $('mbStyle').value = s.mapbox_style || '';
     }
     $('zUseGps').onclick = () => locate((ll) => { $('zLat').value = ll[0].toFixed(6); $('zLng').value = ll[1].toFixed(6); toast('Centre set to your location. Tap Save centre.', 'info'); });
     $('zUseMap').onclick = () => { if (!map) return; const c = map.getCenter(); $('zLat').value = c.lat.toFixed(6); $('zLng').value = c.lng.toFixed(6); toast('Centre set to the middle of the map. Tap Save centre.', 'info'); };
@@ -1507,7 +1509,7 @@
     });
     $('mapboxForm').addEventListener('submit', (e) => {
       e.preventDefault();
-      saveSettings({ mapbox_token: $('mbToken').value.trim(), mapbox_style: $('mbStyle').value.trim() }, $('mbSave'), $('mbToken').value.trim() ? 'Mapbox map connected' : 'Mapbox settings cleared');
+      saveSettings({ mapbox_style: $('mbStyle').value.trim() }, $('mbSave'), $('mbStyle').value.trim() ? 'Map style saved' : 'Using the default Mapbox Streets style');
     });
 
     // ---------- Converts ----------
@@ -1818,13 +1820,7 @@
       finally { setBusy(btn, false); }
     }
 
-    $('tokenSetupBtn').onclick = () => {
-      if (!state.token) { toast('Sign in as admin first', 'error'); return; }
-      $('settingsBtn').click();
-      setTimeout(() => { $('mbToken').scrollIntoView({ block: 'center' }); $('mbToken').focus(); }, 250);
-    };
-
-    // Public map config (Mapbox token from Vercel env or admin settings)
+    // Public map config (Mapbox token comes only from the MAPBOX_TOKEN env variable in Vercel)
     fetch('/api/config').then(r => r.json()).then(cfg => {
       state.config = cfg || {};
       if (cfg?.mapbox_style && !state.settings.mapbox_style) state.settings.mapbox_style = cfg.mapbox_style;

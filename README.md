@@ -26,8 +26,8 @@ The map runs on **Mapbox GL JS** (vector, GPU-rendered). Streets come from **Ove
 
 **Setup (free tier: about 50,000 map loads a month):**
 1. Create an account at mapbox.com and copy your **Default public token** (`pk.…`). In the token settings, restrict it to your site's URL.
-2. Either set `MAPBOX_TOKEN` in Vercel → Settings → Environment Variables, **or** sign in as admin and paste it in **Admin → Map style**.
-3. Optional: design a style in **Mapbox Studio** → **Share**, copy the **Style URL** (`mapbox://styles/you/xxxx`) and paste it in Admin (or set `MAPBOX_STYLE`). It becomes the default and appears as **Mapbox** in the style switcher next to Street / Satellite / Dark.
+2. In Vercel → your project → **Settings → Environment Variables**, add `MAPBOX_TOKEN` = your `pk.…` token (all environments), then **redeploy**. The token is only read from this variable.
+3. Optional: design a style in **Mapbox Studio** → **Share**, copy the **Style URL** (`mapbox://styles/you/xxxx`) and paste it in **Admin → Map style** (or set `MAPBOX_STYLE` in Vercel). It becomes the default and appears as **Mapbox** in the style switcher next to Street / Satellite / Dark.
 
 Until a token is set, the map shows a "Connect Mapbox" card; everything else in the app still works.
 

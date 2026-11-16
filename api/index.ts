@@ -429,12 +429,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (resource === 'config' && method === 'GET') {
       let saved: Record<string, unknown> = {};
       try {
-        const { rows } = await pool.query(`SELECT key, value FROM app_settings WHERE key IN ('mapbox_token', 'mapbox_style')`);
+        const { rows } = await pool.query(`SELECT key, value FROM app_settings WHERE key = 'mapbox_style'`);
         saved = Object.fromEntries(rows.map(r => [r.key, r.value]));
       } catch { /* table not created yet */ }
       res.setHeader('Cache-Control', 'no-store');
       return res.json({
-        mapbox_token: process.env.MAPBOX_TOKEN || saved.mapbox_token || '',
+        mapbox_token: process.env.MAPBOX_TOKEN || '',
         mapbox_style: process.env.MAPBOX_STYLE || saved.mapbox_style || ''
       });
     }
@@ -444,7 +444,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       requireAuth(req);
       await ensureSchema();
       if (method === 'GET') {
-        const { rows } = await pool.query('SELECT key, value FROM app_settings');
+        const { rows } = await pool.query(`SELECT key, value FROM app_settings WHERE key <> 'mapbox_token'`);
         return res.json(Object.fromEntries(rows.map(r => [r.key, r.value])));
       }
       if (method === 'PUT') {
@@ -460,11 +460,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           const v = Math.round(Number(b[k]));
           if (!Number.isFinite(v) || v < 100 || v > 20000) throw new HttpError(400, 'Zone sizes must be between 100 m and 20 km');
           out[k] = v;
-        }
-        if (b.mapbox_token !== undefined) {
-          const tok = String(b.mapbox_token || '').trim();
-          if (tok && !tok.startsWith('pk.')) throw new HttpError(400, 'Use a Mapbox PUBLIC token (it starts with pk.)');
-          out.mapbox_token = tok;
         }
         if (b.mapbox_style !== undefined) {
           const st = String(b.mapbox_style || '').trim();
