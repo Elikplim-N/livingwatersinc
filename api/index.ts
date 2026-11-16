@@ -126,6 +126,13 @@ ALTER TABLE converts ADD COLUMN IF NOT EXISTS collector_name  text;
 ALTER TABLE converts ADD COLUMN IF NOT EXISTS collector_phone text;
 ALTER TABLE converts ADD COLUMN IF NOT EXISTS client_id       text;  -- prevents duplicates when an offline entry is retried
 CREATE UNIQUE INDEX IF NOT EXISTS converts_client_id_idx ON converts(client_id);
+
+-- App settings (centre pin, zone sizes, Mapbox style) edited by the admin
+CREATE TABLE IF NOT EXISTS app_settings (
+  key        text PRIMARY KEY,
+  value      jsonb NOT NULL,
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
 `;
 
 let schemaReady = false;
@@ -416,6 +423,50 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         [String(auth.userId)]
       );
       return res.json(result.rows);
+    }
+
+    // ---- App settings (admin) ----
+    if (resource === 'settings') {
+      requireAuth(req);
+      await ensureSchema();
+      if (method === 'GET') {
+        const { rows } = await pool.query('SELECT key, value FROM app_settings');
+        return res.json(Object.fromEntries(rows.map(r => [r.key, r.value])));
+      }
+      if (method === 'PUT') {
+        const b = req.body || {};
+        const out: Record<string, unknown> = {};
+        if (b.center !== undefined) {
+          const lat = Number(b.center?.lat), lng = Number(b.center?.lng);
+          if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) throw new HttpError(400, 'Centre coordinates are not valid');
+          out.center = { lat, lng, name: String(b.center?.name || 'Qodesh').slice(0, 60) };
+        }
+        for (const k of ['zone1_m', 'zone2_m']) {
+          if (b[k] === undefined) continue;
+          const v = Math.round(Number(b[k]));
+          if (!Number.isFinite(v) || v < 100 || v > 20000) throw new HttpError(400, 'Zone sizes must be between 100 m and 20 km');
+          out[k] = v;
+        }
+        if (b.mapbox_token !== undefined) {
+          const tok = String(b.mapbox_token || '').trim();
+          if (tok && !tok.startsWith('pk.')) throw new HttpError(400, 'Use a Mapbox PUBLIC token (it starts with pk.)');
+          out.mapbox_token = tok;
+        }
+        if (b.mapbox_style !== undefined) {
+          const st = String(b.mapbox_style || '').trim();
+          if (st && !/^mapbox:\/\/styles\/[\w.-]+\/[\w-]+$/.test(st)) throw new HttpError(400, 'Style URL should look like mapbox://styles/yourname/styleid');
+          out.mapbox_style = st;
+        }
+        for (const [k, v] of Object.entries(out)) {
+          await pool.query(
+            `INSERT INTO app_settings (key, value, updated_at) VALUES ($1, $2, now())
+             ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()`,
+            [k, JSON.stringify(v)]
+          );
+        }
+        const { rows } = await pool.query('SELECT key, value FROM app_settings');
+        return res.json(Object.fromEntries(rows.map(r => [r.key, r.value])));
+      }
     }
 
     if (resource === 'collectors' && method === 'GET') {

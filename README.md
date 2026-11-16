@@ -16,6 +16,21 @@ A map-based outreach tracker for Living Waters Incorporated. Teams pin the stree
 - **Delete** visits (your own, or any as admin) and streets (admin only), with confirmation
 - Works on phones (bottom-sheet forms, safe-area aware) and desktop
 
+## Qodesh centre & outreach zones
+
+The map is centred on **Qodesh** (5.5880, -0.2301) with two rings:
+
+- **Zone 1 · Around Qodesh** (solid pink, default 800 m)
+- **Zone 2 · Extension to Darkuman** (dashed peach, default 2.2 km)
+
+Each zone shows its own coverage %, has a list filter, and streets carry a Z1/Z2 badge. Change the centre (e.g. "I'm at the centre, use my GPS") and the sizes in **Admin → Centre & outreach zones**. **Load all streets** pulls every named street in the division *and* Zone 2 from OpenStreetMap.
+
+## Mapbox Studio style (optional)
+
+1. Create a free account at mapbox.com, design a style in **Mapbox Studio**, then **Share**.
+2. Copy the **Style URL** (`mapbox://styles/you/xxxx`) and your **Default public token** (`pk.…`).
+3. Paste both in **Admin → Map style**. A **Mapbox** option appears in the map style switcher and becomes the default.
+
 ## Field collectors (no password)
 
 Share **`https://<your-app>/collect`** (Admin → Field collectors → Share). Collectors enter their **name and phone number once** and can record converts straight away:
