@@ -28,7 +28,6 @@
     .pin { width: 28px; height: 28px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); display: grid; place-items: center; box-shadow: 0 4px 12px rgba(42,30,27,.3); border: 2px solid #fff; transition: transform .15s; }
     .pin::after { content: ''; width: 9px; height: 9px; border-radius: 50%; background: #fff; }
     .pin.visited { background: #F2547D; }
-    .pin.recent { background: #1F9D63; }
     .pin.unvisited { background: #A39591; }
     .pin.new { background: #FF9A76; }
 
@@ -350,8 +349,7 @@
       <div id="mapLegend" class="above-tabbar absolute left-3 z-[1000] bg-zinc-900/95 backdrop-blur border border-zinc-800 rounded-xl card-shadow px-3 py-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-zinc-300 max-w-[62vw] sm:max-w-none" style="bottom: max(1.5rem, calc(env(safe-area-inset-bottom) + 1rem));">
         <span class="flex items-center gap-1.5"><svg width="16" height="16" viewBox="0 0 24 24" style="flex-shrink:0"><circle cx="12" cy="12" r="11" fill="#fff"/><circle cx="12" cy="12" r="9" fill="#0891B2"/><circle cx="12" cy="12" r="3" fill="#fff"/></svg>Not visited</span>
         <span class="flex items-center gap-1.5"><svg width="16" height="16" viewBox="0 0 24 24" style="flex-shrink:0"><circle cx="12" cy="12" r="11" fill="#fff"/><circle cx="12" cy="12" r="9" fill="#E11D48"/><path d="M7 21V4M7 4h10l-2.5 4L17 12H7" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" transform="translate(5.8 5.8) scale(.52)"/></svg>Up next</span>
-        <span class="flex items-center gap-1.5"><svg width="16" height="16" viewBox="0 0 24 24" style="flex-shrink:0"><circle cx="12" cy="12" r="11" fill="#fff"/><circle cx="12" cy="12" r="9" fill="#F2547D"/><path d="M6 12.5l4 4 8-9" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" transform="translate(5.8 5.8) scale(.52)"/></svg>Visited</span>
-        <span class="flex items-center gap-1.5"><svg width="16" height="16" viewBox="0 0 24 24" style="flex-shrink:0"><circle cx="12" cy="12" r="11" fill="#fff"/><circle cx="12" cy="12" r="9" fill="#1F9D63"/><path d="M6 12.5l4 4 8-9" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" transform="translate(5.8 5.8) scale(.52)"/></svg>Last 30 days</span>
+        <span class="flex items-center gap-1.5"><svg width="16" height="16" viewBox="0 0 24 24" style="flex-shrink:0"><circle cx="12" cy="12" r="11" fill="#fff"/><circle cx="12" cy="12" r="9" fill="#1F9D63"/><path d="M6 12.5l4 4 8-9" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" transform="translate(5.8 5.8) scale(.52)"/></svg>Visited</span>
         <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full" style="background:#8B5CF6"></i>Convert</span>
       </div>
 
@@ -617,7 +615,6 @@
   (() => {
     const API_URL = '/api';
     const DEFAULT_CENTER = [5.574, -0.239]; // Kaneshie, Accra
-    const RECENT_DAYS = 30;
     const $ = (id) => document.getElementById(id);
     const ICONS = {"eye": '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>', "nav": '<path d="M3 11l19-9-9 19-2-8-8-2z"/>', "pin": '<path d="M12 21s-7-7.5-7-12a7 7 0 1114 0c0 4.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/>', "map": '<path d="M9 4L3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5 9 4z"/><path d="M9 4v13M15 6.5v13"/>', "star": '<path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9L12 3z"/>', "users": '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 010 7M18 14.8c1.8.7 3 2.5 3.5 5.2"/>', "phone": '<path d="M5 3h4l2 5-2.5 1.5a11 11 0 006 6L16 13l5 2v4a2 2 0 01-2 2A16 16 0 013 5a2 2 0 012-2z"/>', "check": '<path d="M5 13l4 4L19 7"/>', "heart": '<path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0112 7a4.3 4.3 0 017.5 2.8C19.5 15.4 12 20 12 20z"/>', "gps": '<circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/><path d="M12 1v3m0 16v3M1 12h3m16 0h3"/>', "chat": '<path d="M21 12a9 9 0 01-13.5 7.8L3 21l1.2-4.5A9 9 0 1121 12z"/>', "church": '<path d="M12 2v5M9.5 4.5h5M5 22V12l7-5 7 5v10M9 22v-5h6v5"/>'};
     ICONS.flag = '<path d="M5 21V4M5 4h11l-2.5 4L16 12H5"/>';
@@ -661,7 +658,7 @@
     }
     function streetStatus(street) {
       if (!street.visits?.length) return 'unvisited';
-      return daysAgo(street.visits[0].visit_date) <= RECENT_DAYS ? 'recent' : 'visited';
+      return 'visited';
     }
 
     function toast(message, type = 'success') {
@@ -848,9 +845,9 @@
       return 2 * R * Math.asin(Math.sqrt(h));
     }
     // Colours: not visited = teal, visited = pink, visited in last 30 days = green, up next = amber
-    const COLORS = { unvisited: '#0891B2', visited: '#F2547D', recent: '#1F9D63', planned: '#E11D48' };
+    const COLORS = { unvisited: '#0891B2', visited: '#1F9D63', planned: '#E11D48' };
     const STATUS_COLOR = ['case', ['get', 'planned'], COLORS.planned,
-      ['match', ['get', 'status'], 'recent', COLORS.recent, 'visited', COLORS.visited, COLORS.unvisited]];
+      ['match', ['get', 'status'], 'visited', COLORS.visited, COLORS.unvisited]];
 
     let map = null, mapReady = false, popup = null, youMarker = null, centerMarker = null;
     let baseKey = store.get('lwi_basemap') || 'street';
@@ -899,7 +896,6 @@
     const MARKERS = {
       'mk-unvisited': { color: COLORS.unvisited, glyph: null, size: 30 },
       'mk-visited': { color: COLORS.visited, glyph: 'M6 12.5l4 4 8-9', size: 38 },
-      'mk-recent': { color: COLORS.recent, glyph: 'M6 12.5l4 4 8-9', size: 38 },
       'mk-planned': { color: COLORS.planned, glyph: 'M7 21V4M7 4h10l-2.5 4L17 12H7', size: 46 }
     };
     function markerImage({ color, glyph, size }) {
@@ -948,7 +944,7 @@
       addMarkerImages(map);
       map.addLayer({ id: 'street-pts', type: 'symbol', source: 'street-pts',
         layout: {
-          'icon-image': ['case', ['get', 'planned'], 'mk-planned', ['match', ['get', 'status'], 'recent', 'mk-recent', 'visited', 'mk-visited', 'mk-unvisited']],
+          'icon-image': ['case', ['get', 'planned'], 'mk-planned', ['match', ['get', 'status'], 'visited', 'mk-visited', 'mk-unvisited']],
           'icon-size': ['interpolate', ['linear'], ['zoom'], 11, 0.55, 15, 0.8, 18, 1],
           'icon-allow-overlap': true, 'icon-ignore-placement': true,
           'symbol-sort-key': ['case', ['get', 'planned'], 3, ['==', ['get', 'status'], 'unvisited'], 1, 2]
@@ -1266,7 +1262,7 @@
         el.innerHTML = `<div class="p-8 text-center text-sm text-zinc-400">No streets match your search.</div>`;
         return;
       }
-      const dot = { recent: 'bg-[#1F9D63]', visited: 'bg-[#F2547D]', unvisited: 'bg-[#0891B2]' };
+      const dot = { visited: 'bg-[#1F9D63]', unvisited: 'bg-[#0891B2]' };
       el.innerHTML = list.map(s => {
         const v = s.visits || [];
         const st = streetStatus(s);
@@ -1318,7 +1314,7 @@
         : `<p class="text-xs text-zinc-500 border border-dashed border-zinc-800 rounded-xl p-3 text-center">No convert details recorded for this street yet.</p>`;
       $('detailName').textContent = s.name;
       $('detailDistrict').textContent = s.district;
-      const badge = s.planned_at ? ['Up next', 'bg-[#FFE4E8] text-[#BE123C]'] : { recent: ['Visited recently', 'bg-emerald-500/15 text-emerald-400'], visited: ['Visited', 'bg-blue-500/15 text-blue-600'], unvisited: ['Not visited', 'bg-[#0891B2]/10 text-[#0E7490]'] }[st];
+      const badge = s.planned_at ? ['Up next', 'bg-[#FFE4E8] text-[#BE123C]'] : { visited: ['Visited', 'bg-emerald-500/15 text-emerald-600'], unvisited: ['Not visited', 'bg-[#0891B2]/10 text-[#0E7490]'] }[st];
       $('detailBadge').textContent = badge[0];
       $('detailBadge').className = `text-[11px] font-semibold px-2 py-1 rounded-full shrink-0 ${badge[1]}`;
       $('detailVisits').textContent = v.length;
