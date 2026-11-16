@@ -179,6 +179,13 @@
             <div class="bg-zinc-800/60 rounded-xl p-2.5"><p class="text-[10px] uppercase tracking-wider text-zinc-400">Followed up</p><p id="cvFollowed" class="text-lg font-bold mt-0.5">0</p></div>
             <div class="bg-zinc-800/60 rounded-xl p-2.5"><p class="text-[10px] uppercase tracking-wider text-zinc-400">With GPS</p><p id="cvGps" class="text-lg font-bold mt-0.5">0</p></div>
           </div>
+          <div class="rounded-2xl border border-zinc-800 p-3">
+            <div class="flex items-center justify-between"><h3 class="text-xs font-bold uppercase tracking-wider text-zinc-400">Retention</h3><button id="retentionListBtn" class="text-xs font-semibold text-blue-600">By outreach</button></div>
+            <div class="grid grid-cols-2 gap-2 mt-2">
+              <div class="rounded-xl bg-[#EAF2FD] p-2.5"><p class="text-[10.5px] font-semibold text-[#0B4F9C]">Qodesh City Church · Sun</p><p class="text-lg font-bold"><span id="retSun">0</span><span class="text-xs font-medium text-zinc-400"> / <span id="retSunOf">0</span></span></p><p id="retSunPct" class="text-[11px] text-zinc-400"></p></div>
+              <div class="rounded-xl bg-[#F3EEFE] p-2.5"><p class="text-[10.5px] font-semibold text-[#5B21B6]">Saturday Night Revival · Sat</p><p class="text-lg font-bold"><span id="retSat">0</span><span class="text-xs font-medium text-zinc-400"> / <span id="retSatOf">0</span></span></p><p id="retSatPct" class="text-[11px] text-zinc-400"></p></div>
+            </div>
+          </div>
           <div class="relative">
             <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path stroke-linecap="round" d="M20 20l-3.5-3.5"/></svg>
             <input id="cvSearch" type="search" placeholder="Search name, phone, street…" class="field py-2" style="padding-left:2.25rem" />
@@ -215,11 +222,11 @@
 
         <!-- Up next (planned streets) -->
         <div id="upNextWrap" class="hidden px-4 pb-3">
-          <div class="rounded-2xl border border-[#F59E0B]/30 bg-[#FFF7E6] p-3">
+          <div class="rounded-2xl border border-[#0768CE]/30 bg-[#EAF2FD] p-3">
             <div class="flex items-center gap-2 mb-2">
-              <span class="relative flex w-2.5 h-2.5"><span class="absolute inline-flex h-full w-full rounded-full bg-[#F59E0B] opacity-60 animate-ping"></span><span class="relative inline-flex w-2.5 h-2.5 rounded-full bg-[#F59E0B]"></span></span>
-              <h3 class="text-xs font-bold uppercase tracking-wider text-[#B45309]">Up next</h3>
-              <span id="upNextCount" class="ml-auto text-xs font-semibold text-[#B45309]"></span>
+              <span class="relative flex w-2.5 h-2.5"><span class="absolute inline-flex h-full w-full rounded-full bg-[#0768CE] opacity-60 animate-ping"></span><span class="relative inline-flex w-2.5 h-2.5 rounded-full bg-[#0768CE]"></span></span>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-[#0B4F9C]">Up next</h3>
+              <span id="upNextCount" class="ml-auto text-xs font-semibold text-[#0B4F9C]"></span>
             </div>
             <div id="upNextList" class="space-y-1.5"></div>
           </div>
@@ -262,7 +269,7 @@
       </section>
 
       <!-- DETAIL VIEW -->
-      <section id="detailView" class="hidden flex-1 flex flex-col min-h-0">
+      <section id="detailView" class="hidden flex-1 flex flex-col min-h-0 overflow-y-auto scroll-thin">
         <div class="px-4 pb-3 border-b border-zinc-800">
           <button id="backBtn" class="flex items-center gap-1 text-xs text-zinc-400 hover:text-white mb-3">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
@@ -280,6 +287,20 @@
             <div class="bg-zinc-800/60 rounded-xl p-2.5 text-center"><p id="detailPeople" class="text-lg font-bold">0</p><p class="text-[10px] uppercase tracking-wider text-zinc-400">People</p></div>
             <div class="bg-zinc-800/60 rounded-xl p-2.5 text-center"><p id="detailConverts" class="text-lg font-bold text-emerald-400">0</p><p class="text-[10px] uppercase tracking-wider text-zinc-400">Converts</p></div>
           </div>
+          <div class="mt-3 rounded-2xl border border-zinc-800 divide-y divide-zinc-800">
+            <div class="flex items-center gap-3 px-3 py-2.5">
+              <span class="w-8 h-8 rounded-lg bg-zinc-800 grid place-items-center text-zinc-300"><svg width="16" height="16" style="flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18M5 20v-6h14v6M8 14V9l4-5 4 5v5"/></svg></span>
+              <div class="flex-1 min-w-0"><p class="text-xs text-zinc-400">Stage point</p><p id="detailStage" class="text-sm font-semibold truncate"></p></div>
+              <button id="stageGpsBtn" class="btn btn-ghost btn-sm" title="Use my GPS"><svg width="14" height="14" style="flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/><path d="M12 1v3m0 16v3M1 12h3m16 0h3"/></svg> GPS</button>
+              <button id="stagePickBtn" class="btn btn-ghost btn-sm"><svg width="14" height="14" style="flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-7.5-7-12a7 7 0 1114 0c0 4.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg> Map</button>
+            </div>
+            <div class="flex items-center gap-3 px-3 py-2.5">
+              <span class="w-8 h-8 rounded-lg bg-zinc-800 grid place-items-center text-zinc-300"><svg width="16" height="16" style="flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></span>
+              <div class="flex-1 min-w-0"><p class="text-xs text-zinc-400">Street rep</p><p id="detailRep" class="text-sm font-semibold truncate"></p></div>
+              <a id="repCall" class="hidden btn btn-ghost btn-sm">Call</a>
+              <button id="repEditBtn" class="btn btn-ghost btn-sm">Edit</button>
+            </div>
+          </div>
           <button id="detailLogBtn" class="btn btn-primary w-full mt-3 py-3 text-base">Log visit</button>
           <div class="grid grid-cols-2 gap-2 mt-2">
             <button id="detailPlanBtn" class="btn btn-ghost text-sm"></button>
@@ -288,7 +309,7 @@
             <button id="detailZoomBtn" class="btn btn-ghost text-sm"><svg width="16" height="16" style="flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-7.5-7-12a7 7 0 1114 0c0 4.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg> Show on map</button>
           </div>
         </div>
-        <div class="flex-1 overflow-y-auto scroll-thin p-4">
+        <div class="p-4">
           <div class="flex items-center justify-between mb-3">
             <h3 class="text-xs font-semibold uppercase tracking-wider text-zinc-400">Converts from this street</h3>
             <button id="detailAddConvert" class="text-xs font-semibold text-emerald-400 hover:text-emerald-300">+ Add</button>
@@ -343,7 +364,7 @@
       <!-- Legend -->
       <div id="mapLegend" class="above-tabbar absolute left-3 z-[1000] bg-zinc-900/95 backdrop-blur border border-zinc-800 rounded-xl card-shadow px-3 py-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-zinc-300 max-w-[62vw] sm:max-w-none" style="bottom: max(1.5rem, calc(env(safe-area-inset-bottom) + 1rem));">
         <span class="flex items-center gap-1.5"><svg width="16" height="16" viewBox="0 0 24 24" style="flex-shrink:0"><circle cx="12" cy="12" r="11" fill="#fff"/><circle cx="12" cy="12" r="9" fill="#E11D48"/><path d="M7 21V4M7 4h10l-2.5 4L17 12H7" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" transform="translate(5.8 5.8) scale(.52)"/></svg>Not visited</span>
-        <span class="flex items-center gap-1.5"><svg width="16" height="16" viewBox="0 0 24 24" style="flex-shrink:0"><circle cx="12" cy="12" r="11" fill="#fff"/><circle cx="12" cy="12" r="9" fill="#F59E0B"/><path d="M7 21V4M7 4h10l-2.5 4L17 12H7" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" transform="translate(5.8 5.8) scale(.52)"/></svg>Up next</span>
+        <span class="flex items-center gap-1.5"><svg width="16" height="16" viewBox="0 0 24 24" style="flex-shrink:0"><circle cx="12" cy="12" r="11" fill="#fff"/><circle cx="12" cy="12" r="9" fill="#0768CE"/><path d="M7 21V4M7 4h10l-2.5 4L17 12H7" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" transform="translate(5.8 5.8) scale(.52)"/></svg>Up next</span>
         <span class="flex items-center gap-1.5"><svg width="16" height="16" viewBox="0 0 24 24" style="flex-shrink:0"><circle cx="12" cy="12" r="11" fill="#fff"/><circle cx="12" cy="12" r="9" fill="#1F9D63"/><path d="M7 21V4M7 4h10l-2.5 4L17 12H7" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" transform="translate(5.8 5.8) scale(.52)"/></svg>Visited</span>
         <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full" style="background:#8B5CF6"></i>Convert</span>
       </div>
@@ -396,6 +417,13 @@
           </button>
         </div>
         <p id="coordsText" class="text-xs text-zinc-500 mt-2">No location selected yet</p>
+        <div id="addExisting" class="hidden mt-3 rounded-xl border border-[#0768CE]/30 bg-[#EAF2FD] p-3">
+          <p class="text-sm"><b id="addExistingName"></b> is already in the app. This point is on that street.</p>
+          <div class="flex gap-2 mt-2.5">
+            <button type="button" id="addExistingUse" class="btn btn-primary btn-sm flex-1">Set the stage point here</button>
+            <button type="button" id="addExistingIgnore" class="btn btn-ghost btn-sm">Add as new street</button>
+          </div>
+        </div>
         <form id="addStreetForm" class="space-y-3 mt-3">
           <div class="grid sm:grid-cols-2 gap-3">
             <div>
@@ -452,6 +480,11 @@
         <div>
           <label class="label" for="visitNotes">Notes</label>
           <textarea id="visitNotes" rows="3" maxlength="2000" class="field resize-none" placeholder="Prayer requests, contacts, anything to remember…"></textarea>
+        </div>
+        <div class="flex items-center gap-3 rounded-xl border border-zinc-800 p-3">
+          <span class="w-8 h-8 rounded-lg bg-zinc-800 grid place-items-center text-zinc-300"><svg width="16" height="16" style="flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18M5 20v-6h14v6M8 14V9l4-5 4 5v5"/></svg></span>
+          <div class="flex-1 min-w-0"><p class="text-sm font-semibold">Stage point</p><p id="visitStageText" class="text-xs text-zinc-400">Standing at the stage? Capture the exact spot.</p></div>
+          <button type="button" id="visitStageBtn" class="btn btn-ghost btn-sm shrink-0"><svg width="14" height="14" style="flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/><path d="M12 1v3m0 16v3M1 12h3m16 0h3"/></svg> Use my GPS</button>
         </div>
         <p id="visitWarning" class="hidden text-xs text-amber-400"></p>
         <div class="flex gap-2 pt-2">
@@ -611,6 +644,63 @@
     </div>
   </div>
 
+  <!-- ============ RETENTION (attendance after an outreach) ============ -->
+  <div id="retModal" class="modal fixed inset-0 z-[2000] bg-black/70 backdrop-blur-sm items-end sm:items-center justify-center sm:p-4">
+    <div class="panel bg-zinc-900 border border-zinc-800 w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl max-h-[95vh] flex flex-col shadow-2xl">
+      <div class="px-5 pt-5 pb-3 flex items-start justify-between">
+        <div class="min-w-0"><h2 class="text-lg font-bold">Who came to church?</h2><p id="retSub" class="text-sm text-zinc-400 mt-0.5 truncate"></p></div>
+        <button data-close class="p-2 -m-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800"><svg width="20" height="20" style="flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </div>
+      <form id="retForm" class="overflow-y-auto px-5 pb-5 space-y-4">
+        <div id="retBlocks" class="space-y-3"></div>
+        <p class="text-xs text-zinc-400">Type a number, or tick names if you recorded them. Both are fine.</p>
+        <div class="flex gap-2 pt-1">
+          <button type="button" data-close class="btn btn-ghost">Cancel</button>
+          <button type="submit" id="retSave" class="btn btn-primary flex-1">Save attendance</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============ STAGE POINT PICKER ============ -->
+  <div id="stageModal" class="modal fixed inset-0 z-[2000] bg-black/70 backdrop-blur-sm items-end sm:items-center justify-center sm:p-4">
+    <div class="panel bg-zinc-900 border border-zinc-800 w-full sm:max-w-xl rounded-t-2xl sm:rounded-2xl max-h-[95vh] flex flex-col shadow-2xl">
+      <div class="px-5 pt-5 pb-3 flex items-start justify-between">
+        <div class="min-w-0"><h2 class="text-lg font-bold">Stage point</h2><p id="stageSub" class="text-sm text-zinc-400 mt-0.5 truncate"></p></div>
+        <button data-close class="p-2 -m-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800"><svg width="20" height="20" style="flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </div>
+      <div class="px-5 pb-5 overflow-y-auto">
+        <div class="relative rounded-xl overflow-hidden border border-zinc-700"><div id="stageMap" class="h-72"></div>
+          <button type="button" id="stageMapGps" class="absolute top-2 right-2 z-[5] btn btn-ghost btn-sm bg-zinc-900/95 border border-zinc-700 shadow"><svg width="14" height="14" style="flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/><path d="M12 1v3m0 16v3M1 12h3m16 0h3"/></svg> Use my GPS</button>
+        </div>
+        <p id="stageText" class="text-xs text-zinc-400 mt-2">Tap the spot on the street where the stage is mounted. It snaps onto the street.</p>
+        <div class="flex gap-2 mt-3">
+          <button type="button" id="stageClear" class="btn btn-danger btn-sm">Remove</button>
+          <button type="button" data-close class="btn btn-ghost ml-auto">Cancel</button>
+          <button type="button" id="stageSave" class="btn btn-primary">Save stage point</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ STREET REP ============ -->
+  <div id="repModal" class="modal fixed inset-0 z-[2000] bg-black/70 backdrop-blur-sm items-end sm:items-center justify-center sm:p-4">
+    <form id="repForm" class="panel bg-zinc-900 border border-zinc-800 w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl p-5 shadow-2xl space-y-3">
+      <div class="flex items-start justify-between"><div><h2 class="text-lg font-bold">Street rep</h2><p id="repSub" class="text-sm text-zinc-400 mt-0.5"></p></div><button data-close class="p-2 -m-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800"><svg width="20" height="20" style="flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      <div><label class="label" for="repName">Name <span class="text-zinc-500 font-normal">(optional)</span></label><input id="repName" maxlength="100" class="field" placeholder="Person in charge of this street" /></div>
+      <div><label class="label" for="repPhone">Phone <span class="text-zinc-500 font-normal">(optional)</span></label><input id="repPhone" type="tel" inputmode="tel" maxlength="40" class="field" placeholder="024 000 0000" /></div>
+      <div class="flex gap-2 pt-1"><button type="button" data-close class="btn btn-ghost">Cancel</button><button type="submit" id="repSave" class="btn btn-primary flex-1">Save</button></div>
+    </form>
+  </div>
+
+  <!-- ============ RETENTION BY OUTREACH ============ -->
+  <div id="retListModal" class="modal fixed inset-0 z-[2000] bg-black/70 backdrop-blur-sm items-end sm:items-center justify-center sm:p-4">
+    <div class="panel bg-zinc-900 border border-zinc-800 w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl max-h-[90vh] flex flex-col shadow-2xl">
+      <div class="px-5 pt-5 pb-3 flex items-start justify-between"><div><h2 class="text-lg font-bold">Retention by outreach</h2><p class="text-sm text-zinc-400 mt-0.5">Converts from each outreach who came to church</p></div><button data-close class="p-2 -m-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800"><svg width="20" height="20" style="flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      <div id="retList" class="overflow-y-auto px-5 pb-5 space-y-2"></div>
+    </div>
+  </div>
+
   <!-- ============ CONFIRM ============ -->
   <div id="confirmModal" class="modal fixed inset-0 z-[2500] bg-black/70 backdrop-blur-sm items-center justify-center p-4">
     <div class="panel bg-zinc-900 border border-zinc-800 w-full max-w-sm rounded-2xl p-5 shadow-2xl">
@@ -668,6 +758,7 @@
     const longDate = (s) => parseDate(s).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
 
     function streetPoint(street) {
+      if (street.stage_lat != null && street.stage_lng != null) return [Number(street.stage_lat), Number(street.stage_lng)];
       const line = street.geometry?.coordinates?.[0];
       if (!line?.length) return null;
       const [lng, lat] = line[Math.floor(line.length / 2)];
@@ -862,7 +953,7 @@
       return 2 * R * Math.asin(Math.sqrt(h));
     }
     // Colours: not visited = teal, visited = pink, visited in last 30 days = green, up next = amber
-    const COLORS = { unvisited: '#E11D48', visited: '#1F9D63', planned: '#F59E0B' };
+    const COLORS = { unvisited: '#E11D48', visited: '#1F9D63', planned: '#0768CE' };
     const STATUS_COLOR = ['case', ['get', 'planned'], COLORS.planned,
       ['match', ['get', 'status'], 'visited', COLORS.visited, COLORS.unvisited]];
 
@@ -956,6 +1047,9 @@
         paint: { 'line-color': STATUS_COLOR, 'line-width': W(2.5, 9), 'line-opacity': 0.95 } });
       map.addLayer({ id: 'street-selected', type: 'line', source: 'streets', filter: ['==', ['get', 'id'], ''], layout: { 'line-cap': 'round', 'line-join': 'round' },
         paint: { 'line-color': STATUS_COLOR, 'line-width': W(7, 16), 'line-opacity': 1 } });
+      map.addLayer({ id: 'visited-pulse', type: 'circle', source: 'street-pts',
+        filter: ['all', ['==', ['get', 'status'], 'visited'], ['!=', ['get', 'planned'], true]],
+        paint: { 'circle-color': COLORS.visited, 'circle-radius': 14, 'circle-opacity': 0.15 } });
       map.addLayer({ id: 'planned-pulse', type: 'circle', source: 'street-pts', filter: ['==', ['get', 'planned'], true],
         paint: { 'circle-color': COLORS.planned, 'circle-radius': 20, 'circle-opacity': 0.35, 'circle-stroke-width': 2, 'circle-stroke-color': COLORS.planned, 'circle-stroke-opacity': 0.5 } });
       addMarkerImages(map);
@@ -1015,19 +1109,22 @@
       map.setPaintProperty('division-mask', 'fill-opacity', on ? 0 : 0.12);
     }
 
-    // Soft amber "beep" for streets planned as Up next
+    // Soft pulses: big blue ring for Up next, small gentle green ring for visited
     function startPulse() {
       let last = 0;
       const frame = (t) => {
         requestAnimationFrame(frame);
-        if (!mapReady || t - last < 50 || !state.streets.some(s => s.planned_at)) return;
+        if (!mapReady || t - last < 50 || !state.streets.length) return;
         last = t;
         const raw = (t % 2800) / 2800, k = 1 - Math.pow(1 - raw, 2);   // eased 0..1, repeats every 2.8 s
         const focused = !!(state.selectedId || state.popupStreetId);
         try {
-          map.setPaintProperty('planned-pulse', 'circle-radius', 18 + k * 52);
+          map.setPaintProperty('planned-pulse', 'circle-radius', 20 + k * 80);
           map.setPaintProperty('planned-pulse', 'circle-opacity', focused ? 0 : 0.28 * (1 - raw));
           map.setPaintProperty('planned-pulse', 'circle-stroke-opacity', focused ? 0 : 0.45 * (1 - raw));
+          const vraw = (t % 3600) / 3600, vk = 1 - Math.pow(1 - vraw, 2);   // slower, smaller visited pulse
+          map.setPaintProperty('visited-pulse', 'circle-radius', 13 + vk * 16);
+          map.setPaintProperty('visited-pulse', 'circle-opacity', focused ? 0 : 0.22 * (1 - vraw));
         } catch { /* style is reloading */ }
       };
       requestAnimationFrame(frame);
@@ -1140,7 +1237,7 @@
       return `
         <div style="min-width:200px">
           <div style="font-weight:700;font-size:15px">${esc(street.name)}</div>
-          <div style="color:#86776F;font-size:12px;margin-bottom:10px">${esc(street.district)}</div>
+          <div style="color:#86776F;font-size:12px;margin-bottom:10px">${esc(street.district)}${street.rep_name ? ` · Rep: ${esc(street.rep_name)}` : ''}</div>
           ${v.length ? `
             <div style="display:flex;gap:12px;font-size:12px;margin-bottom:6px">
               <span><b>${v.length}</b> <span style="color:#86776F">visits</span></span>
@@ -1150,7 +1247,7 @@
             <div style="color:#86776F;font-size:12px;margin-bottom:12px">Last visit: ${relDate(v[0].visit_date)}</div>
           ` : `<div style="color:#86776F;font-size:12px;margin-bottom:12px">Not visited yet</div>`}
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
-            <button data-popup-plan="${esc(street.id)}" style="padding:8px;background:${street.planned_at ? '#FFF1D6' : '#F6ECE8'};color:${street.planned_at ? '#B45309' : '#2A1E1B'};border:0;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer"><span style="display:inline-flex;align-items:center;gap:5px">${icon('flag', 14)}${street.planned_at ? 'Up next' : 'Plan next'}</span></button>
+            <button data-popup-plan="${esc(street.id)}" style="padding:8px;background:${street.planned_at ? '#DCEBFB' : '#F6ECE8'};color:${street.planned_at ? '#0B4F9C' : '#2A1E1B'};border:0;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer"><span style="display:inline-flex;align-items:center;gap:5px">${icon('flag', 14)}${street.planned_at ? 'Up next' : 'Plan next'}</span></button>
             ${(() => { const pt = streetPoint(street); return pt ? `<button data-popup-sv="${pt[0]},${pt[1]}" data-name="${esc(street.name)}" style="padding:8px;background:#F6ECE8;color:#2A1E1B;border:0;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:5px">${icon('eye', 14)}Street View</button>` : '<span></span>'; })()}
           </div>
           <div style="display:flex;gap:6px">
@@ -1301,7 +1398,7 @@
         const converts = sum(v, 'decisions');
         return `
           <div class="group flex items-center gap-3 px-4 py-3 hover:bg-zinc-800/50 cursor-pointer border-b border-zinc-800/60 ${String(state.selectedId) === String(s.id) ? 'bg-zinc-800/60' : ''}" data-street="${esc(s.id)}">
-            <span class="w-2.5 h-2.5 rounded-full shrink-0 ${s.planned_at ? 'bg-[#F59E0B] animate-pulse' : dot[st]}"></span>
+            <span class="w-2.5 h-2.5 rounded-full shrink-0 ${s.planned_at ? 'bg-[#0768CE] animate-pulse' : dot[st]}"></span>
             <div class="flex-1 min-w-0">
               <p class="text-sm font-medium truncate">${esc(s.name)}</p>
               <p class="text-xs text-zinc-400 truncate">${division.outer && !inDivision(streetPoint(s)) ? '<span class="text-amber-400">Outside division</span> · ' : ''}${esc(s.district)}${v.length ? ` · ${relDate(v[0].visit_date)}` : ' · Not visited'}${converts ? ` · <span class="text-emerald-400">${converts} convert${converts === 1 ? '' : 's'}</span>` : ''}</p>
@@ -1351,7 +1448,7 @@
         : `<p class="text-xs text-zinc-500 border border-dashed border-zinc-800 rounded-xl p-3 text-center">No convert details recorded for this street yet.</p>`;
       $('detailName').textContent = s.name;
       $('detailDistrict').textContent = s.district;
-      const badge = s.planned_at ? ['Up next', 'bg-[#FFF1D6] text-[#B45309]'] : { visited: ['Visited', 'bg-emerald-500/15 text-emerald-600'], unvisited: ['Not visited', 'bg-[#E11D48]/10 text-[#BE123C]'] }[st];
+      const badge = s.planned_at ? ['Up next', 'bg-[#DCEBFB] text-[#0B4F9C]'] : { visited: ['Visited', 'bg-emerald-500/15 text-emerald-600'], unvisited: ['Not visited', 'bg-[#E11D48]/10 text-[#BE123C]'] }[st];
       $('detailBadge').textContent = badge[0];
       $('detailBadge').className = `text-[11px] font-semibold px-2 py-1 rounded-full shrink-0 ${badge[1]}`;
       $('detailVisits').textContent = v.length;
@@ -1360,8 +1457,16 @@
       const pt = streetPoint(s);
       $('detailDirections').href = pt ? `https://www.google.com/maps/dir/?api=1&destination=${pt[0]},${pt[1]}` : '#';
       $('detailPlanBtn').innerHTML = `${icon('flag', 16)} ${s.planned_at ? 'Up next' : 'Plan next'}`;
-      $('detailPlanBtn').className = `btn text-sm ${s.planned_at ? 'bg-[#FFF1D6] text-[#B45309]' : 'btn-ghost'}`;
+      $('detailPlanBtn').className = `btn text-sm ${s.planned_at ? 'bg-[#DCEBFB] text-[#0B4F9C]' : 'btn-ghost'}`;
       $('detailSvBtn').onclick = () => pt && openStreetView(pt[0], pt[1], s.name);
+      $('detailStage').innerHTML = s.stage_lat != null
+        ? `<span class="text-emerald-600">Set</span>${s.stage_accuracy_m ? ` <span class="text-zinc-400 font-normal">· ±${s.stage_accuracy_m} m</span>` : ''}`
+        : '<span class="text-zinc-400 font-normal">Not set yet</span>';
+      $('detailRep').innerHTML = s.rep_name || s.rep_phone
+        ? `${esc(s.rep_name || 'Rep')}${s.rep_phone ? ` <span class="text-zinc-400 font-normal">· ${esc(s.rep_phone)}</span>` : ''}`
+        : '<span class="text-zinc-400 font-normal">None yet</span>';
+      $('repCall').classList.toggle('hidden', !s.rep_phone);
+      if (s.rep_phone) $('repCall').href = `tel:${s.rep_phone.replace(/[^\d+]/g, '')}`;
       applyFocus();
       $('deleteStreetBtn').classList.toggle('hidden', state.user?.role !== 'admin');
 
@@ -1383,6 +1488,7 @@
           </div>
           ${visit.team_members?.length ? `<p class="text-xs text-zinc-400 mt-2 flex items-center gap-1.5">${icon('users', 13)} ${esc(visit.team_members.join(', '))}</p>` : ''}
           ${visit.notes ? `<p class="text-xs text-zinc-300 mt-2 whitespace-pre-wrap">${esc(visit.notes)}</p>` : ''}
+          ${retentionRow(s, visit)}
         </div>`).join('')
         : `<div class="text-center py-8 text-sm text-zinc-400 border border-dashed border-zinc-800 rounded-xl">No visits logged yet.<br><span class="text-xs">Tap <b>Log visit</b> after your outreach.</span></div>`;
       renderList();
@@ -1427,10 +1533,10 @@
       $('upNextCount').textContent = `${list.length} planned`;
       $('upNextList').innerHTML = list.slice(0, 6).map((s, i) => `
         <div class="flex items-center gap-2 bg-zinc-900 rounded-xl px-2.5 py-2 cursor-pointer hover:bg-zinc-800" data-street="${esc(s.id)}">
-          <span class="w-5 h-5 rounded-full bg-[#F59E0B] on-accent text-[11px] font-bold grid place-items-center shrink-0">${i + 1}</span>
+          <span class="w-5 h-5 rounded-full bg-[#0768CE] on-accent text-[11px] font-bold grid place-items-center shrink-0">${i + 1}</span>
           <span class="flex-1 min-w-0 text-sm font-semibold truncate">${esc(s.name)}</span>
-          <button data-log="${esc(s.id)}" class="text-xs font-semibold px-2 py-1 rounded-lg bg-[#F59E0B] on-accent">Log</button>
-        </div>`).join('') + (list.length > 6 ? `<button class="text-xs font-semibold text-[#B45309] w-full pt-1" data-show-planned>See all ${list.length}</button>` : '');
+          <button data-log="${esc(s.id)}" class="text-xs font-semibold px-2 py-1 rounded-lg bg-[#0768CE] on-accent">Log</button>
+        </div>`).join('') + (list.length > 6 ? `<button class="text-xs font-semibold text-[#0B4F9C] w-full pt-1" data-show-planned>See all ${list.length}</button>` : '');
     }
     $('upNextList').addEventListener('click', (e) => {
       if (e.target.closest('[data-show-planned]')) { document.querySelector('[data-filter="planned"]').click(); return; }
@@ -1543,13 +1649,15 @@
     document.querySelector('[data-close-sidebar]').onclick = () => toggleSidebar(false);
 
     // ---------- Add street ----------
-    let addMap = null, addMarker = null, addCoords = null, geocodeSeq = 0;
+    let addMap = null, addMarker = null, addCoords = null, geocodeSeq = 0, addExisting = null, addIgnoreExisting = false;
 
     document.querySelectorAll('[data-action="add-street"]').forEach(b => b.onclick = openAddModal);
 
     function openAddModal() {
       toggleSidebar(false);
       addCoords = null;
+      addExisting = null; addIgnoreExisting = false;
+      $('addExisting').classList.add('hidden');
       $('addStreetForm').reset();
       $('coordsText').textContent = 'No location selected yet';
       openModal('addModal');
@@ -1572,6 +1680,7 @@
       $('coordsText').innerHTML = `<span class="inline-flex items-center gap-1 align-middle">${icon('pin', 13)}</span> ${lat.toFixed(5)}, ${lng.toFixed(5)} · drag the pin to adjust${inside ? '' : ' · <span class="text-amber-400 font-medium">Outside Kaneshie Division</span>'}`;
       const d = districtAt([lat, lng]);
       if (d) $('newStreetDistrict').value = d;
+      checkExistingStreet(lat, lng);
       if (geocode) reverseGeocode(lat, lng);
     }
 
@@ -1587,7 +1696,7 @@
         const a = d.address || {};
         const street = a.road || a.pedestrian || a.footway || a.residential || a.neighbourhood;
         const district = a.suburb || a.neighbourhood || a.city_district || a.quarter || a.town || a.city;
-        if (street) nameEl.value = street;
+        if (street) { nameEl.value = street; checkExistingStreet(lat, lng, street); }
         if (district && !districtAt([lat, lng])) distEl.value = district;
         if (!street) nameEl.focus();
       } catch {
@@ -1633,6 +1742,8 @@
       $('visitDate').max = todayISO();
       $('visitTeam').value = store.get('lwi_last_team') || '';
       $('visitWarning').classList.add('hidden');
+      visitStage = null;
+      $('visitStageText').textContent = s.stage_lat != null ? 'Already set. Capture again to update it.' : 'Standing at the stage? Capture the exact spot.';
       openModal('visitModal');
       setTimeout(() => $('visitAttendance').focus(), 100);
     }
@@ -1663,6 +1774,7 @@
           })
         });
         store.set('lwi_last_team', team.join(', '));
+        if (visitStage) await saveStage(state.visitStreetId, visitStage, { quiet: true });
         closeModal('visitModal');
         toast('Visit saved');
         await loadStreets({ quiet: true });
@@ -1803,6 +1915,7 @@
     }
 
     function renderConverts() {
+      renderRetentionSummary();
       const all = state.converts;
       $('convertsTabCount').textContent = all.length;
       $('cvTotal').textContent = fmt(all.length);
@@ -1982,7 +2095,7 @@
       if (!rows.length) { toast('Nothing to export', 'error'); return; }
       const cols = [['Full name', c => c.full_name], ['Age', c => c.age ?? ''], ['Phone', c => c.phone], ['Street', c => c.street_name || streetName(c.street_id)],
         ['Location', c => c.location], ['Latitude', c => c.latitude ?? ''], ['Longitude', c => c.longitude ?? ''], ['Decision date', c => String(c.decision_date || '').slice(0, 10)],
-        ['Followed up on', c => String(c.followed_up_at || '').slice(0, 10)], ['Notes', c => c.notes], ['Collected by', c => [c.collector_name, c.collector_phone].filter(Boolean).join(' ')]];
+        ['Followed up on', c => String(c.followed_up_at || '').slice(0, 10)], ['Notes', c => c.notes], ['Came to Qodesh City Church (Sun)', c => c.came_sunday ? 'Yes' : ''], ['Came to Saturday Night Revival', c => c.came_saturday ? 'Yes' : ''], ['Collected by', c => [c.collector_name, c.collector_phone].filter(Boolean).join(' ')]];
       const cell = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
       const csv = '﻿' + [cols.map(c => cell(c[0])).join(','), ...rows.map(r => cols.map(c => cell(c[1](r))).join(','))].join('\r\n');
       const a = document.createElement('a');
@@ -1991,6 +2104,326 @@
       a.click();
       setTimeout(() => URL.revokeObjectURL(a.href), 1000);
     };
+
+
+    // ---------- Stage point (exact spot on the street where the stage is mounted) ----------
+    // Project onto the nearest point of the street's line so the stage is always ON the street.
+    function nearestOnStreet(street, [lat, lng]) {
+      const lines = (street.geometry?.coordinates || []).filter(l => l.length > 1);
+      const kx = Math.cos(lat * Math.PI / 180) * 111320, ky = 110540;      // metres per degree
+      let best = null;
+      for (const line of lines) {
+        for (let i = 1; i < line.length; i++) {
+          const [ax, ay] = [(line[i - 1][0] - lng) * kx, (line[i - 1][1] - lat) * ky];
+          const [bx, by] = [(line[i][0] - lng) * kx, (line[i][1] - lat) * ky];
+          const dx = bx - ax, dy = by - ay, len2 = dx * dx + dy * dy;
+          const t = len2 ? Math.max(0, Math.min(1, -(ax * dx + ay * dy) / len2)) : 0;
+          const px = ax + t * dx, py = ay + t * dy, d = Math.hypot(px, py);
+          if (!best || d < best.dist) best = { dist: d, pt: [lat + py / ky, lng + px / kx] };
+        }
+      }
+      return best;   // { dist (m), pt: [lat, lng] } or null when the street has no line
+    }
+    function nearestStreet(pt, maxDist = 35) {
+      let best = null;
+      for (const s of state.streets) {
+        if (!(s.length_m > 20)) continue;
+        const n = nearestOnStreet(s, pt);
+        if (n && n.dist <= maxDist && (!best || n.dist < best.dist)) best = { street: s, ...n };
+      }
+      return best;
+    }
+    function snapToStreet(street, pt, maxDist = 150) {
+      const n = nearestOnStreet(street, pt);
+      return n && n.dist <= maxDist ? { pt: n.pt, snapped: true, dist: n.dist } : { pt, snapped: false, dist: n ? n.dist : null };
+    }
+
+    async function saveStage(streetId, stage, { quiet = false } = {}) {
+      const updated = await api(`/streets/${encodeURIComponent(streetId)}`, { method: 'PUT', body: JSON.stringify({ stage }) });
+      const i = state.streets.findIndex(x => String(x.id) === String(streetId));
+      if (i >= 0) state.streets[i] = { ...state.streets[i], ...updated, visits: state.streets[i].visits };
+      renderAll();
+      if (!quiet) toast(stage ? 'Stage point saved' : 'Stage point removed');
+    }
+
+    function gpsOnce(onOk, btn) {
+      if (!navigator.geolocation) { toast('GPS is not available on this device', 'error'); return; }
+      if (btn) setBusy(btn, true, 'Getting GPS…');
+      navigator.geolocation.getCurrentPosition((pos) => {
+        if (btn) setBusy(btn, false);
+        onOk([pos.coords.latitude, pos.coords.longitude], pos.coords.accuracy);
+        if (pos.coords.accuracy > 40) toast(`GPS is rough (±${Math.round(pos.coords.accuracy)} m). Step into the open and try again for a better fix.`, 'info');
+      }, (err) => {
+        if (btn) setBusy(btn, false);
+        toast(err.code === 1 ? 'Location permission denied. Allow it in your browser settings.' : 'Could not get GPS. Try again.', 'error');
+      }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
+    }
+
+    // From the street page: "GPS" sets the stage where you stand (snapped to the street)
+    $('stageGpsBtn').onclick = () => {
+      const s = state.streets.find(x => String(x.id) === String(state.selectedId));
+      if (!s) return;
+      gpsOnce(async (pt, acc) => {
+        const snap = snapToStreet(s, pt);
+        if (!snap.snapped && snap.dist != null && !confirm(`You are about ${Math.round(snap.dist)} m from ${s.name}. Use this spot anyway?`)) return;
+        try { await saveStage(s.id, { lat: snap.pt[0], lng: snap.pt[1], accuracy_m: Math.round(acc) }); focusStreet(s.id, false); }
+        catch (err) { if (!err.handled) toast(err.message, 'error'); }
+      }, $('stageGpsBtn'));
+    };
+
+    // Map picker
+    let stageMap = null, stageMarker = null, stageDraft = null, stageStreet = null;
+    function setStageDraft(pt, acc, source) {
+      const snap = snapToStreet(stageStreet, pt);
+      stageDraft = { lat: snap.pt[0], lng: snap.pt[1], accuracy_m: acc != null ? Math.round(acc) : null };
+      if (!stageMarker) {
+        stageMarker = htmlMarker('<div class="pin new"></div>', { draggable: true, anchor: 'bottom' }).setLngLat([stageDraft.lng, stageDraft.lat]).addTo(stageMap);
+        stageMarker.on('dragend', () => { const p = stageMarker.getLngLat(); setStageDraft([p.lat, p.lng], null, 'map'); });
+      } else stageMarker.setLngLat([stageDraft.lng, stageDraft.lat]);
+      $('stageText').innerHTML = snap.snapped
+        ? `Stage point on <b>${esc(stageStreet.name)}</b>${source === 'GPS' && acc ? ` · GPS ±${Math.round(acc)} m` : ''}. Drag the pin to fine-tune.`
+        : `<span class="text-amber-500">This spot is ${snap.dist != null ? Math.round(snap.dist) + ' m' : 'far'} from the street line.</span> Drag the pin closer, or save anyway.`;
+    }
+    function drawStreetOn(m, s) {
+      const ls = (s.geometry?.coordinates || []).filter(l => l.length > 1);
+      if (!ls.length || m.getSource('the-street')) return;
+      m.addSource('the-street', { type: 'geojson', data: { type: 'Feature', properties: {}, geometry: { type: 'MultiLineString', coordinates: ls } } });
+      m.addLayer({ id: 'the-street-casing', type: 'line', source: 'the-street', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#fff', 'line-width': 12 } });
+      m.addLayer({ id: 'the-street', type: 'line', source: 'the-street', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#0768CE', 'line-width': 7 } });
+    }
+    $('stagePickBtn').onclick = () => {
+      const s = state.streets.find(x => String(x.id) === String(state.selectedId));
+      if (!s) return;
+      if (!window.mapboxgl || !mapboxgl.accessToken) { toast('Map not connected yet. Use the GPS button instead.', 'error'); return; }
+      stageStreet = s; stageDraft = null;
+      $('stageSub').textContent = `${s.name} · ${s.district}`;
+      $('stageText').textContent = 'Tap the spot on the street where the stage is mounted. It snaps onto the street.';
+      openModal('stageModal');
+      requestAnimationFrame(() => {
+        const start = streetPoint(s) || centerLL();
+        if (stageMap) { stageMap.remove(); stageMap = null; stageMarker = null; }
+        stageMap = makePickerMap('stageMap', start, (lat, lng) => setStageDraft([lat, lng], null, 'map'));
+        stageMap.on('style.load', () => {
+          drawStreetOn(stageMap, s);
+          const coords = (s.geometry?.coordinates || []).flat().filter(c => Array.isArray(c) && c.length === 2);
+          if (coords.length > 1 && s.length_m > 20) stageMap.fitBounds(ringBounds(coords), { padding: 40, maxZoom: 18, duration: 0 });
+          if (s.stage_lat != null) setStageDraft([Number(s.stage_lat), Number(s.stage_lng)], s.stage_accuracy_m, 'saved');
+        });
+      });
+    };
+    $('stageMapGps').onclick = () => gpsOnce((pt, acc) => { setStageDraft(pt, acc, 'GPS'); stageMap?.flyTo({ center: ll2(stageDraft ? [stageDraft.lat, stageDraft.lng] : pt), zoom: 18 }); }, $('stageMapGps'));
+    $('stageSave').onclick = async () => {
+      if (!stageDraft) { toast('Tap the street to place the stage point first', 'error'); return; }
+      const btn = $('stageSave'); setBusy(btn, true, 'Saving…');
+      try { await saveStage(stageStreet.id, stageDraft); closeModal('stageModal'); focusStreet(stageStreet.id, false); }
+      catch (err) { if (!err.handled) toast(err.message, 'error'); }
+      finally { setBusy(btn, false); }
+    };
+    $('stageClear').onclick = async () => {
+      if (!stageStreet || stageStreet.stage_lat == null) { closeModal('stageModal'); return; }
+      try { await saveStage(stageStreet.id, null); closeModal('stageModal'); } catch (err) { if (!err.handled) toast(err.message, 'error'); }
+    };
+
+    // Log visit: capture the stage point with GPS while you're there
+    let visitStage = null;
+    $('visitStageBtn').onclick = () => {
+      const s = state.streets.find(x => String(x.id) === String(state.visitStreetId));
+      if (!s) return;
+      gpsOnce((pt, acc) => {
+        const snap = snapToStreet(s, pt);
+        visitStage = { lat: snap.pt[0], lng: snap.pt[1], accuracy_m: Math.round(acc) };
+        $('visitStageText').innerHTML = snap.snapped
+          ? `<span class="text-emerald-600 font-semibold">Captured</span> · on ${esc(s.name)} · ±${Math.round(acc)} m`
+          : `<span class="text-amber-500 font-semibold">Captured, ${snap.dist != null ? Math.round(snap.dist) + ' m' : ''} off the street line</span> · ±${Math.round(acc)} m`;
+      }, $('visitStageBtn'));
+    };
+
+    // Add street: if the tapped point is on a street we already have, offer to set its stage point instead
+    function checkExistingStreet(lat, lng, geocodedName) {
+      if (addIgnoreExisting) return;
+      let hit = nearestStreet([lat, lng]);
+      if (!hit && geocodedName) {
+        const s = state.streets.find(x => x.name.trim().toLowerCase() === geocodedName.trim().toLowerCase());
+        if (s) { const n = nearestOnStreet(s, [lat, lng]); hit = { street: s, ...(n || { pt: [lat, lng], dist: null }) }; }
+      }
+      addExisting = hit;
+      $('addExisting').classList.toggle('hidden', !hit);
+      if (hit) $('addExistingName').textContent = hit.street.name;
+    }
+    $('addExistingIgnore').onclick = () => { addIgnoreExisting = true; addExisting = null; $('addExisting').classList.add('hidden'); };
+    $('addExistingUse').onclick = async () => {
+      if (!addExisting || !addCoords) return;
+      const s = addExisting.street;
+      const snap = snapToStreet(s, [addCoords.lat, addCoords.lng]);
+      const btn = $('addExistingUse'); setBusy(btn, true, 'Saving…');
+      try {
+        await saveStage(s.id, { lat: snap.pt[0], lng: snap.pt[1], accuracy_m: null });
+        closeModal('addModal');
+        showDetail(s.id); focusStreet(s.id, false); toggleSidebar(true);
+      } catch (err) { if (!err.handled) toast(err.message, 'error'); }
+      finally { setBusy(btn, false); }
+    };
+
+    // ---------- Street rep ----------
+    $('repEditBtn').onclick = () => {
+      const s = state.streets.find(x => String(x.id) === String(state.selectedId));
+      if (!s) return;
+      $('repSub').textContent = s.name;
+      $('repName').value = s.rep_name || ''; $('repPhone').value = s.rep_phone || '';
+      openModal('repModal');
+      setTimeout(() => $('repName').focus(), 100);
+    };
+    $('repForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = state.selectedId, btn = $('repSave');
+      setBusy(btn, true, 'Saving…');
+      try {
+        const updated = await api(`/streets/${encodeURIComponent(id)}`, { method: 'PUT', body: JSON.stringify({ rep_name: $('repName').value, rep_phone: $('repPhone').value }) });
+        const i = state.streets.findIndex(x => String(x.id) === String(id));
+        if (i >= 0) state.streets[i] = { ...state.streets[i], ...updated, visits: state.streets[i].visits };
+        closeModal('repModal'); renderAll(); toast('Street rep saved');
+      } catch (err) { if (!err.handled) toast(err.message, 'error'); }
+      finally { setBusy(btn, false); }
+    });
+
+    // ---------- Retention: converts who came to church after an outreach ----------
+    const CHURCH = {
+      sun: { name: 'Qodesh City Church', day: 0, field: 'sunday_count', mark: 'came_sunday', color: '#0768CE', bg: '#EAF2FD' },
+      sat: { name: 'Saturday Night Revival', day: 6, field: 'saturday_count', mark: 'came_saturday', color: '#6D28D9', bg: '#F3EEFE' }
+    };
+    function nextServiceDate(visitDate, dow) {           // the next Sunday / Saturday after the outreach day
+      const d = parseDate(visitDate);
+      d.setDate(d.getDate() + (((dow - d.getDay() + 7) % 7) || 7));
+      return d;
+    }
+    const shortDate = (d) => d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
+    const isoOf = (v) => String(v || '').slice(0, 10);
+    function visitConverts(street, visit) {               // named converts recorded for this outreach
+      return state.converts.filter(c => String(c.street_id) === String(street.id) && isoOf(c.decision_date) === isoOf(visit.visit_date));
+    }
+    function retentionRow(street, visit) {
+      const n = visit.decisions || 0;
+      const named = visitConverts(street, visit).length;
+      if (!n && !named) return '';
+      const cell = (k) => {
+        const c = CHURCH[k], v = visit[c.field];
+        return `<div class="flex-1 rounded-lg px-2 py-1.5" style="background:${c.bg}">
+          <p class="text-[10px] font-semibold truncate" style="color:${c.color}">${c.name}</p>
+          <p class="text-xs"><b>${v == null ? '—' : fmt(v)}</b><span class="text-zinc-400"> / ${fmt(Math.max(n, named))}</span> <span class="text-zinc-400">· ${shortDate(nextServiceDate(visit.visit_date, c.day))}</span></p>
+        </div>`;
+      };
+      return `<div class="mt-2.5 pt-2.5 border-t border-zinc-800">
+        <div class="flex gap-1.5">${cell('sun')}${cell('sat')}</div>
+        <button data-retention="${esc(visit.id)}" class="mt-2 w-full btn btn-ghost btn-sm">${icon('check', 14)} Record attendance</button>
+      </div>`;
+    }
+
+    let retCtx = null;
+    function openRetention(streetId, visitId) {
+      const s = state.streets.find(x => String(x.id) === String(streetId));
+      const v = s?.visits?.find(x => String(x.id) === String(visitId));
+      if (!v) return;
+      const named = visitConverts(s, v);
+      retCtx = { s, v, named };
+      $('retSub').textContent = `${s.name} · outreach on ${longDate(v.visit_date)} · ${fmt(Math.max(v.decisions || 0, named.length))} converts`;
+      $('retBlocks').innerHTML = ['sun', 'sat'].map(k => {
+        const c = CHURCH[k], val = v[c.field];
+        return `<div class="rounded-2xl p-3" style="background:${c.bg}">
+          <div class="flex items-center gap-2">
+            <div class="flex-1 min-w-0"><p class="font-semibold text-sm" style="color:${c.color}">${c.name}</p><p class="text-xs text-zinc-400">${shortDate(nextServiceDate(v.visit_date, c.day))}</p></div>
+            <div class="flex items-center gap-1 bg-zinc-900 rounded-xl p-1">
+              <button type="button" data-step="${k}:-1" class="w-9 h-9 rounded-lg hover:bg-zinc-800 text-lg font-bold">−</button>
+              <input id="ret-${k}" type="number" inputmode="numeric" min="0" value="${val ?? ''}" placeholder="0" class="w-14 text-center font-bold text-lg bg-transparent outline-none" />
+              <button type="button" data-step="${k}:1" class="w-9 h-9 rounded-lg hover:bg-zinc-800 text-lg font-bold">+</button>
+            </div>
+          </div>
+          ${named.length ? `<div class="mt-2.5 space-y-1">${named.map(cv => `
+            <label class="flex items-center gap-2.5 bg-zinc-900 rounded-xl px-3 py-2 cursor-pointer">
+              <input type="checkbox" data-mark="${k}" data-cid="${esc(cv.id)}" ${cv[c.mark] ? 'checked' : ''} class="w-5 h-5 shrink-0" style="accent-color:${c.color}" />
+              <span class="text-sm font-medium flex-1 truncate">${esc(cv.full_name)}</span>${cv.phone ? `<span class="text-xs text-zinc-400">${esc(cv.phone)}</span>` : ''}
+            </label>`).join('')}</div>` : ''}
+        </div>`;
+      }).join('');
+      openModal('retModal');
+    }
+    $('retBlocks').addEventListener('click', (e) => {
+      const b = e.target.closest('[data-step]');
+      if (!b) return;
+      const [k, d] = b.dataset.step.split(':'); const inp = $(`ret-${k}`);
+      inp.value = Math.max(0, (parseInt(inp.value, 10) || 0) + Number(d));
+    });
+    $('retBlocks').addEventListener('change', (e) => {
+      const cb = e.target.closest('[data-mark]');
+      if (!cb) return;
+      const k = cb.dataset.mark, inp = $(`ret-${k}`);
+      const ticked = document.querySelectorAll(`[data-mark="${k}"]:checked`).length;
+      const cur = parseInt(inp.value, 10);
+      // Ticking names keeps the number at least as high as the ticked names
+      if (cb.checked) inp.value = Math.max(Number.isFinite(cur) ? cur : 0, ticked);
+      else if (Number.isFinite(cur) && cur > 0) inp.value = Math.max(ticked, cur - 1);
+    });
+    $('retForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const { s, v, named } = retCtx;
+      const marks = named.map(cv => ({ id: cv.id,
+        came_sunday: !!document.querySelector(`[data-mark="sun"][data-cid="${CSS.escape(String(cv.id))}"]`)?.checked,
+        came_saturday: !!document.querySelector(`[data-mark="sat"][data-cid="${CSS.escape(String(cv.id))}"]`)?.checked }));
+      const val = (k) => { const x = $(`ret-${k}`).value.trim(); return x === '' ? null : Math.max(0, parseInt(x, 10) || 0); };
+      const body = { sunday_count: val('sun'), saturday_count: val('sat'), marks };
+      const btn = $('retSave'); setBusy(btn, true, 'Saving…');
+      try {
+        await api(`/visits/${encodeURIComponent(v.id)}/retention`, { method: 'PUT', body: JSON.stringify(body) });
+        v.sunday_count = body.sunday_count; v.saturday_count = body.saturday_count;
+        for (const m of marks) { const cv = state.converts.find(x => String(x.id) === String(m.id)); if (cv) { cv.came_sunday = m.came_sunday; cv.came_saturday = m.came_saturday; } }
+        closeModal('retModal'); renderAll(); toast('Attendance saved');
+        if ($('retListModal').classList.contains('active')) renderRetentionList();
+      } catch (err) { if (!err.handled) toast(err.message, 'error'); }
+      finally { setBusy(btn, false); }
+    });
+    $('visitHistory').addEventListener('click', (e) => {
+      const b = e.target.closest('[data-retention]');
+      if (b) { e.stopPropagation(); openRetention(state.selectedId, b.dataset.retention); }
+    }, true);
+
+    function outreachesWithConverts() {
+      const out = [];
+      for (const s of state.streets) for (const v of s.visits || []) {
+        const n = Math.max(v.decisions || 0, visitConverts(s, v).length);
+        if (n) out.push({ s, v, n });
+      }
+      return out.sort((a, b) => isoOf(b.v.visit_date).localeCompare(isoOf(a.v.visit_date)));
+    }
+    function renderRetentionSummary() {
+      const list = outreachesWithConverts();
+      let sun = 0, sunOf = 0, sat = 0, satOf = 0;
+      for (const { v, n } of list) {
+        if (v.sunday_count != null) { sun += v.sunday_count; sunOf += n; }
+        if (v.saturday_count != null) { sat += v.saturday_count; satOf += n; }
+      }
+      $('retSun').textContent = fmt(sun); $('retSunOf').textContent = fmt(sunOf);
+      $('retSat').textContent = fmt(sat); $('retSatOf').textContent = fmt(satOf);
+      $('retSunPct').textContent = sunOf ? `${Math.round(sun / sunOf * 100)}% retained` : 'Not recorded yet';
+      $('retSatPct').textContent = satOf ? `${Math.round(sat / satOf * 100)}% retained` : 'Not recorded yet';
+    }
+    function renderRetentionList() {
+      const list = outreachesWithConverts();
+      $('retList').innerHTML = list.length ? list.map(({ s, v, n }) => `
+        <div class="rounded-2xl border border-zinc-800 p-3">
+          <div class="flex items-center gap-2"><div class="flex-1 min-w-0"><p class="font-semibold text-sm truncate">${esc(s.name)}</p><p class="text-xs text-zinc-400">${esc(longDate(v.visit_date))} · ${fmt(n)} converts</p></div>
+            <button data-ret-open="${esc(s.id)}|${esc(v.id)}" class="btn btn-primary btn-sm">Record</button></div>
+          <div class="flex gap-1.5 mt-2 text-xs">
+            <span class="flex-1 rounded-lg px-2 py-1.5" style="background:${CHURCH.sun.bg}"><span style="color:${CHURCH.sun.color}" class="font-semibold">Sun</span> · <b>${v.sunday_count ?? '—'}</b> / ${fmt(n)}</span>
+            <span class="flex-1 rounded-lg px-2 py-1.5" style="background:${CHURCH.sat.bg}"><span style="color:${CHURCH.sat.color}" class="font-semibold">Sat</span> · <b>${v.saturday_count ?? '—'}</b> / ${fmt(n)}</span>
+          </div>
+        </div>`).join('') : '<p class="text-sm text-zinc-400 text-center py-8">No outreaches with converts yet.</p>';
+    }
+    $('retentionListBtn').onclick = () => { renderRetentionList(); openModal('retListModal'); };
+    $('retList').addEventListener('click', (e) => {
+      const b = e.target.closest('[data-ret-open]');
+      if (!b) return;
+      const [sid, vid] = b.dataset.retOpen.split('|');
+      openRetention(sid, vid);
+    });
 
     // ---------- Import all streets in the division (admin) ----------
     const OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
