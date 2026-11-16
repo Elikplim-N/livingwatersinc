@@ -22,6 +22,10 @@
     .lwi-popup .mapboxgl-popup-close-button { font-size: 18px; color: #A39591; right: 6px; top: 4px; }
     .bar { height: 8px; border-radius: 99px; background: #F6ECE8; overflow: hidden; }
     .bar > i { display: block; height: 100%; border-radius: 99px; }
+    .chip { display: inline-flex; align-items: center; gap: .45rem; padding: .55rem 1rem; border-radius: 9999px; font-size: .9rem; font-weight: 700; color: #5C4E4A; background: #fff; box-shadow: 0 1px 2px rgba(42,30,27,.06), 0 4px 12px rgba(42,30,27,.05); white-space: nowrap; transition: all .15s; }
+    .chip:hover { color: #2A1E1B; }
+    .chip.active { background: #2A1E1B; color: #fff; }
+    .chip .dot { width: 10px; height: 10px; border-radius: 50%; }
     .tabbtn { padding: .45rem .9rem; border-radius: 99px; font-size: .85rem; font-weight: 600; color: #86776F; }
     .tabbtn.active { background: #fff; color: #2A1E1B; box-shadow: 0 1px 4px rgba(42,30,27,.12); }
   </style>
@@ -90,7 +94,13 @@
     </section>
 
     <!-- Map + side -->
-    <section class="grid lg:grid-cols-3 gap-3 mt-3">
+    <div class="flex items-center gap-2 mt-4 overflow-x-auto pb-1" id="filters">
+      <button class="chip active" data-f="all">All <span class="opacity-60" data-n="all"></span></button>
+      <button class="chip" data-f="unvisited"><i class="dot" style="background:#E11D48"></i>Not visited <span class="opacity-60" data-n="unvisited"></span></button>
+      <button class="chip" data-f="planned"><i class="dot" style="background:#0768CE"></i>Up next <span class="opacity-60" data-n="planned"></span></button>
+      <button class="chip" data-f="visited"><i class="dot" style="background:#1F9D63"></i>Visited <span class="opacity-60" data-n="visited"></span></button>
+    </div>
+    <section class="grid lg:grid-cols-3 gap-3 mt-2">
       <div class="card overflow-hidden lg:col-span-2 relative" style="height:min(70vh,620px);min-height:420px">
         <div id="map"></div>
         <div id="mapNote" class="hidden absolute inset-0 grid place-items-center text-sm text-zinc-400 p-6 text-center">The map is not connected yet.</div>
@@ -126,6 +136,26 @@
 
   </div>
 
+  <div id="viewChoice" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4">
+    <div class="bg-zinc-900 w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl p-5 shadow-2xl" style="padding-bottom:max(1.25rem, env(safe-area-inset-bottom))">
+      <h2 class="text-lg font-bold">See this street</h2>
+      <p id="vcName" class="text-sm text-zinc-400 mt-0.5 truncate"></p>
+      <div class="mt-4 space-y-2">
+        <button id="vcStreetView" class="w-full flex items-center gap-3 p-3.5 rounded-2xl bg-zinc-800 hover:bg-zinc-700 text-left">
+          <span class="w-11 h-11 rounded-xl brand-grad on-accent grid place-items-center shrink-0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></span>
+          <span class="flex-1"><span class="block font-semibold">Google Street View</span><span class="block text-xs text-zinc-400">Walk the street at ground level</span></span>
+          <span class="text-zinc-500"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M9 6l6 6-6 6"/></svg></span>
+        </button>
+        <button id="vcEarth" class="w-full flex items-center gap-3 p-3.5 rounded-2xl bg-zinc-800 hover:bg-zinc-700 text-left">
+          <span class="w-11 h-11 rounded-xl bg-[#1A73E8] on-accent grid place-items-center shrink-0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"/></svg></span>
+          <span class="flex-1"><span class="block font-semibold">Google Earth</span><span class="block text-xs text-zinc-400">3D satellite view · opens the Earth app if installed</span></span>
+          <span class="text-zinc-500"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M9 6l6 6-6 6"/></svg></span>
+        </button>
+      </div>
+      <button id="vcCancel" class="btn btn-ghost w-full mt-3">Cancel</button>
+    </div>
+  </div>
+
   <script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
   <script>
   (() => {
@@ -140,7 +170,9 @@
     const COLORS = { unvisited: '#E11D48', visited: '#1F9D63', planned: '#0768CE' };
     const FLAG = 'M7 21V4M7 4h10l-2.5 4L17 12H7';
     const STYLES = { street: 'mapbox://styles/mapbox/streets-v12', satellite: 'mapbox://styles/mapbox/satellite-streets-v12' };
-    let data = null, map = null, mapReady = false, styleKey = 'street', popup = null;
+    let data = null, map = null, mapReady = false, styleKey = 'street', popup = null, filter = 'all';
+    const statusOf = (s) => s.planned ? 'planned' : s.visited ? 'visited' : 'unvisited';
+    const matches = (s) => filter === 'all' || statusOf(s) === filter;
 
     // Big legend
     const flagSvg = (c, s = 22) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" style="flex-shrink:0"><circle cx="12" cy="12" r="11" fill="#fff"/><circle cx="12" cy="12" r="9.5" fill="${c}"/><path d="${FLAG}" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" transform="translate(5.8 5.8) scale(.52)"/></svg>`;
@@ -195,6 +227,7 @@
           <span class="text-xs rounded-lg px-2 py-1" style="background:#EAF2FD;color:#0B4F9C">Sun <b>${o.sunday ?? '—'}</b></span>
           <span class="text-xs rounded-lg px-2 py-1" style="background:#F3EEFE;color:#5B21B6">Sat <b>${o.saturday ?? '—'}</b></span>
         </div>`).join('') : '<p class="text-sm text-zinc-400 py-4">No outreaches logged yet.</p>';
+      renderFilterCounts();
       refreshMap();
     }
 
@@ -232,7 +265,7 @@
       if (!state.division) { try { state.division = await (await fetch('/division.geojson')).json(); } catch { state.division = { features: [] }; } }
       const outer = state.division.features.find(f => f.properties.kind === 'division');
       if (outer) map.getSource('division').setData(outer);
-      map.getSource('pts').setData({ type: 'FeatureCollection', features: data.streets.filter(s => s.point).map(s => ({
+      map.getSource('pts').setData({ type: 'FeatureCollection', features: data.streets.filter(s => s.point && matches(s)).map(s => ({
         type: 'Feature', properties: { id: s.id, visited: s.visited, planned: s.planned }, geometry: { type: 'Point', coordinates: [s.point[1], s.point[0]] } })) });
       drawCenter();
       if (!state.fitted) {
@@ -262,13 +295,71 @@
       const status = s.planned ? ['Up next', COLORS.planned] : s.visited ? ['Visited', COLORS.visited] : ['Not visited', COLORS.unvisited];
       map.getSource('sel').setData({ type: 'FeatureCollection', features: s.line.length ? [{ type: 'Feature', properties: { color: status[1] }, geometry: { type: 'MultiLineString', coordinates: s.line } }] : [] });
       popup?.remove();
-      popup = new mapboxgl.Popup({ className: 'lwi-popup', offset: 16, maxWidth: '280px' }).setLngLat(lngLat).setHTML(`
+      popup = new mapboxgl.Popup({ className: 'lwi-popup', offset: 16, maxWidth: '300px' }).setLngLat(lngLat).setHTML(`
         <div style="min-width:190px"><div style="font-weight:800;font-size:15px">${esc(s.name)}</div>
         <div style="color:#86776F;font-size:12px;margin:2px 0 8px">${esc(s.district)}${s.rep ? ` · Rep: ${esc(s.rep)}` : ''}</div>
         <span style="display:inline-block;font-size:12px;font-weight:700;color:#fff;background:${status[1]};border-radius:99px;padding:2px 9px">${status[0]}</span>
-        <div style="font-size:12px;margin-top:8px;color:#2A1E1B">${s.visits ? `<b>${s.visits}</b> outreach${s.visits > 1 ? 'es' : ''} · <b style="color:#1F9D63">${s.converts}</b> converts${s.last_visit ? `<br><span style="color:#86776F">Last: ${esc(longDate(s.last_visit))}</span>` : ''}` : 'No outreach yet'}</div></div>`).addTo(map);
+        <div style="font-size:12px;margin-top:8px;color:#2A1E1B">${s.visits ? `<b>${s.visits}</b> outreach${s.visits > 1 ? 'es' : ''} · <b style="color:#1F9D63">${s.converts}</b> converts${s.last_visit ? `<br><span style="color:#86776F">Last: ${esc(longDate(s.last_visit))}</span>` : ''}` : 'No outreach yet'}</div>
+        ${s.point ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px">
+          ${btn('sv', 'eye', 'Street View')}
+          <a href="https://www.google.com/maps/dir/?api=1&destination=${s.point[0]},${s.point[1]}" target="_blank" rel="noopener" style="${BTN}">${ico('nav')}Directions</a>
+          <span style="grid-column:1/-1">${btn('zoom', 'pin', 'Show on map', 'width:100%')}</span>
+        </div>` : ''}</div>`).addTo(map);
       popup.on('close', () => map.getSource('sel')?.setData({ type: 'FeatureCollection', features: [] }));
+      const el = popup.getElement();
+      el.querySelector('[data-act="sv"]')?.addEventListener('click', () => openViewChoice(s));
+      el.querySelector('[data-act="zoom"]')?.addEventListener('click', () => zoomTo(s));
     }
+    const ICO = {
+      eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+      nav: '<path d="M3 11l19-9-9 19-2-8-8-2z"/>',
+      pin: '<path d="M12 21s-7-7.5-7-12a7 7 0 1114 0c0 4.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/>'
+    };
+    const ico = (n) => `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICO[n]}</svg>`;
+    const BTN = 'display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 8px;background:#F6ECE8;color:#2A1E1B;border:0;border-radius:11px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none';
+    const btn = (act, i, label, extra = '') => `<button data-act="${act}" style="${BTN};${extra}">${ico(i)}${label}</button>`;
+
+    function zoomTo(s) {
+      const coords = (s.line || []).flat().filter(c => Array.isArray(c) && c.length === 2);
+      if (coords.length > 1) {
+        const xs = coords.map(c => c[0]), ys = coords.map(c => c[1]);
+        map.fitBounds([[Math.min(...xs), Math.min(...ys)], [Math.max(...xs), Math.max(...ys)]], { padding: 70, maxZoom: 17.5, duration: 800 });
+      } else if (s.point) map.flyTo({ center: [s.point[1], s.point[0]], zoom: 17, duration: 800 });
+    }
+
+    // Street View / Google Earth chooser
+    let viewTarget = null;
+    function openViewChoice(s) {
+      viewTarget = s;
+      $('vcName').textContent = s.name;
+      $('viewChoice').classList.remove('hidden');
+    }
+    const closeChoice = () => $('viewChoice').classList.add('hidden');
+    $('vcCancel').onclick = closeChoice;
+    $('viewChoice').addEventListener('click', (e) => { if (e.target === $('viewChoice')) closeChoice(); });
+    $('vcStreetView').onclick = () => { closeChoice(); const p = viewTarget?.point; if (p) window.open(`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${p[0]},${p[1]}`, '_blank', 'noopener'); };
+    $('vcEarth').onclick = () => { closeChoice(); const p = viewTarget?.point; if (p) window.open(`https://earth.google.com/web/@${p[0]},${p[1]},40a,350d,35y,0h,55t,0r`, '_blank', 'noopener'); };
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeChoice(); });
+
+    // Filters: show only matching flags on the map and fit to them
+    function renderFilterCounts() {
+      const c = { all: data.streets.length, unvisited: 0, planned: 0, visited: 0 };
+      for (const s of data.streets) c[statusOf(s)]++;
+      document.querySelectorAll('[data-n]').forEach(el => el.textContent = c[el.dataset.n]);
+    }
+    $('filters').addEventListener('click', (e) => {
+      const b = e.target.closest('[data-f]');
+      if (!b || !data) return;
+      filter = b.dataset.f;
+      document.querySelectorAll('[data-f]').forEach(x => x.classList.toggle('active', x === b));
+      popup?.remove();
+      refreshMap();
+      const pts = data.streets.filter(s => s.point && matches(s)).map(s => s.point);
+      if (map && pts.length && filter !== 'all') {
+        if (pts.length === 1) map.flyTo({ center: [pts[0][1], pts[0][0]], zoom: 16.5, duration: 700 });
+        else { const xs = pts.map(p => p[1]), ys = pts.map(p => p[0]); map.fitBounds([[Math.min(...xs), Math.min(...ys)], [Math.max(...xs), Math.max(...ys)]], { padding: 70, maxZoom: 16.5, duration: 700 }); }
+      }
+    });
     function initMap(token) {
       if (!token || !window.mapboxgl) { $('mapNote').classList.remove('hidden'); return; }
       mapboxgl.accessToken = token;
