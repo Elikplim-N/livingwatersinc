@@ -136,6 +136,19 @@ CREATE TABLE IF NOT EXISTS app_settings (
 
 -- "Up next": streets planned for the next outreach (null = not planned)
 ALTER TABLE streets ADD COLUMN IF NOT EXISTS planned_at timestamptz;
+
+-- Exact stage point on a street (where the stage is mounted) + optional street rep
+ALTER TABLE streets ADD COLUMN IF NOT EXISTS stage_lat double precision;
+ALTER TABLE streets ADD COLUMN IF NOT EXISTS stage_lng double precision;
+ALTER TABLE streets ADD COLUMN IF NOT EXISTS stage_accuracy_m integer;
+ALTER TABLE streets ADD COLUMN IF NOT EXISTS rep_name text;
+ALTER TABLE streets ADD COLUMN IF NOT EXISTS rep_phone text;
+
+-- Retention: converts from an outreach who came to church afterwards
+ALTER TABLE visits ADD COLUMN IF NOT EXISTS sunday_count integer;    -- Qodesh City Church (following Sunday)
+ALTER TABLE visits ADD COLUMN IF NOT EXISTS saturday_count integer;  -- Saturday Night Revival (following Saturday)
+ALTER TABLE converts ADD COLUMN IF NOT EXISTS came_sunday boolean NOT NULL DEFAULT false;
+ALTER TABLE converts ADD COLUMN IF NOT EXISTS came_saturday boolean NOT NULL DEFAULT false;
 `;
 
 let schemaReady = false;
@@ -158,6 +171,7 @@ const signToken = (u: { id: string; email: string; role: string }) =>
 const STREET_SELECT = `
   SELECT
     s.id, s.name, s.district, s.geometry, s.length_m, s.planned_at,
+    s.stage_lat, s.stage_lng, s.stage_accuracy_m, s.rep_name, s.rep_phone,
     COALESCE(
       json_agg(
         json_build_object(
@@ -167,6 +181,8 @@ const STREET_SELECT = `
           'attendance', v.attendance,
           'decisions', v.decisions,
           'follow_ups', v.follow_ups,
+          'sunday_count', v.sunday_count,
+          'saturday_count', v.saturday_count,
           'notes', v.notes,
           'created_at', v.created_at
         ) ORDER BY v.visit_date DESC, v.created_at DESC
@@ -330,6 +346,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (method === 'GET' && !id) {
         const result = await pool.query(`${STREET_SELECT} GROUP BY s.id ORDER BY s.name`);
         return res.json(result.rows);
+      }
+
+      // Update stage point and/or street rep
+      if (method === 'PUT' && id) {
+        const b = req.body || {};
+        const sets: string[] = [], vals: unknown[] = [];
+        const add = (col: string, v: unknown) => { vals.push(v); sets.push(col + ' = $' + vals.length); };
+        if (b.stage !== undefined) {
+          if (b.stage === null) { add('stage_lat', null); add('stage_lng', null); add('stage_accuracy_m', null); }
+          else {
+            const lat = Number(b.stage.lat), lng = Number(b.stage.lng);
+            if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) throw new HttpError(400, 'Stage location is not valid');
+            add('stage_lat', lat); add('stage_lng', lng);
+            add('stage_accuracy_m', b.stage.accuracy_m == null ? null : Math.round(Number(b.stage.accuracy_m)) || null);
+          }
+        }
+        if (b.rep_name !== undefined) add('rep_name', String(b.rep_name || '').trim().slice(0, 100) || null);
+        if (b.rep_phone !== undefined) add('rep_phone', String(b.rep_phone || '').trim().slice(0, 40) || null);
+        if (!sets.length) throw new HttpError(400, 'Nothing to update');
+        vals.push(String(id));
+        const result = await pool.query('UPDATE streets SET ' + sets.join(', ') + ' WHERE id::text = $' + vals.length + ' RETURNING id', vals);
+        if (!result.rows[0]) throw new HttpError(404, 'Street not found');
+        const full = await pool.query(STREET_SELECT + ' WHERE s.id::text = $1 GROUP BY s.id', [String(id)]);
+        return res.json(full.rows[0]);
       }
 
       if (method === 'POST' && !id) {
@@ -579,6 +619,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // ---- Visits ----
     if (resource === 'visits') {
       const auth = requireAuth(req);
+      await ensureSchema();
+
+      // Retention: how many converts from this outreach came to church afterwards
+      if (method === 'PUT' && id && req.url?.includes('/retention')) {
+        const b = req.body || {};
+        const num = (v: unknown) => (v === null || v === undefined || v === '' ? null : toCount(v));
+        const result = await pool.query(
+          'UPDATE visits SET sunday_count = $2, saturday_count = $3 WHERE id::text = $1 RETURNING id, sunday_count, saturday_count',
+          [String(id), num(b.sunday_count), num(b.saturday_count)]
+        );
+        if (!result.rows[0]) throw new HttpError(404, 'Outreach not found');
+        for (const m of Array.isArray(b.marks) ? b.marks.slice(0, 500) : []) {
+          await pool.query('UPDATE converts SET came_sunday = $2, came_saturday = $3 WHERE id::text = $1', [String(m.id), !!m.came_sunday, !!m.came_saturday]);
+        }
+        return res.json(result.rows[0]);
+      }
 
       if (method === 'POST' && !id) {
         const { street_id, visit_date, team_members, notes } = req.body || {};

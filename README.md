@@ -42,6 +42,21 @@ Until a token is set, the map shows a "Connect Mapbox" card; everything else in 
 2. **APIs & Services → Credentials → Create credentials → API key.** Restrict it to *Maps Embed API* and to your site's URL (HTTP referrers).
 3. In Vercel add `GOOGLE_MAPS_KEY` = that key, then redeploy.
 
+## Retention (who came to church after an outreach)
+
+Converts from each outreach are followed up by two services:
+
+- **Qodesh City Church**: the Sunday after the outreach
+- **Saturday Night Revival**: the following Saturday
+
+On a street's visit history tap **Record attendance**. Type how many came (or use + and −), or tick the names of converts recorded for that outreach. Ticking names fills in the number, and names are never required. The service dates are worked out from the outreach date. Totals and percentages appear in **Converts → Retention**, and **By outreach** lists every outreach so attendance is quick to record. The CSV export includes whether each named convert came.
+
+## Stage point & street rep
+
+- **Stage point:** the exact spot on a street where the stage is mounted. The street's flag sits there. Set it from the street page with **GPS** (stand at the spot) or **Map** (tap the spot), or capture it while logging a visit. It always snaps onto the street line.
+- **No duplicate streets:** when adding a street, if the point is on a street already in the app, you get **Set the stage point here** instead of a second copy.
+- **Street rep:** optional name and phone of the person in charge of a street, with a Call button.
+
 ## Field collectors (no password)
 
 Share **`https://<your-app>/collect`** (Admin → Field collectors → Share). Collectors enter their **name and phone number once** and can record converts straight away:

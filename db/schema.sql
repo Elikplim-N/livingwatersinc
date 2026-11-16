@@ -83,3 +83,16 @@ CREATE TABLE IF NOT EXISTS app_settings (
 
 -- "Up next": streets planned for the next outreach (null = not planned)
 ALTER TABLE streets ADD COLUMN IF NOT EXISTS planned_at timestamptz;
+
+-- Exact stage point on a street (where the stage is mounted) + optional street rep
+ALTER TABLE streets ADD COLUMN IF NOT EXISTS stage_lat double precision;
+ALTER TABLE streets ADD COLUMN IF NOT EXISTS stage_lng double precision;
+ALTER TABLE streets ADD COLUMN IF NOT EXISTS stage_accuracy_m integer;
+ALTER TABLE streets ADD COLUMN IF NOT EXISTS rep_name text;
+ALTER TABLE streets ADD COLUMN IF NOT EXISTS rep_phone text;
+
+-- Retention: converts from an outreach who came to church afterwards
+ALTER TABLE visits ADD COLUMN IF NOT EXISTS sunday_count integer;    -- Qodesh City Church (following Sunday)
+ALTER TABLE visits ADD COLUMN IF NOT EXISTS saturday_count integer;  -- Saturday Night Revival (following Saturday)
+ALTER TABLE converts ADD COLUMN IF NOT EXISTS came_sunday boolean NOT NULL DEFAULT false;
+ALTER TABLE converts ADD COLUMN IF NOT EXISTS came_saturday boolean NOT NULL DEFAULT false;
