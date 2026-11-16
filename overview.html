@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#FFF6F2" />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="referrer" content="no-referrer" />
+  <title>LW Inc. Street Campaign · Overview</title>
+  <link rel="icon" type="image/png" href="/img/favicon-64.png" />
+  <link rel="apple-touch-icon" href="/img/apple-touch-icon.png" />
+  <link rel="stylesheet" href="/app.css" />
+  <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" />
+  <style>
+    body { background: #FFF6F2; -webkit-tap-highlight-color: transparent; }
+    .card { background: #fff; border-radius: 20px; box-shadow: 0 1px 2px rgba(42,30,27,.05), 0 8px 24px rgba(42,30,27,.06); }
+    .kpi b { display: block; font-size: 30px; line-height: 1.1; font-weight: 800; letter-spacing: -.02em; }
+    .kpi span { font-size: 12px; font-weight: 600; color: #86776F; text-transform: uppercase; letter-spacing: .05em; }
+    #map { position: absolute; inset: 0; }
+    .mapboxgl-ctrl-group { border-radius: 12px !important; overflow: hidden; box-shadow: 0 6px 20px rgba(42,30,27,.12) !important; }
+    .lwi-popup .mapboxgl-popup-content { border-radius: 16px; padding: 14px 16px; box-shadow: 0 16px 40px rgba(42,30,27,.18); font-family: inherit; color: #2A1E1B; }
+    .lwi-popup .mapboxgl-popup-close-button { font-size: 18px; color: #A39591; right: 6px; top: 4px; }
+    .bar { height: 8px; border-radius: 99px; background: #F6ECE8; overflow: hidden; }
+    .bar > i { display: block; height: 100%; border-radius: 99px; }
+    .tabbtn { padding: .45rem .9rem; border-radius: 99px; font-size: .85rem; font-weight: 600; color: #86776F; }
+    .tabbtn.active { background: #fff; color: #2A1E1B; box-shadow: 0 1px 4px rgba(42,30,27,.12); }
+  </style>
+</head>
+<body class="font-sans antialiased text-white">
+
+  <!-- Not allowed -->
+  <div id="denied" class="hidden min-h-screen grid place-items-center p-6">
+    <div class="card p-8 max-w-sm text-center">
+      <img src="/img/logo-192.png" alt="" width="88" height="88" class="mx-auto mb-4 rounded-full" />
+      <h1 class="text-xl font-bold">Overview link not valid</h1>
+      <p id="deniedText" class="text-sm text-zinc-400 mt-2">Ask the admin to share the overview link with you again.</p>
+    </div>
+  </div>
+
+  <div id="page" class="hidden max-w-7xl mx-auto px-4 sm:px-6 pb-10" style="padding-top:max(1rem, env(safe-area-inset-top))">
+    <!-- Header -->
+    <header class="flex items-center gap-3 py-3">
+      <img src="/img/logo-96.png" alt="Living Waters Incorporated" width="52" height="52" class="w-12 h-12 sm:w-14 sm:h-14 rounded-full shrink-0" style="box-shadow:0 4px 14px rgba(7,104,206,.25)" />
+      <div class="flex-1 min-w-0">
+        <h1 class="text-lg sm:text-2xl font-extrabold tracking-tight leading-tight">LW Inc. Street Campaign</h1>
+        <p class="text-sm text-zinc-400">Overview · <span id="updated">loading…</span></p>
+      </div>
+      <button id="refreshBtn" class="btn btn-ghost btn-sm shrink-0" title="Refresh">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 10-2.3 5.7M20 4v7h-7"/></svg>
+        <span class="hidden sm:inline">Refresh</span>
+      </button>
+    </header>
+
+    <!-- KPIs -->
+    <section class="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-2">
+      <div class="card kpi p-4 col-span-2 lg:col-span-1">
+        <span>Streets reached</span>
+        <div class="flex items-end gap-2 mt-1"><b id="kCoverage">0%</b><p class="text-sm text-zinc-400 pb-1"><span id="kVisited">0</span> of <span id="kStreets">0</span> streets</p></div>
+        <div class="bar mt-3"><i id="kBar" style="width:0%;background:linear-gradient(90deg,#F2547D,#1F9D63)"></i></div>
+      </div>
+      <div class="card kpi p-4"><span>Outreaches</span><b id="kOutreaches" class="mt-1">0</b></div>
+      <div class="card kpi p-4"><span>People reached</span><b id="kPeople" class="mt-1">0</b></div>
+      <div class="card kpi p-4 col-span-2 lg:col-span-1"><span>Converts</span><b id="kConverts" class="mt-1 text-emerald-500">0</b><p class="text-sm text-zinc-400 mt-1"><span id="kFollowed">0</span> followed up</p></div>
+    </section>
+
+    <!-- Retention -->
+    <section class="grid sm:grid-cols-2 gap-3 mt-3">
+      <div class="card p-4 flex items-center gap-4">
+        <div class="hidden sm:grid w-12 h-12 rounded-2xl place-items-center shrink-0" style="background:#EAF2FD;color:#0768CE">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v5M9.5 4.5h5M5 22V12l7-5 7 5v10M9 22v-5h6v5"/></svg>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-bold" style="color:#0768CE">Qodesh City Church · Sunday</p>
+          <p class="text-2xl font-extrabold"><span id="rSun">0</span> <span class="text-base font-semibold text-zinc-400">of <span id="rSunOf">0</span> converts came</span></p>
+          <div class="bar mt-2"><i id="rSunBar" style="width:0%;background:#0768CE"></i></div>
+        </div>
+        <p id="rSunPct" class="text-xl font-extrabold shrink-0" style="color:#0768CE">—</p>
+      </div>
+      <div class="card p-4 flex items-center gap-4">
+        <div class="hidden sm:grid w-12 h-12 rounded-2xl place-items-center shrink-0" style="background:#F3EEFE;color:#6D28D9">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 009 9 9 9 0 11-9-9z"/></svg>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-bold" style="color:#6D28D9">Saturday Night Revival · Saturday</p>
+          <p class="text-2xl font-extrabold"><span id="rSat">0</span> <span class="text-base font-semibold text-zinc-400">of <span id="rSatOf">0</span> converts came</span></p>
+          <div class="bar mt-2"><i id="rSatBar" style="width:0%;background:#6D28D9"></i></div>
+        </div>
+        <p id="rSatPct" class="text-xl font-extrabold shrink-0" style="color:#6D28D9">—</p>
+      </div>
+    </section>
+
+    <!-- Map + side -->
+    <section class="grid lg:grid-cols-3 gap-3 mt-3">
+      <div class="card overflow-hidden lg:col-span-2 relative" style="height:min(70vh,620px);min-height:420px">
+        <div id="map"></div>
+        <div id="mapNote" class="hidden absolute inset-0 grid place-items-center text-sm text-zinc-400 p-6 text-center">The map is not connected yet.</div>
+        <div class="absolute top-3 left-3 flex bg-zinc-800/90 backdrop-blur rounded-full p-1 gap-0.5 shadow" id="styleSwitch">
+          <button class="tabbtn active" data-style="street">Map</button>
+          <button class="tabbtn" data-style="satellite">Satellite</button>
+        </div>
+        <!-- Big legend (no convert key) -->
+        <div class="absolute left-3 bottom-10 card px-4 py-3 flex flex-wrap gap-x-5 gap-y-2 text-[15px] font-semibold" id="legend"></div>
+      </div>
+
+      <div class="space-y-3">
+        <div class="card p-4">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="relative flex w-3 h-3"><span class="absolute inline-flex h-full w-full rounded-full opacity-60 animate-ping" style="background:#0768CE"></span><span class="relative inline-flex w-3 h-3 rounded-full" style="background:#0768CE"></span></span>
+            <h2 class="text-sm font-bold uppercase tracking-wider" style="color:#0B4F9C">Up next</h2>
+            <span id="upCount" class="ml-auto text-sm font-semibold text-zinc-400"></span>
+          </div>
+          <div id="upList" class="space-y-1.5"></div>
+        </div>
+        <div class="card p-4">
+          <h2 class="text-sm font-bold uppercase tracking-wider text-zinc-400 mb-2">By area</h2>
+          <div id="districts" class="space-y-3"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Recent outreaches -->
+    <section class="card p-4 mt-3">
+      <h2 class="text-sm font-bold uppercase tracking-wider text-zinc-400 mb-3">Recent outreaches</h2>
+      <div id="recent" class="divide-y divide-zinc-800"></div>
+    </section>
+
+    <p class="text-center text-xs text-zinc-500 mt-6">View only · totals only, no personal details · refreshes every minute</p>
+  </div>
+
+  <script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
+  <script>
+  (() => {
+    const $ = (id) => document.getElementById(id);
+    const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+    const fmt = (n) => Number(n || 0).toLocaleString();
+    const pct = (a, b) => b ? Math.round(a / b * 100) : 0;
+    const parseDate = (s) => { const [y, m, d] = String(s).slice(0, 10).split('-').map(Number); return new Date(y, m - 1, d); };
+    const longDate = (s) => parseDate(s).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+    const key = new URLSearchParams(location.search).get('k') || '';
+
+    const COLORS = { unvisited: '#E11D48', visited: '#1F9D63', planned: '#0768CE' };
+    const FLAG = 'M7 21V4M7 4h10l-2.5 4L17 12H7';
+    const STYLES = { street: 'mapbox://styles/mapbox/streets-v12', satellite: 'mapbox://styles/mapbox/satellite-streets-v12' };
+    let data = null, map = null, mapReady = false, styleKey = 'street', popup = null;
+
+    // Big legend
+    const flagSvg = (c, s = 22) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" style="flex-shrink:0"><circle cx="12" cy="12" r="11" fill="#fff"/><circle cx="12" cy="12" r="9.5" fill="${c}"/><path d="${FLAG}" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" transform="translate(5.8 5.8) scale(.52)"/></svg>`;
+    $('legend').innerHTML = [['Not visited', COLORS.unvisited], ['Up next', COLORS.planned], ['Visited', COLORS.visited]]
+      .map(([t, c]) => `<span class="flex items-center gap-2">${flagSvg(c)}${t}</span>`).join('');
+
+    // ---------- Data ----------
+    async function load() {
+      try {
+        const r = await fetch(`/api/overview?k=${encodeURIComponent(key)}`);
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok) { showDenied(d.error); return; }
+        data = d;
+        $('denied').classList.add('hidden'); $('page').classList.remove('hidden');
+        map?.resize();
+        render();
+      } catch {
+        $('updated').textContent = 'offline, showing last data';
+      }
+    }
+    function showDenied(msg) { $('page').classList.add('hidden'); $('denied').classList.remove('hidden'); if (msg) $('deniedText').textContent = msg; }
+
+    function render() {
+      const t = data.totals, rt = data.retention;
+      $('updated').textContent = `updated ${new Date(data.generated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+      $('kCoverage').textContent = `${pct(t.visited, t.streets)}%`;
+      $('kVisited').textContent = fmt(t.visited); $('kStreets').textContent = fmt(t.streets);
+      $('kBar').style.width = `${pct(t.visited, t.streets)}%`;
+      $('kOutreaches').textContent = fmt(t.outreaches); $('kPeople').textContent = fmt(t.people);
+      $('kConverts').textContent = fmt(t.converts); $('kFollowed').textContent = fmt(t.followed_up);
+      for (const [k, a, b] of [['Sun', rt.sunday, rt.sunday_of], ['Sat', rt.saturday, rt.saturday_of]]) {
+        $(`r${k}`).textContent = fmt(a); $(`r${k}Of`).textContent = fmt(b);
+        $(`r${k}Bar`).style.width = `${pct(a, b)}%`;
+        $(`r${k}Pct`).textContent = b ? `${pct(a, b)}%` : '—';
+      }
+      $('upCount').textContent = data.up_next.length ? `${data.up_next.length} planned` : '';
+      $('upList').innerHTML = data.up_next.length ? data.up_next.slice(0, 8).map((s, i) => `
+        <div class="flex items-center gap-2.5 rounded-xl px-3 py-2" style="background:#EAF2FD">
+          <span class="w-6 h-6 rounded-full text-xs font-bold grid place-items-center shrink-0" style="background:#0768CE;color:#fff">${i + 1}</span>
+          <div class="min-w-0 flex-1"><p class="text-sm font-semibold truncate">${esc(s.name)}</p><p class="text-xs text-zinc-400 truncate">${esc(s.district)}${s.rep ? ` · Rep: ${esc(s.rep)}` : ''}</p></div>
+        </div>`).join('') : '<p class="text-sm text-zinc-400">No streets planned yet.</p>';
+      $('districts').innerHTML = data.districts.map(d => `
+        <div>
+          <div class="flex items-baseline justify-between text-sm"><span class="font-semibold">${esc(d.name)}</span><span class="text-zinc-400">${d.visited}/${d.streets} streets · <b class="text-emerald-500">${fmt(d.converts)}</b> converts</span></div>
+          <div class="bar mt-1.5"><i style="width:${pct(d.visited, d.streets)}%;background:#1F9D63"></i></div>
+        </div>`).join('') || '<p class="text-sm text-zinc-400">No streets yet.</p>';
+      $('recent').innerHTML = data.recent.length ? data.recent.map(o => `
+        <div class="py-3 flex flex-wrap items-center gap-x-4 gap-y-1">
+          <div class="min-w-0 flex-1 basis-56"><p class="font-semibold truncate">${esc(o.street)}</p><p class="text-xs text-zinc-400">${esc(o.district)} · ${esc(longDate(o.date))}</p></div>
+          <span class="text-sm"><b>${fmt(o.reached)}</b> <span class="text-zinc-400">reached</span></span>
+          <span class="text-sm text-emerald-500"><b>${fmt(o.converts)}</b> converts</span>
+          <span class="text-xs rounded-lg px-2 py-1" style="background:#EAF2FD;color:#0B4F9C">Sun <b>${o.sunday ?? '—'}</b></span>
+          <span class="text-xs rounded-lg px-2 py-1" style="background:#F3EEFE;color:#5B21B6">Sat <b>${o.saturday ?? '—'}</b></span>
+        </div>`).join('') : '<p class="text-sm text-zinc-400 py-4">No outreaches logged yet.</p>';
+      refreshMap();
+    }
+
+    // ---------- Map (view only) ----------
+    function markerImage(color, size = 40) {
+      const px = 2, s = size * px, c = document.createElement('canvas'); c.width = c.height = s;
+      const g = c.getContext('2d');
+      g.shadowColor = 'rgba(42,30,27,.35)'; g.shadowBlur = 4 * px; g.shadowOffsetY = 1.5 * px;
+      g.beginPath(); g.arc(s / 2, s / 2, s / 2 - 3 * px, 0, Math.PI * 2); g.fillStyle = '#fff'; g.fill(); g.shadowColor = 'transparent';
+      g.beginPath(); g.arc(s / 2, s / 2, s / 2 - 5.5 * px, 0, Math.PI * 2); g.fillStyle = color; g.fill();
+      const k = (s * 0.52) / 24; g.save(); g.translate(s / 2 - 12 * k, s / 2 - 12 * k); g.scale(k, k);
+      g.strokeStyle = '#fff'; g.lineWidth = 2.8; g.lineCap = 'round'; g.lineJoin = 'round'; g.stroke(new Path2D(FLAG)); g.restore();
+      return { width: s, height: s, data: new Uint8Array(g.getImageData(0, 0, s, s).data.buffer) };
+    }
+    const images = {};
+    function addLayers() {
+      for (const [n, c, sz] of [['mk-unvisited', COLORS.unvisited, 36], ['mk-visited', COLORS.visited, 36], ['mk-planned', COLORS.planned, 44]]) {
+        images[n] ||= markerImage(c, sz);
+        if (!map.hasImage(n)) map.addImage(n, images[n], { pixelRatio: 2 });
+      }
+      for (const id of ['division', 'pts', 'sel']) map.addSource(id, { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+      map.addLayer({ id: 'division-casing', type: 'line', source: 'division', paint: { 'line-color': '#000', 'line-opacity': .3, 'line-width': 7 } });
+      map.addLayer({ id: 'division-line', type: 'line', source: 'division', paint: { 'line-color': '#f59e0b', 'line-width': 4 } });
+      map.addLayer({ id: 'sel-casing', type: 'line', source: 'sel', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#fff', 'line-width': 13 } });
+      map.addLayer({ id: 'sel', type: 'line', source: 'sel', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': ['get', 'color'], 'line-width': 8 } });
+      map.addLayer({ id: 'visited-pulse', type: 'circle', source: 'pts', filter: ['all', ['get', 'visited'], ['!', ['get', 'planned']]], paint: { 'circle-color': COLORS.visited, 'circle-radius': 14, 'circle-opacity': .15 } });
+      map.addLayer({ id: 'planned-pulse', type: 'circle', source: 'pts', filter: ['get', 'planned'], paint: { 'circle-color': COLORS.planned, 'circle-radius': 20, 'circle-opacity': .3, 'circle-stroke-width': 2, 'circle-stroke-color': COLORS.planned } });
+      map.addLayer({ id: 'pts', type: 'symbol', source: 'pts', layout: {
+        'icon-image': ['case', ['get', 'planned'], 'mk-planned', ['get', 'visited'], 'mk-visited', 'mk-unvisited'],
+        'icon-size': ['interpolate', ['linear'], ['zoom'], 11, .6, 15, .85, 18, 1.05], 'icon-allow-overlap': true, 'icon-ignore-placement': true,
+        'symbol-sort-key': ['case', ['get', 'planned'], 3, ['get', 'visited'], 2, 1] } });
+    }
+    async function refreshMap() {
+      if (!mapReady || !data) return;
+      if (!state.division) { try { state.division = await (await fetch('/division.geojson')).json(); } catch { state.division = { features: [] }; } }
+      const outer = state.division.features.find(f => f.properties.kind === 'division');
+      if (outer) map.getSource('division').setData(outer);
+      map.getSource('pts').setData({ type: 'FeatureCollection', features: data.streets.filter(s => s.point).map(s => ({
+        type: 'Feature', properties: { id: s.id, visited: s.visited, planned: s.planned }, geometry: { type: 'Point', coordinates: [s.point[1], s.point[0]] } })) });
+      drawCenter();
+      if (!state.fitted) {
+        state.fitted = true;
+        map.resize();
+        if (outer) {
+          const ring = outer.geometry.coordinates[0], xs = ring.map(p => p[0]), ys = ring.map(p => p[1]);
+          map.fitBounds([[Math.min(...xs), Math.min(...ys)], [Math.max(...xs), Math.max(...ys)]], { padding: 30, duration: 0 });
+        } else { const c = data.center; map.jumpTo({ center: c ? [c.lng, c.lat] : [-0.230065, 5.587981], zoom: 14 }); }
+      }
+    }
+    const state = {};
+    let centerMarker = null;
+    function drawCenter() {
+      const c = data.center || { lat: 5.587981, lng: -0.230065, name: 'Qodesh' };
+      centerMarker?.remove();
+      const el = document.createElement('div');
+      el.innerHTML = `<div style="position:relative;width:60px;height:60px">
+        <div style="width:60px;height:60px;border-radius:19px;background:linear-gradient(135deg,#A855F7,#6D28D9);border:4px solid #fff;box-shadow:0 8px 22px rgba(109,40,217,.5);display:grid;place-items:center">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v5M9.5 4.5h5M5 22V12l7-5 7 5v10M9 22v-5h6v5"/></svg></div>
+        <div style="position:absolute;top:66px;left:50%;transform:translateX(-50%);white-space:nowrap;font:800 15px -apple-system,BlinkMacSystemFont,sans-serif;color:#5B21B6;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 8px #fff">${esc(c.name || 'Qodesh')}</div></div>`;
+      centerMarker = new mapboxgl.Marker({ element: el.firstElementChild }).setLngLat([c.lng, c.lat]).addTo(map);
+    }
+    function showStreet(id, lngLat) {
+      const s = data.streets.find(x => x.id === id);
+      if (!s) return;
+      const status = s.planned ? ['Up next', COLORS.planned] : s.visited ? ['Visited', COLORS.visited] : ['Not visited', COLORS.unvisited];
+      map.getSource('sel').setData({ type: 'FeatureCollection', features: s.line.length ? [{ type: 'Feature', properties: { color: status[1] }, geometry: { type: 'MultiLineString', coordinates: s.line } }] : [] });
+      popup?.remove();
+      popup = new mapboxgl.Popup({ className: 'lwi-popup', offset: 16, maxWidth: '280px' }).setLngLat(lngLat).setHTML(`
+        <div style="min-width:190px"><div style="font-weight:800;font-size:15px">${esc(s.name)}</div>
+        <div style="color:#86776F;font-size:12px;margin:2px 0 8px">${esc(s.district)}${s.rep ? ` · Rep: ${esc(s.rep)}` : ''}</div>
+        <span style="display:inline-block;font-size:12px;font-weight:700;color:#fff;background:${status[1]};border-radius:99px;padding:2px 9px">${status[0]}</span>
+        <div style="font-size:12px;margin-top:8px;color:#2A1E1B">${s.visits ? `<b>${s.visits}</b> outreach${s.visits > 1 ? 'es' : ''} · <b style="color:#1F9D63">${s.converts}</b> converts${s.last_visit ? `<br><span style="color:#86776F">Last: ${esc(longDate(s.last_visit))}</span>` : ''}` : 'No outreach yet'}</div></div>`).addTo(map);
+      popup.on('close', () => map.getSource('sel')?.setData({ type: 'FeatureCollection', features: [] }));
+    }
+    function initMap(token) {
+      if (!token || !window.mapboxgl) { $('mapNote').classList.remove('hidden'); return; }
+      mapboxgl.accessToken = token;
+      map = window.ovMap = new mapboxgl.Map({ container: 'map', style: STYLES[styleKey], center: [-0.230065, 5.587981], zoom: 13.5, cooperativeGestures: matchMedia('(max-width: 767px)').matches });
+      map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-right');
+      map.on('style.load', () => { addLayers(); mapReady = true; refreshMap(); });
+      map.on('click', (e) => {
+        const f = map.queryRenderedFeatures([[e.point.x - 10, e.point.y - 10], [e.point.x + 10, e.point.y + 10]], { layers: ['pts'] })[0];
+        if (f) showStreet(f.properties.id, f.geometry.coordinates);
+      });
+      map.on('mousemove', (e) => { map.getCanvas().style.cursor = map.queryRenderedFeatures(e.point, { layers: ['pts'] }).length ? 'pointer' : ''; });
+      // Soft pulses
+      const frame = (t) => {
+        requestAnimationFrame(frame);
+        if (!mapReady) return;
+        const raw = (t % 2800) / 2800, k = 1 - (1 - raw) ** 2, v = (t % 3600) / 3600, vk = 1 - (1 - v) ** 2;
+        try {
+          map.setPaintProperty('planned-pulse', 'circle-radius', 20 + k * 80);
+          map.setPaintProperty('planned-pulse', 'circle-opacity', .28 * (1 - raw));
+          map.setPaintProperty('planned-pulse', 'circle-stroke-opacity', .45 * (1 - raw));
+          map.setPaintProperty('visited-pulse', 'circle-radius', 13 + vk * 16);
+          map.setPaintProperty('visited-pulse', 'circle-opacity', .22 * (1 - v));
+        } catch {}
+      };
+      requestAnimationFrame(frame);
+    }
+    document.querySelectorAll('[data-style]').forEach(b => b.onclick = () => {
+      styleKey = b.dataset.style;
+      document.querySelectorAll('[data-style]').forEach(x => x.classList.toggle('active', x === b));
+      if (map) { mapReady = false; popup?.remove(); map.setStyle(STYLES[styleKey]); }
+    });
+
+    $('refreshBtn').onclick = load;
+    if (!key) { showDenied(); return; }
+    fetch('/api/config').then(r => r.json()).then(cfg => initMap(cfg.mapbox_token)).catch(() => initMap(''));
+    load();
+    setInterval(load, 60000);
+  })();
+  </script>
+</body>
+</html>

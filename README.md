@@ -57,6 +57,10 @@ On a street's visit history tap **Record attendance**. Type how many came (or us
 - **No duplicate streets:** when adding a street, if the point is on a street already in the app, you get **Set the stage point here** instead of a second copy.
 - **Street rep:** optional name and phone of the person in charge of a street, with a Call button.
 
+## Overview page for leaders (view only, no login)
+
+**Admin → Overview link → Share** gives a link like `https://<your-app>/overview?k=…`. Opening it shows a read-only summary: streets reached, outreaches, people reached, converts, retention for Qodesh City Church and Saturday Night Revival, the map with flags, Up next, a breakdown by area and recent outreaches. It refreshes every minute and shows **totals only, never names or phone numbers**. **Make a new link** turns the old link off.
+
 ## Field collectors (no password)
 
 Share **`https://<your-app>/collect`** (Admin → Field collectors → Share). Collectors enter their **name and phone number once** and can record converts straight away:
@@ -73,6 +77,7 @@ The admin sees every convert with who collected it, can follow up (call, WhatsAp
 ```
 index.html          Admin app (vanilla JS + Mapbox GL JS)
 collect.html        Field collector app (/collect), no dependencies
+overview.html       Read-only overview for leaders (/overview?k=…)
 app.css             Prebuilt Tailwind CSS (regenerate with `npm run build:css`)
 api/index.ts        Vercel serverless API (/api/*)
 img/                Logo (transparent PNGs), favicon, phone home-screen icon

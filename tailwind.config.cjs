@@ -1,7 +1,7 @@
 // Warm light "iOS" palette. The zinc scale is inverted (950 = page background, 100 = ink) and
 // `white` is the ink colour, so the app's original dark-theme classes render as a light theme.
 module.exports = {
-  content: ['./index.html', './collect.html'],
+  content: ['./index.html', './collect.html', './overview.html'],
   theme: {
     extend: {
       fontFamily: { sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Text"', '"Segoe UI"', 'Roboto', '"Helvetica Neue"', 'Arial', 'sans-serif'] },
