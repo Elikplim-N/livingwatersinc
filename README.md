@@ -69,6 +69,14 @@ All three pages can be installed like a normal app, with the logo as the icon, o
 - **iPhone / iPad:** tap **Install app**, then Safari **Share** → **Add to Home Screen** (Apple does not allow websites to install in one tap).
 - The installed **Overview** remembers its link on that device, so it opens straight in.
 
+## Road distance from Qodesh & directions
+
+When you select a street, the app shows how far it is **by road** from Qodesh and roughly how long it takes to drive, e.g. *2.3 km by road · 7 min drive from Qodesh*.
+
+- The numbers are worked out by the server **once per street** using [OSRM](https://project-osrm.org/) (free routing on OpenStreetMap roads) and **stored in the database**, so the app and the Overview show them without calling any map service.
+- New streets are filled in automatically when the admin opens the app. A street is recalculated when its stage point changes, and every street is recalculated if the Qodesh pin moves.
+- **Directions** offers **From Qodesh** (route by road in Google Maps) or **From my location**.
+
 ## Field collectors (no password)
 
 Share **`https://<your-app>/collect`** (Admin → Field collectors → Share). Collectors enter their **name and phone number once** and can record converts straight away:

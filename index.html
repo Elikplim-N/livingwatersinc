@@ -645,6 +645,28 @@
     </div>
   </div>
 
+
+  <!-- ============ DIRECTIONS CHOOSER ============ -->
+  <div id="dirChoice" class="modal fixed inset-0 z-[2400] bg-black/60 backdrop-blur-sm items-end sm:items-center justify-center sm:p-4">
+    <div class="bg-zinc-900 w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl p-5 shadow-2xl" style="padding-bottom:max(1.25rem, env(safe-area-inset-bottom))">
+      <h2 class="text-lg font-bold">Directions</h2>
+      <p id="dcName" class="text-sm text-zinc-400 mt-0.5 truncate"></p>
+      <div class="mt-4 space-y-2">
+        <a id="dcFromCenter" target="_blank" rel="noopener" class="w-full flex items-center gap-3 p-3.5 rounded-2xl bg-zinc-800 hover:bg-zinc-700 text-left">
+          <span class="w-11 h-11 rounded-xl grid place-items-center shrink-0" style="background:linear-gradient(135deg,#A855F7,#6D28D9);color:#fff"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M12 2v5M9.5 4.5h5M5 22V12l7-5 7 5v10M9 22v-5h6v5"/></svg></span>
+          <span class="flex-1"><span class="block font-semibold" id="dcCenterLabel">From Qodesh</span><span class="block text-xs text-zinc-400" id="dcCenterSub">Route by road in Google Maps</span></span>
+          <span class="text-zinc-500"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M9 6l6 6-6 6"/></svg></span>
+        </a>
+        <a id="dcFromMe" target="_blank" rel="noopener" class="w-full flex items-center gap-3 p-3.5 rounded-2xl bg-zinc-800 hover:bg-zinc-700 text-left">
+          <span class="w-11 h-11 rounded-xl bg-[#1A73E8] grid place-items-center shrink-0" style="color:#fff"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/><path d="M12 1v3m0 16v3M1 12h3m16 0h3"/></svg></span>
+          <span class="flex-1"><span class="block font-semibold">From my location</span><span class="block text-xs text-zinc-400">Google Maps uses where you are now</span></span>
+          <span class="text-zinc-500"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M9 6l6 6-6 6"/></svg></span>
+        </a>
+      </div>
+      <button data-close class="btn btn-ghost w-full mt-3">Cancel</button>
+    </div>
+  </div>
+
   <!-- ============ STREET VIEW ============ -->
   <div id="svModal" class="modal fixed inset-0 z-[2400] bg-black/80 backdrop-blur-sm items-end sm:items-center justify-center sm:p-4">
     <div class="panel bg-zinc-900 w-full sm:max-w-3xl rounded-t-2xl sm:rounded-2xl overflow-hidden shadow-2xl flex flex-col" style="height:min(85vh,640px)">
@@ -1269,12 +1291,51 @@
     loadDivision();
     $('fitDivisionBtn').onclick = () => division.bounds && whenMap(m => m.fitBounds(division.bounds, { padding: 30, duration: 700 }));
 
+
+    // ---------- Road distance from the centre (stored in the database, worked out once by the server) ----------
+    const fmtDist = (m) => m < 1000 ? `${Math.round(m / 10) * 10} m` : `${(m / 1000).toFixed(m < 10000 ? 1 : 0)} km`;
+    const fmtTime = (s) => s < 3600 ? `${Math.max(1, Math.round(s / 60))} min` : `${Math.floor(s / 3600)} h ${Math.round((s % 3600) / 60)} min`;
+    function roadText(s) {
+      if (s.road_dist_m == null) return null;
+      return `${fmtDist(s.road_dist_m)} by road · ${fmtTime(s.road_time_s || 0)} drive from ${state.settings?.center?.name || 'Qodesh'}`;
+    }
+    let roadBusy = false;
+    async function computeRoadDistances() {
+      if (roadBusy || state.user?.role !== 'admin') return;
+      if (!state.streets.some(s => s.road_dist_m == null && !s._roadTried)) return;
+      roadBusy = true;
+      try {
+        for (let i = 0; i < 20; i++) {
+          const r = await api('/streets/road-distances', { method: 'POST', body: '{}' });
+          if (!r.remaining || (!r.updated && !r.failed)) break;
+        }
+        state.streets.forEach(s => s._roadTried = true);
+        await loadStreets({ quiet: true });
+      } catch (err) { console.warn('Road distances:', err.message); }
+      finally { roadBusy = false; state.streets.forEach(s => s._roadTried = true); }
+    }
+
+    // Directions: from the centre (Qodesh) or from where you are now
+    function openDirections(s) {
+      const p = streetPoint(s); if (!p) return;
+      const c = centerLL(), name = state.settings?.center?.name || 'Qodesh';
+      $('dcName').textContent = s.name;
+      $('dcCenterLabel').textContent = `From ${name}`;
+      $('dcCenterSub').textContent = roadText(s) ? `${fmtDist(s.road_dist_m)} · about ${fmtTime(s.road_time_s || 0)} by car` : 'Route by road in Google Maps';
+      $('dcFromCenter').href = `https://www.google.com/maps/dir/?api=1&origin=${c[0]},${c[1]}&destination=${p[0]},${p[1]}`;
+      $('dcFromMe').href = `https://www.google.com/maps/dir/?api=1&destination=${p[0]},${p[1]}`;
+      openModal('dirChoice');
+    }
+    $('dcFromCenter').addEventListener('click', () => setTimeout(() => closeModal('dirChoice'), 50));
+    $('dcFromMe').addEventListener('click', () => setTimeout(() => closeModal('dirChoice'), 50));
+
     function popupHtml(street) {
       const v = street.visits || [];
       return `
         <div style="min-width:200px">
           <div style="font-weight:700;font-size:15px">${esc(street.name)}</div>
-          <div style="color:#86776F;font-size:12px;margin-bottom:10px">${esc(street.district)}${street.rep_name ? ` · Rep: ${esc(street.rep_name)}` : ''}</div>
+          <div style="color:#86776F;font-size:12px;margin-bottom:${roadText(street) ? 4 : 10}px">${esc(street.district)}${street.rep_name ? ` · Rep: ${esc(street.rep_name)}` : ''}</div>
+          ${roadText(street) ? `<div style="font-size:12px;margin-bottom:10px;color:#6D28D9;font-weight:600">${esc(roadText(street))}</div>` : ''}
           ${v.length ? `
             <div style="display:flex;gap:12px;font-size:12px;margin-bottom:6px">
               <span><b>${v.length}</b> <span style="color:#86776F">visits</span></span>
@@ -1338,6 +1399,7 @@
         state.converts = converts;
         renderAll();
         if (!streets.length) setTimeout(() => autoImportIfEmpty(), 300);
+        else setTimeout(() => computeRoadDistances(), 800);
         if (!quiet && !state.fitted && !division.outer) {
           const pts = state.streets.map(streetPoint).filter(Boolean);
           if (pts.length) whenMap(m => m.fitBounds(ringBounds(pts.map(ll2)), { padding: 40, maxZoom: 16 }));
@@ -1484,7 +1546,7 @@
       $('detailConvertsList').innerHTML = sc.length ? sc.map(convertCard).join('')
         : `<p class="text-xs text-zinc-500 border border-dashed border-zinc-800 rounded-xl p-3 text-center">No convert details recorded for this street yet.</p>`;
       $('detailName').textContent = s.name;
-      $('detailDistrict').textContent = s.district;
+      $('detailDistrict').innerHTML = `${esc(s.district)}${roadText(s) ? `<br><span class="text-[13px] font-semibold text-[#6D28D9]">${esc(roadText(s))}</span>` : ''}`;
       const badge = s.planned_at ? ['Up next', 'bg-[#DCEBFB] text-[#0B4F9C]'] : { visited: ['Visited', 'bg-emerald-500/15 text-emerald-600'], unvisited: ['Not visited', 'bg-[#E11D48]/10 text-[#BE123C]'] }[st];
       $('detailBadge').textContent = badge[0];
       $('detailBadge').className = `text-[11px] font-semibold px-2 py-1 rounded-full shrink-0 ${badge[1]}`;
@@ -1492,7 +1554,8 @@
       $('detailPeople').textContent = fmt(sum(v, 'attendance'));
       $('detailConverts').textContent = fmt(sum(v, 'decisions'));
       const pt = streetPoint(s);
-      $('detailDirections').href = pt ? `https://www.google.com/maps/dir/?api=1&destination=${pt[0]},${pt[1]}` : '#';
+      $('detailDirections').href = '#';
+      $('detailDirections').onclick = (e) => { e.preventDefault(); openDirections(s); };
       $('detailPlanBtn').innerHTML = `${icon('flag', 16)} ${s.planned_at ? 'Up next' : 'Plan next'}`;
       $('detailPlanBtn').className = `btn text-sm ${s.planned_at ? 'bg-[#DCEBFB] text-[#0B4F9C]' : 'btn-ghost'}`;
       $('detailSvBtn').onclick = () => pt && openStreetView(pt[0], pt[1], s.name);
