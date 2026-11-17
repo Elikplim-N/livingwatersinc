@@ -16,43 +16,71 @@
   <link rel="stylesheet" href="/app.css" />
   <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" />
   <style>
-    html, body { height: 100%; }
-    body { background: #FFF6F2; -webkit-tap-highlight-color: transparent; overflow: hidden; overscroll-behavior: none; }
+    body { background: #FFF6F2; -webkit-tap-highlight-color: transparent; }
     .card { background: #fff; border-radius: 20px; box-shadow: 0 1px 2px rgba(42,30,27,.05), 0 8px 24px rgba(42,30,27,.06); }
-    .kpi b { display: block; font-size: 28px; line-height: 1.1; font-weight: 800; letter-spacing: -.02em; }
-    .kpi span { font-size: 11.5px; font-weight: 600; color: #86776F; text-transform: uppercase; letter-spacing: .05em; }
-    #map { position: absolute; inset: 0; background: #F3ECE8; }
+    .kpi b { display: block; font-size: 30px; line-height: 1.1; font-weight: 800; letter-spacing: -.02em; }
+    .kpi span { font-size: 12px; font-weight: 600; color: #86776F; text-transform: uppercase; letter-spacing: .05em; }
+    #map { position: absolute; inset: 0; }
     .mapboxgl-ctrl-group { border-radius: 12px !important; overflow: hidden; box-shadow: 0 6px 20px rgba(42,30,27,.12) !important; }
     .lwi-popup .mapboxgl-popup-content { border-radius: 16px; padding: 14px 16px; box-shadow: 0 16px 40px rgba(42,30,27,.18); font-family: inherit; color: #2A1E1B; }
     .lwi-popup .mapboxgl-popup-close-button { font-size: 18px; color: #A39591; right: 6px; top: 4px; }
     .bar { height: 8px; border-radius: 99px; background: #F6ECE8; overflow: hidden; }
     .bar > i { display: block; height: 100%; border-radius: 99px; }
-    .chip { display: inline-flex; align-items: center; gap: .45rem; padding: .55rem 1rem; border-radius: 9999px; font-size: .9rem; font-weight: 700; color: #5C4E4A; background: #fff; box-shadow: 0 1px 2px rgba(42,30,27,.08), 0 4px 14px rgba(42,30,27,.1); white-space: nowrap; transition: all .15s; }
+    .chip { display: inline-flex; align-items: center; gap: .45rem; padding: .55rem 1rem; border-radius: 9999px; font-size: .9rem; font-weight: 700; color: #5C4E4A; background: #fff; box-shadow: 0 1px 2px rgba(42,30,27,.06), 0 4px 12px rgba(42,30,27,.05); white-space: nowrap; transition: all .15s; }
     .chip:hover { color: #2A1E1B; }
     .chip.active { background: #2A1E1B; color: #fff; }
     .chip .dot { width: 10px; height: 10px; border-radius: 50%; }
-    .tabbtn { padding: .45rem .9rem; border-radius: 99px; font-size: .85rem; font-weight: 600; color: #86776F; }
-    .tabbtn.active { background: #fff; color: #2A1E1B; box-shadow: 0 1px 4px rgba(42,30,27,.12); }
-    .sec-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #86776F; margin: 0 2px 8px; }
 
-    /* App layout: summary sidebar + full-screen map */
-    #page { position: fixed; inset: 0; display: flex; }
-    #page.hidden { display: none; }
-    #side { width: 420px; flex-shrink: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; border-right: 1px solid #F1E4DF; padding: max(1rem, env(safe-area-inset-top)) 1rem 1.5rem; }
-    #mapWrap { position: relative; flex: 1; min-width: 0; }
-    #tabbar { display: none; }
+    /* ===== Phone app layout (desktop keeps the page layout above) ===== */
+    #mPanel, #tabbar { display: none; }
     .tb-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 7px 0 5px; font-size: 10.5px; font-weight: 600; color: #A39591; }
     .tb-item svg { width: 25px; height: 25px; }
     .tb-item.active { color: #6D28D9; }
     @media (max-width: 767px) {
-      #side { position: fixed; inset: 0; bottom: calc(env(safe-area-inset-bottom) + 57px); width: auto; z-index: 20; border: 0; background: #FFF6F2;
-              transform: translateY(calc(100% + 90px)); visibility: hidden; transition: transform .32s cubic-bezier(.32,.72,0,1), visibility 0s linear .32s; }
-      #side.open { transform: none; visibility: visible; transition: transform .32s cubic-bezier(.32,.72,0,1); }
+      html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
+      #page { padding: 0 !important; }
+      #mapCard { position: fixed !important; inset: 0; bottom: calc(env(safe-area-inset-bottom) + 57px); height: auto !important; min-height: 0 !important; border-radius: 0; box-shadow: none; z-index: 5; }
+      #mBrand { display: flex !important; left: 12px; top: max(.75rem, env(safe-area-inset-top)); }
+      #styleSwitch { left: auto !important; right: 12px; top: max(.75rem, env(safe-area-inset-top)) !important; }
+      #filters { position: fixed; z-index: 12; left: 0; right: 0; top: calc(max(.75rem, env(safe-area-inset-top)) + 54px); margin: 0 !important; padding: 0 12px 4px; scrollbar-width: none; }
+      #filters::-webkit-scrollbar { display: none; }
+      #legend { bottom: 2.25rem !important; font-size: 13.5px !important; padding: 10px 14px !important; }
+      .mapboxgl-ctrl-top-right { display: none; }
       #tabbar { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; padding-bottom: env(safe-area-inset-bottom);
-                background: rgba(255,250,248,.92); backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px); border-top: 1px solid #EBDDD8; }
-      #mapWrap { margin-bottom: calc(env(safe-area-inset-bottom) + 57px); }
-      #legend { bottom: 2.25rem !important; font-size: 13.5px !important; }
+                background: rgba(255,250,248,.94); backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px); border-top: 1px solid #EBDDD8; }
+      #mPanel { display: block; position: fixed; inset: 0; bottom: calc(env(safe-area-inset-bottom) + 57px); z-index: 20; overflow-y: auto; -webkit-overflow-scrolling: touch;
+                background: #FFF6F2; padding: max(.75rem, env(safe-area-inset-top)) 12px 16px;
+                transform: translateY(calc(100% + 90px)); visibility: hidden; transition: transform .3s cubic-bezier(.32,.72,0,1), visibility 0s linear .3s; }
+      #mPanel.open { transform: none; visibility: visible; transition: transform .3s cubic-bezier(.32,.72,0,1); }
+      .mgroup { display: none; }
+      .mgroup.show { display: block; }
+      /* Compact cards on the phone */
+      #mPanel #hdr { padding: 2px 0 10px; }
+      #mPanel #hdr h1 { font-size: 17px; }
+      #mPanel #hdr img { width: 40px; height: 40px; }
+      #mPanel .card { border-radius: 16px; }
+      #mPanel #kpiSec { gap: 8px; margin: 0; grid-template-columns: repeat(3, 1fr); }
+      #mPanel #kpiSec > .card { padding: 10px 12px; grid-column: auto; min-width: 0; }
+      #mPanel #kpiSec > .card:first-child { grid-column: 1 / -1; }
+      #mPanel #kpiSec > .card:first-child b { font-size: 26px; }
+      #mPanel #kpiSec > .card:first-child .bar { margin-top: 8px; }
+      #mPanel .kpi b { font-size: 20px; margin-top: 2px; }
+      #mPanel .kpi span { font-size: 9.5px; letter-spacing: .04em; white-space: nowrap; }
+      #mPanel .kpi p { font-size: 11px; margin-top: 2px; }
+      #mPanel #retSec { gap: 8px; margin-top: 8px; grid-template-columns: 1fr; }
+      #mPanel #retSec > .card { padding: 10px 14px; gap: 10px; }
+      #mPanel #retSec .text-sm { font-size: 12.5px; }
+      #mPanel #retSec .text-2xl { font-size: 19px; }
+      #mPanel #retSec .text-base { font-size: 13px; }
+      #mPanel #retSec .text-xl { font-size: 17px; }
+      #mPanel #retSec .bar { height: 6px; margin-top: 6px; }
+      #mPanel #areaCard .space-y-3 > * + * { margin-top: 10px; }
+      #mPanel #areaCard { margin-top: 8px; padding: 12px 14px; }
+      #mPanel #upCard, #mPanel #recentSec { margin: 0; padding: 12px 14px; }
+      #mPanel #recentSec > div > div { padding-top: 10px; padding-bottom: 10px; }
     }
+    .tabbtn { padding: .45rem .9rem; border-radius: 99px; font-size: .85rem; font-weight: 600; color: #86776F; }
+    .tabbtn.active { background: #fff; color: #2A1E1B; box-shadow: 0 1px 4px rgba(42,30,27,.12); }
   </style>
 </head>
 <body class="font-sans antialiased text-white">
@@ -66,105 +94,119 @@
     </div>
   </div>
 
-  <div id="page" class="hidden">
-    <!-- ===== Summary sidebar (desktop) / slide-up panel (phone) ===== -->
-    <aside id="side">
-      <header class="flex items-center gap-3 pb-3">
-        <img src="/img/logo-96.png" alt="Living Waters Incorporated" width="48" height="48" class="w-12 h-12 rounded-full shrink-0" style="box-shadow:0 4px 14px rgba(7,104,206,.25)" />
+  <div id="page" class="hidden max-w-7xl mx-auto px-4 sm:px-6 pb-10" style="padding-top:max(1rem, env(safe-area-inset-top))">
+    <!-- Header -->
+    <header id="hdr" class="flex items-center gap-3 py-3">
+      <img src="/img/logo-96.png" alt="Living Waters Incorporated" width="52" height="52" class="w-12 h-12 sm:w-14 sm:h-14 rounded-full shrink-0" style="box-shadow:0 4px 14px rgba(7,104,206,.25)" />
+      <div class="flex-1 min-w-0">
+        <h1 class="text-lg sm:text-2xl font-extrabold tracking-tight leading-tight">LW Inc. Street Campaign</h1>
+        <p class="text-sm text-zinc-400">Overview · <span id="updated">loading…</span></p>
+      </div>
+      <button data-install class="btn btn-ghost btn-sm shrink-0" title="Install app"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/></svg><span class="hidden sm:inline">Install app</span></button>
+      <button id="refreshBtn" class="btn btn-ghost btn-sm shrink-0" title="Refresh">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 10-2.3 5.7M20 4v7h-7"/></svg>
+        <span class="hidden sm:inline">Refresh</span>
+      </button>
+    </header>
+
+    <!-- KPIs -->
+    <section id="kpiSec" class="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-2">
+      <div class="card kpi p-4 col-span-2 lg:col-span-1">
+        <span>Streets reached</span>
+        <div class="flex items-end gap-2 mt-1"><b id="kCoverage">0%</b><p class="text-sm text-zinc-400 pb-1"><span id="kVisited">0</span> of <span id="kStreets">0</span> streets</p></div>
+        <div class="bar mt-3"><i id="kBar" style="width:0%;background:linear-gradient(90deg,#F2547D,#1F9D63)"></i></div>
+      </div>
+      <div class="card kpi p-4"><span>Outreaches</span><b id="kOutreaches" class="mt-1">0</b></div>
+      <div class="card kpi p-4"><span>People reached</span><b id="kPeople" class="mt-1">0</b></div>
+      <div class="card kpi p-4 col-span-2 lg:col-span-1"><span>Converts</span><b id="kConverts" class="mt-1 text-emerald-500">0</b><p class="text-sm text-zinc-400 mt-1"><span id="kFollowed">0</span> followed up</p></div>
+    </section>
+
+    <!-- Retention -->
+    <section id="retSec" class="grid sm:grid-cols-2 gap-3 mt-3">
+      <div class="card p-4 flex items-center gap-4">
+        <div class="hidden sm:grid w-12 h-12 rounded-2xl place-items-center shrink-0" style="background:#EAF2FD;color:#0768CE">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v5M9.5 4.5h5M5 22V12l7-5 7 5v10M9 22v-5h6v5"/></svg>
+        </div>
         <div class="flex-1 min-w-0">
-          <h1 class="text-lg font-extrabold tracking-tight leading-tight">LW Inc. Street Campaign</h1>
-          <p class="text-sm text-zinc-400">Overview · <span id="updated">loading…</span></p>
-        </div>
-        <button data-install class="btn btn-ghost btn-sm shrink-0" title="Install app"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/></svg></button>
-        <button id="refreshBtn" class="btn btn-ghost btn-sm shrink-0" title="Refresh">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 10-2.3 5.7M20 4v7h-7"/></svg>
-        </button>
-      </header>
-
-      <!-- KPIs -->
-      <section id="secSummary" class="grid grid-cols-2 gap-2.5">
-        <div class="card kpi p-4 col-span-2">
-          <span>Streets reached</span>
-          <div class="flex items-end gap-2 mt-1"><b id="kCoverage">0%</b><p class="text-sm text-zinc-400 pb-1"><span id="kVisited">0</span> of <span id="kStreets">0</span> streets</p></div>
-          <div class="bar mt-3"><i id="kBar" style="width:0%;background:linear-gradient(90deg,#F2547D,#1F9D63)"></i></div>
-        </div>
-        <div class="card kpi p-4"><span>Outreaches</span><b id="kOutreaches" class="mt-1">0</b></div>
-        <div class="card kpi p-4"><span>People reached</span><b id="kPeople" class="mt-1">0</b></div>
-        <div class="card kpi p-4 col-span-2 flex items-end justify-between"><div><span>Converts</span><b id="kConverts" class="mt-1 text-emerald-500">0</b></div><p class="text-sm text-zinc-400"><span id="kFollowed">0</span> followed up</p></div>
-      </section>
-
-      <!-- Retention -->
-      <h2 class="sec-title mt-5">Retention</h2>
-      <section class="space-y-2.5">
-        <div class="card p-4">
-          <div class="flex items-center justify-between"><p class="text-sm font-bold" style="color:#0768CE">Qodesh City Church · Sunday</p><p id="rSunPct" class="text-lg font-extrabold" style="color:#0768CE">—</p></div>
-          <p class="text-2xl font-extrabold mt-0.5"><span id="rSun">0</span> <span class="text-sm font-semibold text-zinc-400">of <span id="rSunOf">0</span> converts came</span></p>
+          <p class="text-sm font-bold" style="color:#0768CE">Qodesh City Church · Sunday</p>
+          <p class="text-2xl font-extrabold"><span id="rSun">0</span> <span class="text-base font-semibold text-zinc-400">of <span id="rSunOf">0</span> converts came</span></p>
           <div class="bar mt-2"><i id="rSunBar" style="width:0%;background:#0768CE"></i></div>
         </div>
-        <div class="card p-4">
-          <div class="flex items-center justify-between"><p class="text-sm font-bold" style="color:#6D28D9">Saturday Night Revival · Saturday</p><p id="rSatPct" class="text-lg font-extrabold" style="color:#6D28D9">—</p></div>
-          <p class="text-2xl font-extrabold mt-0.5"><span id="rSat">0</span> <span class="text-sm font-semibold text-zinc-400">of <span id="rSatOf">0</span> converts came</span></p>
+        <p id="rSunPct" class="text-xl font-extrabold shrink-0" style="color:#0768CE">—</p>
+      </div>
+      <div class="card p-4 flex items-center gap-4">
+        <div class="hidden sm:grid w-12 h-12 rounded-2xl place-items-center shrink-0" style="background:#F3EEFE;color:#6D28D9">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 009 9 9 9 0 11-9-9z"/></svg>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-bold" style="color:#6D28D9">Saturday Night Revival · Saturday</p>
+          <p class="text-2xl font-extrabold"><span id="rSat">0</span> <span class="text-base font-semibold text-zinc-400">of <span id="rSatOf">0</span> converts came</span></p>
           <div class="bar mt-2"><i id="rSatBar" style="width:0%;background:#6D28D9"></i></div>
         </div>
-      </section>
-
-      <!-- Up next -->
-      <div id="secUp" class="flex items-center gap-2 mt-5 mb-2 mx-0.5">
-        <span class="relative flex w-3 h-3"><span class="absolute inline-flex h-full w-full rounded-full opacity-60 animate-ping" style="background:#0768CE"></span><span class="relative inline-flex w-3 h-3 rounded-full" style="background:#0768CE"></span></span>
-        <h2 class="text-xs font-bold uppercase tracking-wider" style="color:#0B4F9C">Up next</h2>
-        <span id="upCount" class="ml-auto text-sm font-semibold text-zinc-400"></span>
+        <p id="rSatPct" class="text-xl font-extrabold shrink-0" style="color:#6D28D9">—</p>
       </div>
-      <div class="card p-3"><div id="upList" class="space-y-1.5"></div></div>
+    </section>
 
-      <!-- By area -->
-      <h2 class="sec-title mt-5">By area</h2>
-      <div class="card p-4"><div id="districts" class="space-y-3"></div></div>
-
-      <!-- Recent outreaches -->
-      <h2 id="secRecent" class="sec-title mt-5">Recent outreaches</h2>
-      <div class="card px-4 py-1"><div id="recent" class="divide-y divide-zinc-800"></div></div>
-    </aside>
-
-    <!-- ===== Full-screen map ===== -->
-    <main id="mapWrap">
-      <div id="map"></div>
-      <div id="mapNote" class="hidden absolute inset-0 grid place-items-center text-sm text-zinc-400 p-6 text-center">The map is not connected yet.</div>
-
-      <div id="mapTop" class="absolute left-3 right-3 z-10 flex flex-col gap-2 pointer-events-none" style="top:max(.75rem, env(safe-area-inset-top))">
-        <div class="flex items-center gap-2">
-          <!-- Brand (phones) -->
-          <div class="md:hidden pointer-events-auto flex items-center gap-2 bg-zinc-900/95 backdrop-blur rounded-2xl pl-1.5 pr-3 py-1.5" style="box-shadow:0 6px 20px rgba(42,30,27,.12)">
-            <img src="/img/logo-96.png" alt="" width="32" height="32" class="w-8 h-8 rounded-full" />
-            <span class="text-[13px] font-bold leading-tight">LW Inc.<br><span class="font-medium text-zinc-400 text-[11px]">Overview</span></span>
-          </div>
-          <div class="flex-1"></div>
-          <div class="pointer-events-auto flex bg-zinc-800/90 backdrop-blur rounded-full p-1 gap-0.5 shadow" id="styleSwitch">
-            <button class="tabbtn active" data-style="street">Map</button>
-            <button class="tabbtn" data-style="satellite">Satellite</button>
-          </div>
+    <!-- Map + side -->
+    <div class="flex items-center gap-2 mt-4 overflow-x-auto pb-1" id="filters">
+      <button class="chip active" data-f="all">All <span class="opacity-60" data-n="all"></span></button>
+      <button class="chip" data-f="unvisited"><i class="dot" style="background:#E11D48"></i>Not visited <span class="opacity-60" data-n="unvisited"></span></button>
+      <button class="chip" data-f="planned"><i class="dot" style="background:#0768CE"></i>Up next <span class="opacity-60" data-n="planned"></span></button>
+      <button class="chip" data-f="visited"><i class="dot" style="background:#1F9D63"></i>Visited <span class="opacity-60" data-n="visited"></span></button>
+    </div>
+    <section class="grid lg:grid-cols-3 gap-3 mt-2">
+      <div id="mapCard" class="card overflow-hidden lg:col-span-2 relative" style="height:min(70vh,620px);min-height:420px">
+        <div id="map"></div>
+        <div id="mBrand" class="hidden absolute z-10 items-center gap-2 bg-zinc-900/95 backdrop-blur rounded-2xl pl-1.5 pr-3 py-1.5" style="box-shadow:0 6px 20px rgba(42,30,27,.12)">
+          <img src="/img/logo-96.png" alt="" width="32" height="32" class="w-8 h-8 rounded-full" />
+          <span class="text-[13px] font-bold leading-tight">LW Inc.<br><span class="font-medium text-zinc-400 text-[11px]">Overview</span></span>
         </div>
-        <!-- Filters -->
-        <div class="pointer-events-auto flex items-center gap-2 overflow-x-auto pb-1 -mx-3 px-3" id="filters" style="scrollbar-width:none">
-          <button class="chip active" data-f="all">All <span class="opacity-60" data-n="all"></span></button>
-          <button class="chip" data-f="unvisited"><i class="dot" style="background:#E11D48"></i>Not visited <span class="opacity-60" data-n="unvisited"></span></button>
-          <button class="chip" data-f="planned"><i class="dot" style="background:#0768CE"></i>Up next <span class="opacity-60" data-n="planned"></span></button>
-          <button class="chip" data-f="visited"><i class="dot" style="background:#1F9D63"></i>Visited <span class="opacity-60" data-n="visited"></span></button>
+        <div id="mapNote" class="hidden absolute inset-0 grid place-items-center text-sm text-zinc-400 p-6 text-center">The map is not connected yet.</div>
+        <div class="absolute top-3 left-3 flex bg-zinc-800/90 backdrop-blur rounded-full p-1 gap-0.5 shadow" id="styleSwitch">
+          <button class="tabbtn active" data-style="street">Map</button>
+          <button class="tabbtn" data-style="satellite">Satellite</button>
         </div>
+        <!-- Big legend (no convert key) -->
+        <div class="absolute left-3 bottom-10 card px-4 py-3 flex flex-wrap gap-x-5 gap-y-2 text-[15px] font-semibold" id="legend"></div>
       </div>
 
-      <!-- Big legend (no convert key) -->
-      <div class="absolute left-3 bottom-10 z-10 card px-4 py-3 flex flex-wrap gap-x-5 gap-y-2 text-[15px] font-semibold" id="legend"></div>
-    </main>
+      <div class="space-y-3">
+        <div id="upCard" class="card p-4">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="relative flex w-3 h-3"><span class="absolute inline-flex h-full w-full rounded-full opacity-60 animate-ping" style="background:#0768CE"></span><span class="relative inline-flex w-3 h-3 rounded-full" style="background:#0768CE"></span></span>
+            <h2 class="text-sm font-bold uppercase tracking-wider" style="color:#0B4F9C">Up next</h2>
+            <span id="upCount" class="ml-auto text-sm font-semibold text-zinc-400"></span>
+          </div>
+          <div id="upList" class="space-y-1.5"></div>
+        </div>
+        <div id="areaCard" class="card p-4">
+          <h2 class="text-sm font-bold uppercase tracking-wider text-zinc-400 mb-2">By area</h2>
+          <div id="districts" class="space-y-3"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Recent outreaches -->
+    <section id="recentSec" class="card p-4 mt-3">
+      <h2 class="text-sm font-bold uppercase tracking-wider text-zinc-400 mb-3">Recent outreaches</h2>
+      <div id="recent" class="divide-y divide-zinc-800"></div>
+    </section>
+
   </div>
 
-  <!-- ===== Bottom tab bar (phones) ===== -->
+
+  <!-- ===== Phone: slide-up panel (one section per tab) + bottom tab bar ===== -->
+  <div id="mPanel">
+    <div id="m-summary" class="mgroup"></div>
+    <div id="m-upnext" class="mgroup"></div>
+    <div id="m-recent" class="mgroup"></div>
+  </div>
   <nav id="tabbar">
     <button class="tb-item active" data-tab="map"><svg fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24"><path stroke-linejoin="round" d="M9 4L3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5 9 4z"/><path d="M9 4v13M15 6.5v13"/></svg>Map</button>
     <button class="tb-item" data-tab="summary"><svg fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg>Summary</button>
     <button class="tb-item" data-tab="upnext"><svg fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M5 21V4M5 4h11l-2.5 4L16 12H5"/></svg>Up next</button>
     <button class="tb-item" data-tab="recent"><svg fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Outreaches</button>
   </nav>
-
   <div id="viewChoice" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4">
     <div class="bg-zinc-900 w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl p-5 shadow-2xl" style="padding-bottom:max(1.25rem, env(safe-area-inset-bottom))">
       <h2 class="text-lg font-bold">See this street</h2>
@@ -197,6 +239,7 @@
     // The installed app opens /overview without the code, so remember it on this device
     const lsGet = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
     const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
+    const MOBILE = matchMedia('(max-width: 767px)');
     const key = new URLSearchParams(location.search).get('k') || lsGet('lwi_overview_key') || '';
 
     const COLORS = { unvisited: '#E11D48', visited: '#1F9D63', planned: '#0768CE' };
@@ -343,9 +386,10 @@
       const mine = popup;
       popup.on('close', () => { if (popup === mine) map.getSource('sel')?.setData({ type: 'FeatureCollection', features: [] }); });
       const el = popup.getElement();
-      // Keep the popup clear of the filter row at the top of the map
+      // Keep the popup clear of the floating filter row on phones
       requestAnimationFrame(() => {
-        const top = el.getBoundingClientRect().top, limit = $('mapTop').getBoundingClientRect().bottom + 10;
+        if (!MOBILE.matches) return;
+        const top = el.getBoundingClientRect().top, limit = $('filters').getBoundingClientRect().bottom + 10;
         if (top < limit) map.panBy([0, -(limit - top)], { duration: 300 });
       });
       el.querySelector('[data-act="sv"]')?.addEventListener('click', () => openViewChoice(s));
@@ -364,7 +408,7 @@
       const coords = (s.line || []).flat().filter(c => Array.isArray(c) && c.length === 2);
       if (coords.length > 1) {
         const xs = coords.map(c => c[0]), ys = coords.map(c => c[1]);
-        map.fitBounds([[Math.min(...xs), Math.min(...ys)], [Math.max(...xs), Math.max(...ys)]], { padding: { top: 260, bottom: 120, left: 50, right: 50 }, maxZoom: 17.5, duration: 800 });
+        map.fitBounds([[Math.min(...xs), Math.min(...ys)], [Math.max(...xs), Math.max(...ys)]], { padding: MOBILE.matches ? { top: 260, bottom: 120, left: 50, right: 50 } : 70, maxZoom: 17.5, duration: 800 });
       } else if (s.point) map.flyTo({ center: [s.point[1], s.point[0]], zoom: 17, duration: 800 });
     }
 
@@ -405,7 +449,7 @@
       if (!token || !window.mapboxgl) { $('mapNote').classList.remove('hidden'); return; }
       mapboxgl.accessToken = token;
       map = window.ovMap = new mapboxgl.Map({ container: 'map', style: STYLES[styleKey], center: [-0.230065, 5.587981], zoom: 13.5, attributionControl: true });
-      if (matchMedia('(min-width: 768px)').matches) map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'bottom-right');
+      map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-right');
       map.on('style.load', () => { addLayers(); mapReady = true; refreshMap(); });
       map.on('click', (e) => {
         const f = map.queryRenderedFeatures([[e.point.x - 10, e.point.y - 10], [e.point.x + 10, e.point.y + 10]], { layers: ['pts'] })[0];
@@ -435,17 +479,37 @@
 
 
 
-    // ---------- Phone tab bar: Map / Summary / Up next / Outreaches ----------
-    const side = $('side');
+
+    // ---------- Phone layout: move sections into tab panels; desktop keeps the page layout ----------
+    const GROUPS = { summary: ['hdr', 'kpiSec', 'retSec', 'areaCard'], upnext: ['upCard'], recent: ['recentSec'] };
+    const homes = {};
+    for (const ids of Object.values(GROUPS)) for (const id of ids) {
+      const el = $(id), mark = document.createComment(id);
+      el.parentNode.insertBefore(mark, el);
+      homes[id] = mark;
+    }
+    function applyLayout() {
+      for (const [g, ids] of Object.entries(GROUPS)) for (const id of ids) {
+        const el = $(id);
+        if (MOBILE.matches) $('m-' + g).appendChild(el);
+        else homes[id].parentNode.insertBefore(el, homes[id].nextSibling);
+      }
+      if (!MOBILE.matches) setTab('map');
+      setTimeout(() => map?.resize(), 50);
+    }
     function setTab(tab) {
       document.querySelectorAll('[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
-      if (tab === 'map') { side.classList.remove('open'); return; }
-      side.classList.add('open');
+      const panel = $('mPanel');
+      if (tab === 'map') { panel.classList.remove('open'); return; }
+      document.querySelectorAll('.mgroup').forEach(g => g.classList.toggle('show', g.id === 'm-' + tab));
+      panel.scrollTop = 0;
+      panel.classList.add('open');
       popup?.remove();
-      const target = { summary: null, upnext: $('secUp'), recent: $('secRecent') }[tab];
-      side.scrollTo({ top: target ? target.offsetTop - 12 : 0, behavior: 'smooth' });
     }
     document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => setTab(b.dataset.tab));
+    MOBILE.addEventListener('change', applyLayout);
+    applyLayout();
+
     // Tapping a street in Up next shows it on the map
     $('upList').addEventListener('click', (e) => {
       const row = e.target.closest('[data-up]');
@@ -453,6 +517,7 @@
       const s = data.streets.find(x => x.name === row.dataset.up);
       if (!s?.point) return;
       setTab('map');
+      if (!MOBILE.matches) $('mapCard').scrollIntoView({ behavior: 'smooth', block: 'center' });
       zoomTo(s);
       map.once('moveend', () => showStreet(s.id, [s.point[1], s.point[0]]));
     });
