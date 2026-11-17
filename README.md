@@ -66,10 +66,8 @@ On a street's visit history tap **Record attendance**. Type how many came (or us
 All three pages can be installed like a normal app, with the logo as the icon, opening full screen:
 
 - **Android / Chrome / Edge:** tap **Install app** (download icon); the browser asks to install.
-- **iPhone / iPad:** tap **Install app** to see the steps: Safari **Share** → **Add to Home Screen** → **Add**.
+- **iPhone / iPad:** tap **Install app**, then Safari **Share** → **Add to Home Screen** (Apple does not allow websites to install in one tap).
 - The installed **Overview** remembers its link on that device, so it opens straight in.
-
-The Overview also has **Download → Save as PDF** (the whole page, A4) and **Download spreadsheet** (all streets + summary, opens in Excel).
 
 ## Field collectors (no password)
 
