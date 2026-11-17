@@ -328,8 +328,8 @@
       const s = data.streets.find(x => x.id === id);
       if (!s) return;
       const status = s.planned ? ['Up next', COLORS.planned] : s.visited ? ['Visited', COLORS.visited] : ['Not visited', COLORS.unvisited];
+      popup?.remove();   // close the previous popup FIRST, so its close handler can't wipe the new highlight
       map.getSource('sel').setData({ type: 'FeatureCollection', features: s.line.length ? [{ type: 'Feature', properties: { color: status[1] }, geometry: { type: 'MultiLineString', coordinates: s.line } }] : [] });
-      popup?.remove();
       popup = new mapboxgl.Popup({ className: 'lwi-popup', offset: 16, maxWidth: '300px' }).setLngLat(lngLat).setHTML(`
         <div style="min-width:190px"><div style="font-weight:800;font-size:15px">${esc(s.name)}</div>
         <div style="color:#86776F;font-size:12px;margin:2px 0 8px">${esc(s.district)}${s.rep ? ` · Rep: ${esc(s.rep)}` : ''}</div>
@@ -340,7 +340,8 @@
           <a href="https://www.google.com/maps/dir/?api=1&destination=${s.point[0]},${s.point[1]}" target="_blank" rel="noopener" style="${BTN}">${ico('nav')}Directions</a>
           <span style="grid-column:1/-1">${btn('zoom', 'pin', 'Show on map', 'width:100%')}</span>
         </div>` : ''}</div>`).addTo(map);
-      popup.on('close', () => map.getSource('sel')?.setData({ type: 'FeatureCollection', features: [] }));
+      const mine = popup;
+      popup.on('close', () => { if (popup === mine) map.getSource('sel')?.setData({ type: 'FeatureCollection', features: [] }); });
       const el = popup.getElement();
       // Keep the popup clear of the filter row at the top of the map
       requestAnimationFrame(() => {
