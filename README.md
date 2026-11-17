@@ -61,6 +61,14 @@ On a street's visit history tap **Record attendance**. Type how many came (or us
 
 **Admin → Overview link → Share** gives a link like `https://<your-app>/overview?k=…`. Opening it shows a read-only summary: streets reached, outreaches, people reached, converts, retention for Qodesh City Church and Saturday Night Revival, the map with flags, Up next, a breakdown by area and recent outreaches. It refreshes every minute and shows **totals only, never names or phone numbers**. Filter chips (All / Not visited / Up next / Visited) control the map, and tapping a flag gives Street View / Google Earth, Directions and Show on map. The link is permanent: it is created once and never changes.
 
+## Install as an app (phones and computers)
+
+All three pages can be installed like a normal app, with the logo as the icon, opening full screen:
+
+- **Android / Chrome / Edge:** tap **Install app** (download icon); the browser asks to install.
+- **iPhone / iPad:** tap **Install app**, then Safari **Share** → **Add to Home Screen** (Apple does not allow websites to install in one tap).
+- The installed **Overview** remembers its link on that device, so it opens straight in.
+
 ## Field collectors (no password)
 
 Share **`https://<your-app>/collect`** (Admin → Field collectors → Share). Collectors enter their **name and phone number once** and can record converts straight away:
@@ -80,6 +88,7 @@ collect.html        Field collector app (/collect), no dependencies
 overview.html       Read-only overview for leaders (/overview?k=…)
 app.css             Prebuilt Tailwind CSS (regenerate with `npm run build:css`)
 api/index.ts        Vercel serverless API (/api/*)
+manifest-*.webmanifest, sw.js   Make the pages installable (app icon, full screen)
 img/                Logo (transparent PNGs), favicon, phone home-screen icon
 division.geojson    Kaneshie Division + Darkuman/Kaneshie district boundaries
 db/schema.sql       Database tables
