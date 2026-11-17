@@ -150,6 +150,11 @@ ALTER TABLE visits ADD COLUMN IF NOT EXISTS sunday_count integer;    -- Qodesh C
 ALTER TABLE visits ADD COLUMN IF NOT EXISTS saturday_count integer;  -- Saturday Night Revival (following Saturday)
 ALTER TABLE converts ADD COLUMN IF NOT EXISTS came_sunday boolean NOT NULL DEFAULT false;
 ALTER TABLE converts ADD COLUMN IF NOT EXISTS came_saturday boolean NOT NULL DEFAULT false;
+
+-- Road distance from the centre (Qodesh), worked out once via OSRM (OpenStreetMap roads) and stored
+ALTER TABLE streets ADD COLUMN IF NOT EXISTS road_dist_m integer;
+ALTER TABLE streets ADD COLUMN IF NOT EXISTS road_time_s integer;
+ALTER TABLE streets ADD COLUMN IF NOT EXISTS road_from text;   -- centre the numbers were computed from ("lat,lng")
 `;
 
 let schemaReady = false;
@@ -172,7 +177,7 @@ const signToken = (u: { id: string; email: string; role: string }) =>
 const STREET_SELECT = `
   SELECT
     s.id, s.name, s.district, s.geometry, s.length_m, s.planned_at,
-    s.stage_lat, s.stage_lng, s.stage_accuracy_m, s.rep_name, s.rep_phone,
+    s.stage_lat, s.stage_lng, s.stage_accuracy_m, s.rep_name, s.rep_phone, s.road_dist_m, s.road_time_s,
     COALESCE(
       json_agg(
         json_build_object(
@@ -333,6 +338,49 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const auth = requireAuth(req);
       await ensureSchema();
 
+
+      // Road distance + drive time from the centre (Qodesh) to each street, following real roads.
+      // Computed in batches with OSRM's table service (OpenStreetMap data) and stored, so the app never
+      // needs a routing API just to show it. Call repeatedly until `remaining` is 0.
+      if (method === 'POST' && id === 'road-distances') {
+        const cRes = await pool.query(`SELECT value FROM app_settings WHERE key = 'center'`);
+        const c = cRes.rows[0]?.value || { lat: 5.587981, lng: -0.230065 };
+        const key = `${Number(c.lat).toFixed(6)},${Number(c.lng).toFixed(6)}`;
+        const todo = await pool.query(
+          'SELECT id, geometry, stage_lat, stage_lng FROM streets WHERE road_from IS DISTINCT FROM $1 LIMIT 240', [key]
+        );
+        const pts = todo.rows.map((s: any) => {
+          if (s.stage_lat != null && s.stage_lng != null) return { id: s.id, lat: Number(s.stage_lat), lng: Number(s.stage_lng) };
+          const line = s.geometry?.coordinates?.[0];
+          const mid = Array.isArray(line) && line.length ? line[Math.floor(line.length / 2)] : null;
+          return mid ? { id: s.id, lat: Number(mid[1]), lng: Number(mid[0]) } : { id: s.id, lat: NaN, lng: NaN };
+        });
+        let updated = 0, failed = 0;
+        for (let i = 0; i < pts.length; i += 80) {
+          const chunk = pts.slice(i, i + 80);
+          const ok = chunk.filter(p => Number.isFinite(p.lat) && Number.isFinite(p.lng));
+          let dist: (number | null)[] = [], dur: (number | null)[] = [];
+          if (ok.length) {
+            const coords = [`${c.lng},${c.lat}`, ...ok.map(p => `${p.lng.toFixed(6)},${p.lat.toFixed(6)}`)].join(';');
+            const url = `https://router.project-osrm.org/table/v1/driving/${coords}?sources=0&annotations=distance,duration`;
+            const resp = await fetch(url, { signal: AbortSignal.timeout(20000), headers: { 'User-Agent': 'lw-inc-street-campaign/1.0' } });
+            const j: any = await resp.json().catch(() => ({}));
+            if (!resp.ok || j.code !== 'Ok') throw new HttpError(502, 'The road-distance service is busy. Try again in a minute.');
+            dist = j.distances?.[0]?.slice(1) || [];
+            dur = j.durations?.[0]?.slice(1) || [];
+          }
+          for (const p of chunk) {
+            const k = ok.indexOf(p);
+            const d = k >= 0 ? dist[k] : null, s = k >= 0 ? dur[k] : null;
+            if (d == null) failed++; else updated++;
+            await pool.query('UPDATE streets SET road_dist_m = $2, road_time_s = $3, road_from = $4 WHERE id = $1',
+              [p.id, d == null ? null : Math.round(d), s == null ? null : Math.round(s), key]);
+          }
+        }
+        const left = await pool.query('SELECT count(*)::int AS n FROM streets WHERE road_from IS DISTINCT FROM $1', [key]);
+        return res.json({ updated, failed, remaining: left.rows[0].n });
+      }
+
       // Plan / unplan a street as "Up next"
       if (method === 'PUT' && id && req.url?.includes('/plan')) {
         const planned = !!req.body?.planned;
@@ -355,6 +403,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const sets: string[] = [], vals: unknown[] = [];
         const add = (col: string, v: unknown) => { vals.push(v); sets.push(col + ' = $' + vals.length); };
         if (b.stage !== undefined) {
+          add('road_from', null);   // stage moved: recompute road distance
           if (b.stage === null) { add('stage_lat', null); add('stage_lng', null); add('stage_accuracy_m', null); }
           else {
             const lat = Number(b.stage.lat), lng = Number(b.stage.lng);
@@ -540,6 +589,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return { id: String(s.id), name: s.name, district: s.district, point: point(s), visited: v.length > 0,
                  planned: !!s.planned_at, planned_at: s.planned_at, last_visit: v[0] ? String(v[0].visit_date).slice(0, 10) : null,
                  visits: v.length, converts: sumConv, rep: s.rep_name || null,
+                 road_dist_m: s.road_dist_m ?? null, road_time_s: s.road_time_s ?? null,
                  line: (s.geometry?.coordinates || []).filter((l: any) => Array.isArray(l) && l.length > 1) };
       });
       recent.sort((a, b) => b.date.localeCompare(a.date));

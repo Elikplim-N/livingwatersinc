@@ -96,3 +96,8 @@ ALTER TABLE visits ADD COLUMN IF NOT EXISTS sunday_count integer;    -- Qodesh C
 ALTER TABLE visits ADD COLUMN IF NOT EXISTS saturday_count integer;  -- Saturday Night Revival (following Saturday)
 ALTER TABLE converts ADD COLUMN IF NOT EXISTS came_sunday boolean NOT NULL DEFAULT false;
 ALTER TABLE converts ADD COLUMN IF NOT EXISTS came_saturday boolean NOT NULL DEFAULT false;
+
+-- Road distance from the centre (Qodesh), worked out once via OSRM (OpenStreetMap roads) and stored
+ALTER TABLE streets ADD COLUMN IF NOT EXISTS road_dist_m integer;
+ALTER TABLE streets ADD COLUMN IF NOT EXISTS road_time_s integer;
+ALTER TABLE streets ADD COLUMN IF NOT EXISTS road_from text;   -- centre the numbers were computed from ("lat,lng")
